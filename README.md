@@ -84,3 +84,22 @@ email before signing in.
 
 Keep the current Google Drive SQLite database as a backup. The old
 records can be migrated after the online app is confirmed working.
+
+
+## Visual assets
+
+The `assets` folder contains optimized Star Citizen artwork supplied by
+the app owner. Upload the entire `assets` folder to GitHub at the same
+level as `app.py`.
+
+The repository should include:
+
+```text
+app.py
+assets/
+requirements.txt
+schema.sql
+.streamlit/config.toml
+```
+
+Streamlit will redeploy automatically after the GitHub commit finishes.
