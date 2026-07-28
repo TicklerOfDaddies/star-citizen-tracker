@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
-import base64
 
 import pandas as pd
 import plotly.express as px
@@ -76,280 +73,6 @@ ORE_TYPES = [
     "Other / Custom",
 ]
 
-ASSETS_DIR = Path(__file__).parent / "assets"
-
-STAR_CITIZEN_COLORS = [
-    "#00C8FF",
-    "#FF8A2A",
-    "#7CE7FF",
-    "#EB4C5D",
-    "#8DA4B8",
-]
-
-
-def apply_custom_theme() -> None:
-    """Apply the Star Citizen-inspired visual theme."""
-    st.markdown(
-        """
-        <style>
-        :root {
-            --sc-bg: #06111b;
-            --sc-panel: #0c1b28;
-            --sc-panel-2: #102536;
-            --sc-border: rgba(88, 197, 235, 0.28);
-            --sc-cyan: #00c8ff;
-            --sc-cyan-soft: #7ce7ff;
-            --sc-orange: #ff8a2a;
-            --sc-text: #eaf8ff;
-            --sc-muted: #93afbf;
-        }
-
-        .stApp {
-            background:
-                radial-gradient(circle at 85% 0%, rgba(0, 200, 255, 0.10), transparent 28rem),
-                radial-gradient(circle at 0% 100%, rgba(255, 138, 42, 0.07), transparent 30rem),
-                linear-gradient(180deg, #06111b 0%, #081521 48%, #06111b 100%);
-            color: var(--sc-text);
-        }
-
-        [data-testid="stHeader"] {
-            background: rgba(6, 17, 27, 0.78);
-            backdrop-filter: blur(14px);
-        }
-
-        [data-testid="stAppViewContainer"] > .main {
-            background: transparent;
-        }
-
-        .block-container {
-            max-width: 1480px;
-            padding-top: 1.4rem;
-            padding-bottom: 3rem;
-        }
-
-        section[data-testid="stSidebar"] {
-            background:
-                linear-gradient(180deg, rgba(8, 25, 38, 0.98), rgba(5, 15, 24, 0.98));
-            border-right: 1px solid var(--sc-border);
-        }
-
-        section[data-testid="stSidebar"] [data-testid="stImage"] img {
-            border-radius: 16px;
-            border: 1px solid var(--sc-border);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
-        }
-
-        h1, h2, h3 {
-            color: var(--sc-text) !important;
-            letter-spacing: 0.02em;
-        }
-
-        p, label, .stCaption {
-            color: var(--sc-muted);
-        }
-
-        .sc-banner {
-            position: relative;
-            min-height: 255px;
-            display: flex;
-            align-items: flex-end;
-            overflow: hidden;
-            border-radius: 20px;
-            border: 1px solid var(--sc-border);
-            margin-bottom: 1.6rem;
-            background-position: center;
-            background-size: cover;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.38);
-        }
-
-        .sc-banner::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(90deg, rgba(2, 10, 17, 0.95) 0%, rgba(4, 15, 24, 0.74) 42%, rgba(4, 15, 24, 0.12) 78%),
-                linear-gradient(0deg, rgba(2, 10, 17, 0.94) 0%, transparent 60%);
-        }
-
-        .sc-banner-content {
-            position: relative;
-            z-index: 2;
-            max-width: 760px;
-            padding: 2rem 2.2rem;
-        }
-
-        .sc-kicker {
-            color: var(--sc-cyan-soft);
-            text-transform: uppercase;
-            letter-spacing: 0.17em;
-            font-size: 0.78rem;
-            font-weight: 700;
-            margin-bottom: 0.45rem;
-        }
-
-        .sc-banner-title {
-            color: #ffffff;
-            font-size: clamp(2rem, 4vw, 3.35rem);
-            line-height: 1.02;
-            font-weight: 760;
-            margin: 0 0 0.65rem 0;
-            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.48);
-        }
-
-        .sc-banner-subtitle {
-            color: #c7dce8;
-            font-size: 1.02rem;
-            max-width: 680px;
-            margin: 0;
-        }
-
-        div[data-testid="stMetric"] {
-            background:
-                linear-gradient(145deg, rgba(14, 36, 52, 0.96), rgba(8, 24, 37, 0.96));
-            border: 1px solid var(--sc-border);
-            border-radius: 15px;
-            padding: 1rem 1rem 0.9rem;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
-        }
-
-        [data-testid="stMetricLabel"] {
-            color: #8eb2c4 !important;
-        }
-
-        [data-testid="stMetricValue"] {
-            color: #f2fbff !important;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button {
-            border: 1px solid rgba(124, 231, 255, 0.50);
-            border-radius: 10px;
-            background: linear-gradient(90deg, #007da8, #00a8dc);
-            color: #ffffff;
-            font-weight: 700;
-            box-shadow: 0 8px 18px rgba(0, 168, 220, 0.16);
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover {
-            border-color: #9af0ff;
-            background: linear-gradient(90deg, #0098c8, #00c8ff);
-            color: #021019;
-        }
-
-        div[data-baseweb="select"] > div,
-        .stTextInput input,
-        .stNumberInput input,
-        .stTextArea textarea {
-            background: rgba(13, 32, 47, 0.94) !important;
-            border-color: rgba(103, 192, 224, 0.30) !important;
-            color: #eefbff !important;
-        }
-
-        div[data-baseweb="select"] svg {
-            fill: var(--sc-cyan-soft);
-        }
-
-        [data-testid="stDataFrame"] {
-            border: 1px solid var(--sc-border);
-            border-radius: 14px;
-            overflow: hidden;
-        }
-
-        div[data-testid="stAlert"] {
-            border: 1px solid rgba(103, 192, 224, 0.25);
-            border-radius: 12px;
-        }
-
-        [data-testid="stTabs"] button[aria-selected="true"] {
-            color: var(--sc-cyan-soft);
-            border-bottom-color: var(--sc-cyan);
-        }
-
-        hr {
-            border-color: rgba(103, 192, 224, 0.18);
-        }
-
-        @media (max-width: 720px) {
-            .sc-banner {
-                min-height: 205px;
-            }
-
-            .sc-banner-content {
-                padding: 1.35rem;
-            }
-
-            .sc-banner-subtitle {
-                font-size: 0.92rem;
-            }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-@lru_cache(maxsize=16)
-def image_data_uri(filename: str) -> str:
-    """Return a local image as a cached data URI for a CSS background."""
-    image_path = ASSETS_DIR / filename
-    encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
-    return f"data:image/jpeg;base64,{encoded}"
-
-
-def page_banner(
-    image_filename: str,
-    title: str,
-    subtitle: str,
-    kicker: str,
-) -> None:
-    background = image_data_uri(image_filename)
-    st.markdown(
-        f"""
-        <section
-            class="sc-banner"
-            style="background-image: url('{background}');"
-            aria-label="{title}"
-        >
-            <div class="sc-banner-content">
-                <div class="sc-kicker">{kicker}</div>
-                <div class="sc-banner-title">{title}</div>
-                <p class="sc-banner-subtitle">{subtitle}</p>
-            </div>
-        </section>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def style_plotly_figure(figure) -> None:
-    """Give Plotly charts the same dark sci-fi appearance as the app."""
-    figure.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(7,20,31,0.72)",
-        font={"color": "#dff6ff"},
-        colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 20, "r": 20, "t": 35, "b": 20},
-        legend_title_text="",
-        hoverlabel={
-            "bgcolor": "#0b1c29",
-            "bordercolor": "#00c8ff",
-            "font_color": "#f2fbff",
-        },
-    )
-    figure.update_xaxes(
-        gridcolor="rgba(124,231,255,0.10)",
-        zerolinecolor="rgba(124,231,255,0.18)",
-    )
-    figure.update_yaxes(
-        gridcolor="rgba(124,231,255,0.10)",
-        zerolinecolor="rgba(124,231,255,0.18)",
-    )
-
-
 
 def get_supabase() -> Client:
     """Create one Supabase client for this browser session."""
@@ -376,12 +99,8 @@ def clear_login_state() -> None:
 
 
 def login_screen(client: Client) -> None:
-    page_banner(
-        "hero_banner.jpg",
-        "Star Citizen Tracker",
-        "A private operations ledger for contracts, mining, trading, and performance analysis across the verse.",
-        "Operations Console",
-    )
+    st.title("Star Citizen Tracker")
+    st.caption("Sign in to access your private contract and ore records.")
 
     login_tab, signup_tab = st.tabs(["Sign in", "Create account"])
 
@@ -647,12 +366,7 @@ def display_ore_table(ores: pd.DataFrame) -> None:
 
 
 def dashboard_page() -> None:
-    page_banner(
-        "dashboard_banner.jpg",
-        "Interactive Dashboard",
-        "Review contract income, ore activity, trends, and mission performance from one command view.",
-        "Command Analytics",
-    )
+    st.header("Interactive Dashboard")
 
     contracts, ores = load_data()
 
@@ -757,7 +471,6 @@ def dashboard_page() -> None:
                     "contract_count": "Contracts",
                 },
             )
-            style_plotly_figure(figure)
             st.plotly_chart(figure, use_container_width=True)
 
     elif view == "Contract Earnings Over Time":
@@ -786,7 +499,6 @@ def dashboard_page() -> None:
                 },
             )
             figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
             st.plotly_chart(figure, use_container_width=True)
 
     elif view == "Ore Value by Mineral":
@@ -815,7 +527,6 @@ def dashboard_page() -> None:
                 },
             )
             figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
             st.plotly_chart(figure, use_container_width=True)
 
     elif view == "Ore Activity Over Time":
@@ -840,7 +551,6 @@ def dashboard_page() -> None:
                 },
             )
             figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
             st.plotly_chart(figure, use_container_width=True)
 
     elif view == "Ore Activity Mix":
@@ -862,17 +572,11 @@ def dashboard_page() -> None:
                 hover_data=["entry_count"],
             )
             figure.update_traces(textinfo="percent+label")
-            style_plotly_figure(figure)
             st.plotly_chart(figure, use_container_width=True)
 
 
 def contract_page() -> None:
-    page_banner(
-        "contracts_banner.jpg",
-        "Contract Pay Calculator",
-        "Record mission payouts, account for operating expenses, and calculate a fair crew split.",
-        "Mission Operations",
-    )
+    st.header("Contract Pay Calculator")
 
     with st.form("contract_form", clear_on_submit=True):
         contract_name = st.text_input(
@@ -979,12 +683,7 @@ def contract_page() -> None:
 
 
 def ore_page() -> None:
-    page_banner(
-        "ore_banner.jpg",
-        "Mining and Ore Ledger",
-        "Track mined, purchased, and sold resources across Stanton, Pyro, Nyx, and future systems.",
-        "Industrial Operations",
-    )
+    st.header("Mining and Ore Ledger")
 
     with st.form("ore_form", clear_on_submit=True):
         action = st.selectbox("Entry type", ["Mined", "Bought", "Sold"])
@@ -1045,12 +744,7 @@ def ore_page() -> None:
 
 
 def records_page() -> None:
-    page_banner(
-        "records_banner.jpg",
-        "Saved Records",
-        "Search, review, and export your complete contract and resource transaction history.",
-        "Records Archive",
-    )
+    st.header("Saved Records")
 
     contracts, ores = load_data()
     contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
@@ -1081,12 +775,7 @@ def records_page() -> None:
 
 
 def edit_records_page() -> None:
-    page_banner(
-        "edit_banner.jpg",
-        "Edit or Delete Records",
-        "Correct mistakes, revise saved values, or permanently remove duplicate entries.",
-        "Data Maintenance",
-    )
+    st.header("Edit or Delete Records")
 
     contracts, ores = load_data()
     record_type = st.radio(
@@ -1281,7 +970,6 @@ def edit_records_page() -> None:
 
 
 def main() -> None:
-    apply_custom_theme()
     client = get_supabase()
 
     if "user_id" not in st.session_state:
@@ -1289,11 +977,7 @@ def main() -> None:
         return
 
     with st.sidebar:
-        sidebar_art = ASSETS_DIR / "sidebar_art.jpg"
-        if sidebar_art.exists():
-            st.image(str(sidebar_art), use_container_width=True)
         st.title("Star Citizen Tracker")
-        st.caption("Private operations console")
         st.caption(st.session_state.get("user_email", "Signed in"))
 
         page = st.radio(
