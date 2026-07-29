@@ -2764,6 +2764,296 @@ def apply_custom_theme() -> None:
                 min-height: 5.2rem;
             }
         }
+
+        /* ================================================================
+           GLOBAL CONTROL PERIMETER REPAIR
+           This is the final CSS layer and applies to every input control.
+           ================================================================ */
+
+        :root {
+            --control-border: #5E8C24;
+            --control-border-hover: #456A18;
+            --control-border-focus: #98FB17;
+            --control-background: #FFFFFF;
+            --control-text: #2C3B1D;
+            --control-placeholder: #6F7C61;
+            --control-radius: 10px;
+        }
+
+        /*
+         * Draw the border on the complete control wrapper rather than only
+         * on the nested input element. This prevents the top and bottom
+         * edges from being clipped by Streamlit/BaseWeb.
+         */
+        html body .stApp [data-testid="stTextInput"] > div:last-child,
+        html body .stApp [data-testid="stNumberInput"] > div:last-child,
+        html body .stApp [data-testid="stDateInput"] > div:last-child,
+        html body .stApp [data-testid="stTimeInput"] > div:last-child,
+        html body .stApp [data-testid="stSearchbox"] > div:last-child,
+        html body .stApp [data-testid="stSelectbox"] > div:last-child,
+        html body .stApp [data-testid="stMultiSelect"] > div:last-child,
+        html body .stApp [data-testid="stTextArea"] > div:last-child {
+            position: relative !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            border-radius: var(--control-radius) !important;
+            background: var(--control-background) !important;
+            box-sizing: border-box !important;
+            box-shadow: none !important;
+            filter: none !important;
+            overflow: visible !important;
+            isolation: isolate !important;
+        }
+
+        html body .stApp [data-testid="stTextInput"] > div:last-child::after,
+        html body .stApp [data-testid="stNumberInput"] > div:last-child::after,
+        html body .stApp [data-testid="stDateInput"] > div:last-child::after,
+        html body .stApp [data-testid="stTimeInput"] > div:last-child::after,
+        html body .stApp [data-testid="stSearchbox"] > div:last-child::after,
+        html body .stApp [data-testid="stSelectbox"] > div:last-child::after,
+        html body .stApp [data-testid="stMultiSelect"] > div:last-child::after,
+        html body .stApp [data-testid="stTextArea"] > div:last-child::after {
+            content: "" !important;
+            position: absolute !important;
+            inset: 0 !important;
+            border: 2px solid var(--control-border) !important;
+            border-radius: var(--control-radius) !important;
+            box-sizing: border-box !important;
+            pointer-events: none !important;
+            z-index: 20 !important;
+        }
+
+        html body .stApp [data-testid="stTextInput"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stNumberInput"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stDateInput"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stTimeInput"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stSearchbox"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stSelectbox"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stMultiSelect"] > div:last-child:hover::after,
+        html body .stApp [data-testid="stTextArea"] > div:last-child:hover::after {
+            border-color: var(--control-border-hover) !important;
+        }
+
+        html body .stApp [data-testid="stTextInput"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stNumberInput"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stDateInput"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stTimeInput"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stSearchbox"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stSelectbox"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stMultiSelect"] > div:last-child:focus-within::after,
+        html body .stApp [data-testid="stTextArea"] > div:last-child:focus-within::after {
+            border-color: var(--control-border-focus) !important;
+            border-width: 3px !important;
+        }
+
+        /*
+         * Remove conflicting nested borders. The wrapper overlay above is
+         * now the single source of truth for the visible perimeter.
+         */
+        html body .stApp [data-testid="stTextInput"] div[data-baseweb="input"],
+        html body .stApp [data-testid="stNumberInput"] div[data-baseweb="input"],
+        html body .stApp [data-testid="stDateInput"] div[data-baseweb="input"],
+        html body .stApp [data-testid="stTimeInput"] div[data-baseweb="input"],
+        html body .stApp [data-testid="stSearchbox"] div[data-baseweb="input"],
+        html body .stApp [data-testid="stTextInput"] div[data-baseweb="base-input"],
+        html body .stApp [data-testid="stNumberInput"] div[data-baseweb="base-input"],
+        html body .stApp [data-testid="stDateInput"] div[data-baseweb="base-input"],
+        html body .stApp [data-testid="stTimeInput"] div[data-baseweb="base-input"],
+        html body .stApp [data-testid="stSearchbox"] div[data-baseweb="base-input"],
+        html body .stApp [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+        html body .stApp [data-testid="stMultiSelect"] div[data-baseweb="select"] > div,
+        html body .stApp [data-testid="stSelectbox"] [role="combobox"],
+        html body .stApp [data-testid="stMultiSelect"] [role="combobox"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            background: var(--control-background) !important;
+            border: 0 !important;
+            outline: 0 !important;
+            border-radius: var(--control-radius) !important;
+            box-shadow: none !important;
+            filter: none !important;
+        }
+
+        html body .stApp [data-testid="stTextInput"] input,
+        html body .stApp [data-testid="stNumberInput"] input,
+        html body .stApp [data-testid="stDateInput"] input,
+        html body .stApp [data-testid="stTimeInput"] input,
+        html body .stApp [data-testid="stSearchbox"] input {
+            min-height: 3.05rem !important;
+            height: 3.05rem !important;
+            padding: .67rem .78rem !important;
+            margin: 0 !important;
+            background: transparent !important;
+            color: var(--control-text) !important;
+            -webkit-text-fill-color: var(--control-text) !important;
+            border: 0 !important;
+            outline: 0 !important;
+            border-radius: var(--control-radius) !important;
+            box-shadow: none !important;
+            box-sizing: border-box !important;
+        }
+
+        html body .stApp [data-testid="stTextArea"] textarea {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 8rem !important;
+            padding: .78rem .84rem !important;
+            margin: 0 !important;
+            background: transparent !important;
+            color: var(--control-text) !important;
+            -webkit-text-fill-color: var(--control-text) !important;
+            border: 0 !important;
+            outline: 0 !important;
+            border-radius: var(--control-radius) !important;
+            box-shadow: none !important;
+            box-sizing: border-box !important;
+            resize: vertical !important;
+        }
+
+        /*
+         * Number input steppers remain inside the single visible perimeter.
+         */
+        html body .stApp [data-testid="stNumberInput"] button {
+            min-width: 2.4rem !important;
+            width: 2.4rem !important;
+            min-height: 3.05rem !important;
+            height: 3.05rem !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #F2F8E8 !important;
+            color: #36550F !important;
+            border: 0 !important;
+            border-left: 1px solid #C7D9AA !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            filter: none !important;
+            transform: none !important;
+            z-index: 10 !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"] button:hover {
+            background: #E2F0CE !important;
+            color: #243713 !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /*
+         * Multiselect tags and dropdown text.
+         */
+        html body .stApp [data-baseweb="tag"] {
+            background: #C9FF78 !important;
+            color: #243713 !important;
+            border: 1px solid #5E8C24 !important;
+            box-shadow: none !important;
+        }
+
+        html body .stApp [data-baseweb="tag"] * {
+            color: #243713 !important;
+        }
+
+        /*
+         * File upload, radio, and checkbox controls used elsewhere in the app.
+         */
+        html body .stApp [data-testid="stFileUploaderDropzone"] {
+            background: #FFFFFF !important;
+            border: 2px dashed var(--control-border) !important;
+            border-radius: var(--control-radius) !important;
+            box-shadow: none !important;
+        }
+
+        html body .stApp [data-testid="stFileUploaderDropzone"]:hover {
+            border-color: var(--control-border-hover) !important;
+            background: #F9FDEF !important;
+        }
+
+        html body .stApp [data-testid="stRadio"] [role="radiogroup"] {
+            padding: .45rem !important;
+            background: #FFFFFF !important;
+            border: 2px solid var(--control-border) !important;
+            border-radius: var(--control-radius) !important;
+            box-shadow: none !important;
+        }
+
+        html body .stApp [data-testid="stRadio"] label {
+            background: #F9FDEF !important;
+            border: 1px solid #C7D9AA !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+
+        html body .stApp [data-testid="stCheckbox"] label {
+            padding: .48rem .62rem !important;
+            background: #FFFFFF !important;
+            border: 1.5px solid var(--control-border) !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+
+        /*
+         * Labels and placeholders remain readable against the light theme.
+         */
+        html body .stApp [data-testid="stWidgetLabel"] p,
+        html body .stApp [data-testid="stTextInput"] label p,
+        html body .stApp [data-testid="stNumberInput"] label p,
+        html body .stApp [data-testid="stDateInput"] label p,
+        html body .stApp [data-testid="stTimeInput"] label p,
+        html body .stApp [data-testid="stSearchbox"] label p,
+        html body .stApp [data-testid="stSelectbox"] label p,
+        html body .stApp [data-testid="stMultiSelect"] label p,
+        html body .stApp [data-testid="stTextArea"] label p,
+        html body .stApp [data-testid="stRadio"] label p,
+        html body .stApp [data-testid="stCheckbox"] label p {
+            color: #2F4617 !important;
+            font-weight: 800 !important;
+        }
+
+        html body .stApp input::placeholder,
+        html body .stApp textarea::placeholder {
+            color: var(--control-placeholder) !important;
+            -webkit-text-fill-color: var(--control-placeholder) !important;
+            opacity: 1 !important;
+        }
+
+        /*
+         * Forms and bordered containers receive a clear but restrained edge.
+         */
+        html body .stApp [data-testid="stForm"],
+        html body .stApp [data-testid="stVerticalBlockBorderWrapper"],
+        html body .stApp [data-testid="stExpander"],
+        html body .stApp [data-testid="stDataFrame"] {
+            border-color: #B8D68C !important;
+            box-shadow: none !important;
+        }
+
+        /*
+         * Prevent narrow columns from clipping the new perimeter.
+         */
+        html body .stApp [data-testid="stHorizontalBlock"] {
+            gap: 1rem !important;
+        }
+
+        html body .stApp [data-testid="column"] {
+            min-width: 0 !important;
+            overflow: visible !important;
+        }
+
+        @media (max-width: 760px) {
+            html body .stApp [data-testid="stTextInput"] input,
+            html body .stApp [data-testid="stNumberInput"] input,
+            html body .stApp [data-testid="stDateInput"] input,
+            html body .stApp [data-testid="stTimeInput"] input,
+            html body .stApp [data-testid="stSearchbox"] input {
+                min-height: 3.2rem !important;
+                height: 3.2rem !important;
+            }
+
+            html body .stApp [data-testid="stNumberInput"] button {
+                min-height: 3.2rem !important;
+                height: 3.2rem !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
