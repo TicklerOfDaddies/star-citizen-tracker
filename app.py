@@ -1028,6 +1028,380 @@ def apply_custom_theme() -> None:
             .sc-banner { min-height:220px; }
             .feature-grid { grid-template-columns:1fr; }
         }
+
+        /* Premium application-wide design system */
+        :root {
+            --premium-navy: #0d2d49;
+            --premium-teal: #087892;
+            --premium-teal-dark: #055a70;
+            --premium-blue: #176fc1;
+            --premium-green: #22a66f;
+            --premium-red: #e54950;
+            --premium-orange: #f28a2a;
+            --premium-purple: #7b55d9;
+            --premium-surface: #ffffff;
+            --premium-surface-soft: #f4f9fc;
+            --premium-border: #bdd2df;
+            --premium-border-strong: #8fb4c7;
+            --premium-shadow: 0 12px 28px rgba(16, 61, 88, .09);
+        }
+
+        .stApp {
+            background:
+                radial-gradient(circle at 15% 0%, rgba(54,157,190,.08), transparent 26rem),
+                linear-gradient(180deg, #f8fbfd 0%, #f1f6fa 100%);
+        }
+
+        .block-container {
+            max-width: 1780px;
+            padding-top: 1.25rem;
+            padding-bottom: 3rem;
+        }
+
+        h1, h2, h3, h4 {
+            color: var(--premium-navy) !important;
+            letter-spacing: -.015em;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: var(--premium-border) !important;
+            border-radius: 17px !important;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fbfd 100%) !important;
+            box-shadow: var(--premium-shadow);
+        }
+
+        [data-testid="stForm"] {
+            border: 1.5px solid var(--premium-border) !important;
+            border-radius: 16px !important;
+            background: #ffffff !important;
+            padding: 1rem !important;
+            box-shadow: 0 9px 22px rgba(16,61,88,.07);
+        }
+
+        [data-testid="stExpander"] {
+            border: 1.5px solid var(--premium-border) !important;
+            border-radius: 13px !important;
+            overflow: hidden;
+            background: #ffffff !important;
+            box-shadow: 0 6px 16px rgba(16,61,88,.06);
+        }
+
+        [data-testid="stExpander"] summary {
+            background: #eef7fa;
+            color: var(--premium-navy) !important;
+            font-weight: 760 !important;
+        }
+
+        div[data-baseweb="select"] > div,
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stDateInput"] input,
+        [data-testid="stFileUploaderDropzone"] {
+            min-height: 3rem;
+            background: #ffffff !important;
+            border: 1.5px solid var(--premium-border-strong) !important;
+            border-radius: 11px !important;
+            color: #112e46 !important;
+            box-shadow: inset 0 1px 2px rgba(8,48,72,.04);
+        }
+
+        [data-testid="stTextArea"] textarea {
+            min-height: 8.5rem;
+        }
+
+        div[data-baseweb="select"] > div:hover,
+        [data-testid="stTextInput"] input:hover,
+        [data-testid="stNumberInput"] input:hover,
+        [data-testid="stTextArea"] textarea:hover,
+        [data-testid="stDateInput"] input:hover {
+            border-color: #4d9eb8 !important;
+        }
+
+        div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stNumberInput"] input:focus,
+        [data-testid="stTextArea"] textarea:focus,
+        [data-testid="stDateInput"] input:focus {
+            border-color: var(--premium-teal) !important;
+            box-shadow: 0 0 0 3px rgba(8,120,146,.16) !important;
+        }
+
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stTextInput"] label,
+        [data-testid="stNumberInput"] label,
+        [data-testid="stTextArea"] label,
+        [data-testid="stDateInput"] label,
+        [data-testid="stSelectbox"] label,
+        [data-testid="stMultiSelect"] label {
+            color: #173b53 !important;
+            font-weight: 760 !important;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            min-height: 3rem;
+            border: 1px solid var(--premium-teal-dark) !important;
+            border-radius: 11px !important;
+            background: linear-gradient(135deg, #0b89a4 0%, #05647b 100%) !important;
+            color: #ffffff !important;
+            font-size: .91rem !important;
+            font-weight: 800 !important;
+            box-shadow: 0 8px 18px rgba(5,100,123,.20);
+        }
+
+        .stButton > button *,
+        .stDownloadButton > button *,
+        [data-testid="stFormSubmitButton"] > button *,
+        .stLinkButton > a * {
+            color: inherit !important;
+            font-weight: inherit !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            background: linear-gradient(135deg, #08758e 0%, #044e61 100%) !important;
+            border-color: #044e61 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 11px 22px rgba(4,78,97,.25);
+        }
+
+        .stButton > button[kind="secondary"] {
+            background: #f3f9fc !important;
+            color: #154d66 !important;
+            border: 1.5px solid #7eb3c6 !important;
+            box-shadow: 0 5px 13px rgba(16,61,88,.07);
+        }
+
+        .stButton > button[kind="secondary"]:hover {
+            background: #dceff5 !important;
+            color: #083f55 !important;
+            border-color: #3c92ad !important;
+        }
+
+        div[data-baseweb="tab-list"] {
+            gap: .55rem !important;
+            padding: .55rem !important;
+            border: 1.5px solid var(--premium-border) !important;
+            border-radius: 14px !important;
+            background: #eaf4f8 !important;
+        }
+
+        button[data-baseweb="tab"] {
+            min-height: 3.15rem !important;
+            border: 1.5px solid #9fc5d4 !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #154d66 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 10px rgba(16,61,88,.06);
+        }
+
+        button[data-baseweb="tab"]:hover {
+            background: #d9edf3 !important;
+            border-color: #5ca4bb !important;
+            color: #073f55 !important;
+        }
+
+        button[data-baseweb="tab"][aria-selected="true"] {
+            background: linear-gradient(135deg, #0b89a4 0%, #05647b 100%) !important;
+            border-color: #05647b !important;
+            color: #ffffff !important;
+            box-shadow: inset 4px 0 0 #67d9ee, 0 8px 18px rgba(5,100,123,.20);
+        }
+
+        button[data-baseweb="tab"][aria-selected="true"] * {
+            color: #ffffff !important;
+        }
+
+        [data-testid="stDataFrame"] {
+            border: 1.5px solid var(--premium-border) !important;
+            border-radius: 14px !important;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(16,61,88,.07);
+        }
+
+        [data-testid="stMetric"] {
+            padding: .85rem .9rem;
+            border: 1px solid var(--premium-border);
+            border-radius: 13px;
+            background: #ffffff;
+            box-shadow: 0 7px 17px rgba(16,61,88,.06);
+        }
+
+        [data-testid="stMetricValue"] {
+            color: #0d526b !important;
+            font-weight: 840 !important;
+        }
+
+        div[data-testid="stAlert"] {
+            border-width: 1.5px !important;
+            border-radius: 13px !important;
+            box-shadow: 0 6px 16px rgba(16,61,88,.06);
+        }
+
+        .section-heading {
+            margin-top: 1.2rem;
+            padding: .3rem .1rem .65rem;
+            border-bottom: 1px solid #cfdee7;
+        }
+
+        .section-title {
+            color: var(--premium-navy);
+            font-size: 1.18rem;
+            font-weight: 850;
+        }
+
+        .section-copy {
+            color: #6b8092;
+            font-size: .8rem;
+            margin-top: .18rem;
+        }
+
+        .analytics-heading {
+            margin-bottom: .7rem;
+        }
+
+        .analytics-kicker {
+            color: var(--premium-teal);
+            font-size: .67rem;
+            font-weight: 850;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .analytics-title {
+            color: var(--premium-navy);
+            font-size: 1.02rem;
+            font-weight: 840;
+            margin-top: .12rem;
+        }
+
+        .analytics-copy {
+            color: #657c8f;
+            font-size: .76rem;
+            line-height: 1.45;
+            margin-top: .2rem;
+        }
+
+        .dashboard-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 10px;
+            margin: .7rem 0 1rem;
+        }
+
+        .dashboard-summary-card {
+            min-width: 0;
+            padding: .9rem .8rem;
+            border: 1.5px solid var(--premium-border);
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(16,61,88,.07);
+            text-align: center;
+        }
+
+        .dashboard-summary-icon {
+            width: 38px;
+            height: 38px;
+            margin: 0 auto .45rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            background: #e8f5f8;
+            color: var(--premium-teal);
+            font-size: 1.1rem;
+            font-weight: 850;
+        }
+
+        .dashboard-summary-label {
+            color: #526b7e;
+            font-size: .68rem;
+            font-weight: 800;
+            line-height: 1.25;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .dashboard-summary-value {
+            color: var(--premium-navy);
+            font-size: clamp(.95rem, 1.35vw, 1.3rem);
+            font-weight: 860;
+            line-height: 1.12;
+            margin-top: .35rem;
+            overflow-wrap: anywhere;
+        }
+
+        .dashboard-summary-detail {
+            color: #718598;
+            font-size: .66rem;
+            line-height: 1.3;
+            margin-top: .28rem;
+        }
+
+        .dashboard-summary-card.green { border-color: #a8dbc7; }
+        .dashboard-summary-card.blue { border-color: #a9cce9; }
+        .dashboard-summary-card.orange { border-color: #f4c691; }
+        .dashboard-summary-card.purple { border-color: #cbb9ee; }
+        .dashboard-summary-card.red { border-color: #edb0b4; }
+
+        .st-key-sidebar_manage_profile {
+            position: relative;
+            z-index: 10;
+            width: 2.35rem;
+            margin-left: auto;
+            margin-top: -4.55rem;
+            margin-right: .65rem;
+            margin-bottom: 2.35rem;
+        }
+
+        .st-key-sidebar_manage_profile button {
+            width: 2.35rem !important;
+            min-height: 2.35rem !important;
+            height: 2.35rem !important;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            background: #ffffff !important;
+            color: var(--premium-teal) !important;
+            border: 1.5px solid #7fb8c9 !important;
+            box-shadow: 0 6px 14px rgba(16,61,88,.16);
+            font-size: 1.1rem !important;
+        }
+
+        .st-key-sidebar_manage_profile button:hover {
+            background: var(--premium-teal) !important;
+            color: #ffffff !important;
+            border-color: var(--premium-teal) !important;
+        }
+
+        section[data-testid="stSidebar"] {
+            border-right: 1px solid #cbdce5;
+            box-shadow: 7px 0 26px rgba(16,61,88,.05);
+        }
+
+        @media (max-width: 1320px) {
+            .dashboard-summary-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 850px) {
+            .dashboard-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 560px) {
+            .dashboard-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1061,6 +1435,23 @@ def page_banner(
                 <div class="sc-kicker">{kicker}</div>
                 <div class="sc-banner-title">{title}</div>
                 <p class="sc-banner-subtitle">{subtitle}</p>
+                <div style="
+                    margin-top:.85rem;
+                    display:inline-flex;
+                    align-items:center;
+                    gap:.42rem;
+                    width:max-content;
+                    padding:.34rem .62rem;
+                    border:1px solid #b9d8e4;
+                    border-radius:999px;
+                    background:#edf8fb;
+                    color:#0d6b84;
+                    font-size:.68rem;
+                    font-weight:800;
+                    letter-spacing:.045em;
+                    text-transform:uppercase;">
+                    ● Live operational workspace
+                </div>
             </div>
             <div class="sc-page-banner-image-wrap">
                 <div class="sc-page-banner-image-frame">
@@ -3447,6 +3838,57 @@ def feature_dashboard_cards() -> None:
                     st.session_state.nav_page = card["target"]
                     st.rerun()
 
+def analytics_heading(
+    title: str,
+    copy: str,
+    kicker: str = "Performance Analytics",
+) -> None:
+    """Render a consistent analytics-card heading."""
+    st.markdown(
+        f"""
+        <div class="analytics-heading">
+            <div class="analytics-kicker">{html.escape(kicker)}</div>
+            <div class="analytics-title">{html.escape(title)}</div>
+            <div class="analytics-copy">{html.escape(copy)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_dashboard_summary(
+    cards: list[dict[str, str]],
+) -> None:
+    """Render the dashboard's responsive earnings summary strip."""
+    rendered_cards: list[str] = []
+    for card in cards:
+        rendered_cards.append(
+            '<div class="dashboard-summary-card '
+            + html.escape(card.get("class", ""))
+            + '">'
+            + '<div class="dashboard-summary-icon">'
+            + html.escape(card.get("icon", "•"))
+            + "</div>"
+            + '<div class="dashboard-summary-label">'
+            + html.escape(card["label"])
+            + "</div>"
+            + '<div class="dashboard-summary-value">'
+            + html.escape(card["value"])
+            + "</div>"
+            + '<div class="dashboard-summary-detail">'
+            + html.escape(card.get("detail", ""))
+            + "</div>"
+            + "</div>"
+        )
+
+    st.markdown(
+        '<div class="dashboard-summary-grid">'
+        + "".join(rendered_cards)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def dashboard_page() -> None:
     dashboard_hero()
 
@@ -3457,16 +3899,14 @@ def dashboard_page() -> None:
         filter_col1, filter_col2 = st.columns([1, 2])
         with filter_col1:
             date_range = st.selectbox(
-                "Date range",
+                "Dashboard date range",
                 ["All Time", "Last 7 Days", "Last 30 Days", "Last 90 Days"],
                 key="dashboard_date_range",
             )
         with filter_col2:
             search_text = st.text_input(
-                "Search records",
-                placeholder=(
-                    "Contract, ore, commodity, type, location, or notes"
-                ),
+                "Search dashboard records",
+                placeholder="Contract, ore, commodity, type, location, or notes",
                 key="dashboard_search",
             )
 
@@ -3479,53 +3919,52 @@ def dashboard_page() -> None:
     )
 
     contract_net = (
-        float(contracts["net_payout"].sum()) if not contracts.empty else 0.0
+        float(contracts["net_payout"].sum())
+        if not contracts.empty
+        else 0.0
     )
-    personal_share = (
+    contract_take_home = (
         float(contracts["individual_share"].sum())
         if not contracts.empty
         else 0.0
     )
-    mined_value = (
-        float(ores.loc[ores["action"] == "Mined", "total_value"].sum())
-        if not ores.empty
-        else 0.0
-    )
+
+    ore_sales_rows = ores[ores["action"] == "Sold"] if not ores.empty else ores
+    ore_purchase_rows = ores[ores["action"] == "Bought"] if not ores.empty else ores
     ore_sales = (
-        float(ores.loc[ores["action"] == "Sold", "total_value"].sum())
-        if not ores.empty
+        float(ore_sales_rows["total_value"].sum())
+        if not ore_sales_rows.empty
         else 0.0
     )
     ore_purchases = (
-        float(ores.loc[ores["action"] == "Bought", "total_value"].sum())
-        if not ores.empty
+        float(ore_purchase_rows["total_value"].sum())
+        if not ore_purchase_rows.empty
+        else 0.0
+    )
+    ore_inventory = build_ore_inventory(ores)
+    ore_on_hand_scu = (
+        float(ore_inventory["On Hand (SCU)"].sum())
+        if not ore_inventory.empty
         else 0.0
     )
 
-    inventory = build_ore_inventory(ores)
-    on_hand_scu = (
-        float(inventory["On Hand (SCU)"].sum())
-        if not inventory.empty
-        else 0.0
+    commodity_sales_rows = (
+        commodity_trades[commodity_trades["action"] == "Sold"]
+        if not commodity_trades.empty
+        else commodity_trades
     )
-
-    commodity_inventory = build_commodity_inventory(
-        commodity_trades
+    commodity_purchase_rows = (
+        commodity_trades[commodity_trades["action"] == "Bought"]
+        if not commodity_trades.empty
+        else commodity_trades
     )
-    commodity_on_hand_scu = (
-        float(commodity_inventory["On Hand (SCU)"].sum())
-        if not commodity_inventory.empty
-        else 0.0
+    commodity_loss_rows = (
+        commodity_trades[
+            commodity_trades["action"] == "Lost / Destroyed"
+        ]
+        if not commodity_trades.empty
+        else commodity_trades
     )
-    commodity_sales_rows = commodity_trades[
-        commodity_trades["action"] == "Sold"
-    ] if not commodity_trades.empty else commodity_trades
-    commodity_purchase_rows = commodity_trades[
-        commodity_trades["action"] == "Bought"
-    ] if not commodity_trades.empty else commodity_trades
-    commodity_loss_rows = commodity_trades[
-        commodity_trades["action"] == "Lost / Destroyed"
-    ] if not commodity_trades.empty else commodity_trades
 
     commodity_sales = (
         float(
@@ -3537,7 +3976,7 @@ def dashboard_page() -> None:
         if not commodity_sales_rows.empty
         else 0.0
     )
-    commodity_purchases = (
+    commodity_spend = (
         float(
             (
                 commodity_purchase_rows["total_value"]
@@ -3547,36 +3986,59 @@ def dashboard_page() -> None:
         if not commodity_purchase_rows.empty
         else 0.0
     )
-    commodity_loss_value = (
-        float(commodity_loss_rows["total_value"].sum())
+    commodity_losses = (
+        float(
+            (
+                commodity_loss_rows["total_value"]
+                + commodity_loss_rows["fees"]
+            ).sum()
+        )
         if not commodity_loss_rows.empty
         else 0.0
     )
-    commodity_trade_net = commodity_sales - commodity_purchases
-    total_earnings = personal_share + ore_sales + commodity_sales
+    commodity_net = commodity_sales - commodity_spend - commodity_losses
+
+    commodity_inventory = build_commodity_inventory(commodity_trades)
+    commodity_on_hand_scu = (
+        float(commodity_inventory["On Hand (SCU)"].sum())
+        if not commodity_inventory.empty
+        else 0.0
+    )
+
+    total_recorded_earnings = (
+        contract_take_home + ore_sales + commodity_sales
+    )
+    total_recorded_spend = ore_purchases + commodity_spend + commodity_losses
+    overall_net_profit = total_recorded_earnings - total_recorded_spend
 
     st.markdown(
-        "<div class='section-title'>Overview</div>",
+        """
+        <div class="section-heading">
+            <div class="section-title">Command overview</div>
+            <div class="section-copy">
+                Key operational totals from contracts, mining, and commodity trading.
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
+
     render_dashboard_metric_cards(
         [
             {
                 "label": "Contracts Completed",
                 "value": f"{len(contracts):,}",
-                "detail": "Saved contract records",
+                "detail": f"Contract net: {format_money(contract_net)}",
             },
             {
-                "label": "Commodity Sales Completed",
+                "label": "Commodity Sales",
                 "value": f"{len(commodity_sales_rows):,}",
-                "detail": (
-                    f"Lost shipments: {len(commodity_loss_rows):,}"
-                ),
+                "detail": f"Lost shipments: {len(commodity_loss_rows):,}",
             },
             {
                 "label": "Ore On Hand",
-                "value": f"{on_hand_scu:,.2f} SCU",
-                "tone": "positive" if on_hand_scu > 0 else "",
+                "value": f"{ore_on_hand_scu:,.2f} SCU",
+                "tone": "positive" if ore_on_hand_scu > 0 else "",
                 "detail": "Mined + bought − sold",
             },
             {
@@ -3592,27 +4054,22 @@ def dashboard_page() -> None:
                 "detail": "Bought − sold − lost",
             },
             {
-                "label": "Total Earnings",
-                "value": format_money(total_earnings),
-                "tone": "positive" if total_earnings > 0 else "",
-                "detail": (
-                    "Contract take-home + ore sales + commodity sales"
-                ),
+                "label": "Total Recorded Earnings",
+                "value": format_money(total_recorded_earnings),
+                "tone": "positive" if total_recorded_earnings > 0 else "",
+                "detail": "Contracts + ore sales + commodity sales",
             },
             {
-                "label": "Commodity Trade Net",
-                "value": format_money(commodity_trade_net),
+                "label": "Overall Net Profit",
+                "value": format_money(overall_net_profit),
                 "tone": (
                     "positive"
-                    if commodity_trade_net > 0
+                    if overall_net_profit > 0
                     else "negative"
-                    if commodity_trade_net < 0
+                    if overall_net_profit < 0
                     else ""
                 ),
-                "detail": (
-                    f"Recorded cargo loss: "
-                    f"{format_money(commodity_loss_value)}"
-                ),
+                "detail": "Recorded earnings minus recorded spend",
             },
         ]
     )
@@ -3622,126 +4079,111 @@ def dashboard_page() -> None:
     st.markdown(
         """
         <div class="section-heading">
-            <div>
-                <div class="section-title">Performance overview</div>
-                <div class="section-copy">All primary charts stay visible, including before the first record is entered.</div>
+            <div class="section-title">Integrated analytics</div>
+            <div class="section-copy">
+                Contracts, ore activity, and commodity trading in one operational picture.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    # Combined earnings over time
     earnings_parts: list[pd.DataFrame] = []
 
     if not contracts.empty:
         contract_events = contracts.dropna(subset=["date_saved"]).copy()
-        contract_events["Day"] = contract_events["date_saved"].dt.floor("D")
-        contract_events["Contract Take-Home"] = pd.to_numeric(
-            contract_events.get("individual_share", 0),
-            errors="coerce",
-        ).fillna(0.0)
-        earnings_parts.append(
-            contract_events[["Day", "Contract Take-Home"]]
-            .groupby("Day", as_index=False)
-            .sum()
-        )
-
-    if not ores.empty:
-        sale_events = ores.loc[ores["action"] == "Sold"].dropna(
-            subset=["date_saved"]
-        ).copy()
-        if not sale_events.empty:
-            sale_events["Day"] = sale_events["date_saved"].dt.floor("D")
-            sale_events["Ore Sales"] = pd.to_numeric(
-                sale_events.get("total_value", 0),
+        if not contract_events.empty:
+            contract_events["Day"] = contract_events["date_saved"].dt.floor("D")
+            contract_events["Contract Earnings"] = pd.to_numeric(
+                contract_events.get("individual_share", 0),
                 errors="coerce",
             ).fillna(0.0)
             earnings_parts.append(
-                sale_events[["Day", "Ore Sales"]]
+                contract_events[["Day", "Contract Earnings"]]
+                .groupby("Day", as_index=False)
+                .sum()
+            )
+
+    if not ore_sales_rows.empty:
+        ore_events = ore_sales_rows.dropna(subset=["date_saved"]).copy()
+        if not ore_events.empty:
+            ore_events["Day"] = ore_events["date_saved"].dt.floor("D")
+            ore_events["Ore Sales"] = pd.to_numeric(
+                ore_events.get("total_value", 0),
+                errors="coerce",
+            ).fillna(0.0)
+            earnings_parts.append(
+                ore_events[["Day", "Ore Sales"]]
                 .groupby("Day", as_index=False)
                 .sum()
             )
 
     if not commodity_sales_rows.empty:
-        commodity_sale_events = commodity_sales_rows.dropna(
+        commodity_events = commodity_sales_rows.dropna(
             subset=["date_saved"]
         ).copy()
-        if not commodity_sale_events.empty:
-            commodity_sale_events["Day"] = commodity_sale_events[
-                "date_saved"
-            ].dt.floor("D")
-            commodity_sale_events["Commodity Sales"] = (
+        if not commodity_events.empty:
+            commodity_events["Day"] = commodity_events["date_saved"].dt.floor("D")
+            commodity_events["Commodity Sales"] = (
                 pd.to_numeric(
-                    commodity_sale_events.get("total_value", 0),
+                    commodity_events.get("total_value", 0),
                     errors="coerce",
                 ).fillna(0.0)
                 - pd.to_numeric(
-                    commodity_sale_events.get("fees", 0),
+                    commodity_events.get("fees", 0),
                     errors="coerce",
                 ).fillna(0.0)
             )
             earnings_parts.append(
-                commodity_sale_events[
-                    ["Day", "Commodity Sales"]
-                ]
+                commodity_events[["Day", "Commodity Sales"]]
                 .groupby("Day", as_index=False)
                 .sum()
             )
 
-    if not earnings_parts:
-        total_earnings_figure = empty_dashboard_figure(
-            "Save a contract, ore sale, or commodity sale to begin tracking earnings over time."
-        )
-    else:
+    if earnings_parts:
         earnings_daily = earnings_parts[0]
-        for earnings_part in earnings_parts[1:]:
-            earnings_daily = earnings_daily.merge(
-                earnings_part,
-                on="Day",
-                how="outer",
-            )
-        earnings_columns = (
-            "Contract Take-Home",
+        for part in earnings_parts[1:]:
+            earnings_daily = earnings_daily.merge(part, on="Day", how="outer")
+
+        earning_columns = [
+            "Contract Earnings",
             "Ore Sales",
             "Commodity Sales",
-        )
-        for column in earnings_columns:
+        ]
+        for column in earning_columns:
             if column not in earnings_daily.columns:
                 earnings_daily[column] = 0.0
-        earnings_daily[list(earnings_columns)] = earnings_daily[
-            list(earnings_columns)
+        earnings_daily[earning_columns] = earnings_daily[
+            earning_columns
         ].fillna(0.0)
-        earnings_daily["Total Earnings"] = (
-            earnings_daily["Contract Take-Home"]
-            + earnings_daily["Ore Sales"]
-            + earnings_daily["Commodity Sales"]
-        )
+        earnings_daily["Total Earnings"] = earnings_daily[
+            earning_columns
+        ].sum(axis=1)
         earnings_daily = earnings_daily.sort_values("Day").reset_index(drop=True)
-        earnings_daily["x_position"] = list(range(len(earnings_daily)))
         earnings_daily["Day Label"] = earnings_daily["Day"].dt.strftime(
             "%b %d, %Y"
         )
-        earnings_daily["plot_value"] = earnings_daily["Total Earnings"].abs()
-        earnings_daily["value_label"] = earnings_daily["Total Earnings"].map(
+        earnings_daily["Position"] = list(range(len(earnings_daily)))
+        earnings_daily["Plot Value"] = earnings_daily["Total Earnings"].abs()
+        earnings_daily["Label"] = earnings_daily["Total Earnings"].map(
             lambda value: f"{value:,.0f} aUEC"
         )
-        earnings_colors = [
-            "#20A36A" if value >= 0 else "#E5484D"
-            for value in earnings_daily["Total Earnings"]
-        ]
 
-        total_earnings_figure = go.Figure()
-        total_earnings_figure.add_trace(
+        total_earnings_figure = go.Figure(
             go.Bar(
-                x=earnings_daily["x_position"],
-                y=earnings_daily["plot_value"],
-                marker_color=earnings_colors,
-                text=earnings_daily["value_label"],
+                x=earnings_daily["Position"],
+                y=earnings_daily["Plot Value"],
+                marker_color=[
+                    "#22A66F" if value >= 0 else "#E54950"
+                    for value in earnings_daily["Total Earnings"]
+                ],
+                text=earnings_daily["Label"],
                 textposition="outside",
                 cliponaxis=False,
                 customdata=earnings_daily[
                     [
-                        "Contract Take-Home",
+                        "Contract Earnings",
                         "Ore Sales",
                         "Commodity Sales",
                         "Total Earnings",
@@ -3749,49 +4191,238 @@ def dashboard_page() -> None:
                 ].to_numpy(),
                 hovertemplate=(
                     "<b>%{customdata[3]:,.0f} aUEC total</b><br>"
-                    "Contract take-home: %{customdata[0]:,.0f} aUEC<br>"
+                    "Contracts: %{customdata[0]:,.0f} aUEC<br>"
                     "Ore sales: %{customdata[1]:,.0f} aUEC<br>"
                     "Commodity sales: %{customdata[2]:,.0f} aUEC"
                     "<extra></extra>"
                 ),
-                name="Total Earnings",
             )
         )
-        tick_positions = earnings_daily["x_position"].tolist()
+        positions = earnings_daily["Position"].tolist()
         total_earnings_figure.update_xaxes(
-            type="linear",
             tickmode="array",
-            tickvals=tick_positions,
+            tickvals=positions,
             ticktext=earnings_daily["Day Label"].tolist(),
-            range=[-0.6, max(tick_positions[-1] + 0.6, 0.6)],
+            range=[-0.6, max(positions[-1] + 0.6, 0.6)],
             title_text="Day",
         )
         total_earnings_figure.update_yaxes(
+            title_text="Earnings in aUEC",
             rangemode="tozero",
-            title_text="Earnings magnitude in aUEC",
         )
-        style_plotly_figure(total_earnings_figure, height=430)
+        style_plotly_figure(total_earnings_figure, height=390)
         total_earnings_figure.update_layout(
-            margin={"l": 38, "r": 28, "t": 54, "b": 60},
             showlegend=False,
-        )
-        total_earnings_figure.add_annotation(
-            x=0,
-            y=1.08,
-            xref="paper",
-            yref="paper",
-            text="<span style='color:#20A36A'>■ Positive</span>&nbsp;&nbsp;&nbsp;"
-                 "<span style='color:#E5484D'>■ Negative</span>",
-            showarrow=False,
-            xanchor="left",
-            font={"size": 12},
-        )
-
-    if contracts.empty:
-        contract_type_figure = empty_dashboard_figure(
-            "Contract categories will appear here after your first mission."
+            margin={"l": 48, "r": 24, "t": 38, "b": 52},
         )
     else:
+        total_earnings_figure = empty_dashboard_figure(
+            "Save a contract, ore sale, or commodity sale to begin tracking combined earnings."
+        )
+
+    # Earnings by source
+    source_data = pd.DataFrame(
+        {
+            "Source": ["Contracts", "Ore / Mining", "Commodities"],
+            "Value": [
+                max(contract_take_home, 0.0),
+                max(ore_sales, 0.0),
+                max(commodity_sales, 0.0),
+            ],
+        }
+    )
+    if source_data["Value"].sum() > 0:
+        source_figure = px.pie(
+            source_data,
+            names="Source",
+            values="Value",
+            hole=.55,
+            color="Source",
+            color_discrete_map={
+                "Contracts": "#22A66F",
+                "Ore / Mining": "#347FD1",
+                "Commodities": "#F28A2A",
+            },
+        )
+        source_figure.update_traces(
+            texttemplate="%{percent:.1%}",
+            textposition="inside",
+            marker={"line": {"color": "#ffffff", "width": 3}},
+            sort=False,
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "%{value:,.0f} aUEC<br>%{percent}<extra></extra>"
+            ),
+        )
+        source_figure.add_annotation(
+            text=(
+                f"<b>{total_recorded_earnings:,.0f}</b><br>"
+                "aUEC<br><span style='font-size:10px'>Total Earnings</span>"
+            ),
+            x=.5,
+            y=.5,
+            showarrow=False,
+            font={"size": 14, "color": "#0D2D49"},
+        )
+        style_plotly_figure(source_figure, height=390)
+        source_figure.update_layout(
+            legend={
+                "orientation": "v",
+                "yanchor": "middle",
+                "y": .5,
+                "xanchor": "left",
+                "x": 1.02,
+                "title_text": "",
+            },
+            margin={"l": 10, "r": 135, "t": 20, "b": 20},
+        )
+    else:
+        source_figure = empty_dashboard_figure(
+            "Earnings by source will appear after income is recorded.",
+            donut=True,
+        )
+
+    # Ore value by mineral
+    if not ores.empty:
+        ore_value_data = (
+            ores.groupby(["ore_name", "action"], as_index=False)
+            .agg(
+                total_value=("total_value", "sum"),
+                entry_count=("id", "count"),
+            )
+        )
+        top_ores = (
+            ore_value_data.groupby("ore_name")["total_value"]
+            .sum()
+            .nlargest(6)
+            .index
+        )
+        ore_value_data = ore_value_data[
+            ore_value_data["ore_name"].isin(top_ores)
+        ].copy()
+        ore_value_data["Plot Value"] = ore_value_data["total_value"].abs()
+        ore_value_data["Label"] = ore_value_data["total_value"].map(
+            lambda value: f"{value:,.0f}"
+        )
+
+        ore_value_figure = px.bar(
+            ore_value_data,
+            x="ore_name",
+            y="Plot Value",
+            color="action",
+            barmode="group",
+            text="Label",
+            custom_data=["total_value", "entry_count"],
+            color_discrete_map={
+                "Bought": "#176FC1",
+                "Mined": "#70B7EC",
+                "Sold": "#E54950",
+            },
+            labels={
+                "ore_name": "Mineral",
+                "Plot Value": "Value in aUEC",
+                "action": "Activity",
+            },
+        )
+        ore_value_figure.update_traces(
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "%{fullData.name}: %{customdata[0]:,.0f} aUEC<br>"
+                "Records: %{customdata[1]}<extra></extra>"
+            ),
+        )
+        style_plotly_figure(ore_value_figure, height=390)
+        ore_value_figure.update_layout(
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "center",
+                "x": .5,
+                "title_text": "",
+            },
+            margin={"l": 48, "r": 20, "t": 58, "b": 52},
+            uniformtext_minsize=9,
+            uniformtext_mode="hide",
+        )
+    else:
+        ore_value_figure = empty_dashboard_figure(
+            "Mined, bought, and sold mineral values will appear here."
+        )
+
+    # Commodity profit by commodity
+    if not commodity_trades.empty:
+        commodity_rows: list[dict[str, object]] = []
+        for commodity_name, group in commodity_trades.groupby(
+            "commodity_name"
+        ):
+            bought = group[group["action"] == "Bought"]
+            sold = group[group["action"] == "Sold"]
+            lost = group[group["action"] == "Lost / Destroyed"]
+
+            bought_cost = float((bought["total_value"] + bought["fees"]).sum())
+            sold_revenue = float((sold["total_value"] - sold["fees"]).sum())
+            lost_value = float((lost["total_value"] + lost["fees"]).sum())
+            net_profit = sold_revenue - bought_cost - lost_value
+
+            commodity_rows.append(
+                {
+                    "Commodity": commodity_name,
+                    "Net Profit": net_profit,
+                    "Sales": sold_revenue,
+                    "Spend": bought_cost,
+                    "Losses": lost_value,
+                }
+            )
+
+        commodity_profit_data = (
+            pd.DataFrame(commodity_rows)
+            .sort_values("Net Profit", ascending=False)
+            .head(8)
+        )
+        commodity_profit_data["Plot Value"] = commodity_profit_data[
+            "Net Profit"
+        ].abs()
+        commodity_profit_data["Label"] = commodity_profit_data[
+            "Net Profit"
+        ].map(lambda value: f"{value:,.0f} aUEC")
+
+        commodity_profit_figure = px.bar(
+            commodity_profit_data,
+            x="Commodity",
+            y="Plot Value",
+            text="Label",
+            custom_data=["Net Profit", "Sales", "Spend", "Losses"],
+        )
+        commodity_profit_figure.update_traces(
+            marker_color=[
+                "#22A66F" if value >= 0 else "#E54950"
+                for value in commodity_profit_data["Net Profit"]
+            ],
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Net profit: %{customdata[0]:,.0f} aUEC<br>"
+                "Sales: %{customdata[1]:,.0f} aUEC<br>"
+                "Spend: %{customdata[2]:,.0f} aUEC<br>"
+                "Losses: %{customdata[3]:,.0f} aUEC<extra></extra>"
+            ),
+        )
+        style_plotly_figure(commodity_profit_figure, height=390)
+        commodity_profit_figure.update_layout(
+            showlegend=False,
+            margin={"l": 48, "r": 20, "t": 38, "b": 58},
+        )
+    else:
+        commodity_profit_figure = empty_dashboard_figure(
+            "Commodity profit will appear after purchases, sales, or losses are recorded."
+        )
+
+    # Contract earnings by type
+    if not contracts.empty:
         contract_type_data = (
             contracts.groupby("contract_type", as_index=False)
             .agg(
@@ -3801,235 +4432,251 @@ def dashboard_page() -> None:
             .sort_values("net_payout", ascending=True)
             .tail(8)
         )
-        contract_type_data["plot_value"] = contract_type_data["net_payout"].abs()
-        contract_type_data["value_label"] = contract_type_data["net_payout"].map(
+        contract_type_data["Plot Value"] = contract_type_data[
+            "net_payout"
+        ].abs()
+        contract_type_data["Label"] = contract_type_data["net_payout"].map(
             lambda value: f"{value:,.0f} aUEC"
         )
-
         contract_type_figure = px.bar(
             contract_type_data,
-            x="plot_value",
+            x="Plot Value",
             y="contract_type",
             orientation="h",
-            custom_data=["net_payout", "contract_count", "value_label"],
-            text="value_label",
+            text="Label",
+            custom_data=["net_payout", "contract_count"],
             labels={
-                "plot_value": "Payout magnitude in aUEC",
+                "Plot Value": "Payout magnitude in aUEC",
                 "contract_type": "Contract type",
-                "contract_count": "Contracts",
             },
         )
-        contract_type_colors = [
-            "#20A36A" if value >= 0 else "#E5484D"
-            for value in contract_type_data["net_payout"]
-        ]
         contract_type_figure.update_traces(
-            marker_color=contract_type_colors,
+            marker_color=[
+                "#22A66F" if value >= 0 else "#E54950"
+                for value in contract_type_data["net_payout"]
+            ],
             textposition="inside",
             insidetextanchor="middle",
-            textfont={"color": "#ffffff", "size": 13},
-            cliponaxis=False,
+            textfont={"color": "#ffffff"},
             hovertemplate=(
                 "<b>%{y}</b><br>"
                 "Net payout: %{customdata[0]:,.0f} aUEC<br>"
                 "Contracts: %{customdata[1]}<extra></extra>"
             ),
         )
-        contract_type_figure.update_xaxes(
-            rangemode="tozero",
-            title_text="Payout magnitude in aUEC",
-        )
-        style_plotly_figure(contract_type_figure, height=430)
+        style_plotly_figure(contract_type_figure, height=390)
         contract_type_figure.update_layout(
-            margin={"l": 38, "r": 28, "t": 54, "b": 42},
             showlegend=False,
-        )
-        contract_type_figure.add_annotation(
-            x=0,
-            y=1.08,
-            xref="paper",
-            yref="paper",
-            text="<span style='color:#20A36A'>■ Positive</span>&nbsp;&nbsp;&nbsp;"
-                 "<span style='color:#E5484D'>■ Negative</span>",
-            showarrow=False,
-            xanchor="left",
-            font={"size": 12},
-        )
-
-    if ores.empty:
-        ore_value_figure = empty_dashboard_figure(
-            "Mined, bought, and sold mineral values will appear here."
-        )
-        ore_mix_figure = empty_dashboard_figure(
-            "Your mining and trade activity mix will appear here.",
-            donut=True,
+            margin={"l": 48, "r": 20, "t": 38, "b": 52},
         )
     else:
-        ore_value_data = (
-            ores.groupby(["ore_name", "action"], as_index=False)
-            .agg(
-                total_value=("total_value", "sum"),
-                entry_count=("id", "count"),
-            )
-            .sort_values("total_value", ascending=False)
-        )
-        leading_ores = (
-            ore_value_data.groupby("ore_name")["total_value"]
-            .sum()
-            .nlargest(8)
-            .index
-        )
-        ore_value_data = ore_value_data[
-            ore_value_data["ore_name"].isin(leading_ores)
-        ]
-        ore_value_data["plot_value"] = ore_value_data["total_value"].abs()
-        ore_value_data["value_label"] = ore_value_data["total_value"].map(
-            lambda value: f"{value:,.0f} aUEC"
+        contract_type_figure = empty_dashboard_figure(
+            "Contract categories will appear after your first mission."
         )
 
-        ore_value_figure = px.bar(
-            ore_value_data,
-            x="ore_name",
-            y="plot_value",
-            color="action",
-            barmode="group",
-            custom_data=["total_value", "entry_count", "value_label"],
-            text="value_label",
-            labels={
-                "ore_name": "Ore or mineral",
-                "plot_value": "Value magnitude in aUEC",
-                "action": "Entry type",
-                "entry_count": "Entries",
+    # Activity mix by record count
+    activity_data = pd.DataFrame(
+        {
+            "Activity": ["Contracts", "Ore / Mining", "Commodities"],
+            "Records": [len(contracts), len(ores), len(commodity_trades)],
+        }
+    )
+    if activity_data["Records"].sum() > 0:
+        activity_mix_figure = px.pie(
+            activity_data,
+            names="Activity",
+            values="Records",
+            hole=.55,
+            color="Activity",
+            color_discrete_map={
+                "Contracts": "#22A66F",
+                "Ore / Mining": "#347FD1",
+                "Commodities": "#F28A2A",
             },
         )
-        ore_value_figure.update_traces(
+        activity_mix_figure.update_traces(
+            texttemplate="%{percent:.1%}",
             textposition="inside",
-            insidetextanchor="middle",
-            textfont={"color": "#ffffff", "size": 12},
-            cliponaxis=False,
-            hovertemplate=(
-                "<b>%{x}</b><br>"
-                "Type: %{fullData.name}<br>"
-                "Recorded value: %{customdata[0]:,.0f} aUEC<br>"
-                "Entries: %{customdata[1]}<extra></extra>"
-            ),
-        )
-        ore_value_figure.update_yaxes(
-            rangemode="tozero",
-            title_text="Value in aUEC",
-        )
-        ore_value_figure.update_xaxes(title_text="Ore or mineral")
-        style_plotly_figure(ore_value_figure, height=430)
-        ore_value_figure.update_layout(
-            margin={"l": 44, "r": 24, "t": 72, "b": 62},
-            legend={
-                "orientation": "h",
-                "yanchor": "bottom",
-                "y": 1.03,
-                "xanchor": "center",
-                "x": 0.5,
-                "title_text": "",
-            },
-            bargap=0.18,
-            bargroupgap=0.06,
-            uniformtext_minsize=10,
-            uniformtext_mode="hide",
-        )
-
-        ore_mix_data = (
-            ores.groupby("action", as_index=False)
-            .agg(
-                total_value=("total_value", "sum"),
-                entry_count=("id", "count"),
-            )
-        )
-        ore_mix_figure = px.pie(
-            ore_mix_data,
-            names="action",
-            values="total_value",
-            hole=0.62,
-            hover_data=["entry_count"],
-        )
-        ore_mix_figure.update_traces(
-            textinfo="label+percent+value",
-            texttemplate="%{label}<br>%{value:,.0f} aUEC<br>%{percent}",
-            textposition="inside",
-            insidetextorientation="horizontal",
-            textfont={"size": 12},
-            hovertemplate=(
-                "<b>%{label}</b><br>"
-                "Value: %{value:,.0f} aUEC<br>"
-                "Share: %{percent}<extra></extra>"
-            ),
             marker={"line": {"color": "#ffffff", "width": 3}},
             sort=False,
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "%{value:,.0f} records<br>%{percent}<extra></extra>"
+            ),
         )
-        style_plotly_figure(ore_mix_figure, height=430)
-        ore_mix_figure.update_layout(
-            margin={"l": 24, "r": 24, "t": 28, "b": 82},
+        activity_mix_figure.add_annotation(
+            text=(
+                f"<b>{int(activity_data['Records'].sum()):,}</b><br>"
+                "<span style='font-size:10px'>Total Records</span>"
+            ),
+            x=.5,
+            y=.5,
+            showarrow=False,
+            font={"size": 14, "color": "#0D2D49"},
+        )
+        style_plotly_figure(activity_mix_figure, height=390)
+        activity_mix_figure.update_layout(
             legend={
-                "orientation": "h",
-                "yanchor": "top",
-                "y": -0.08,
-                "xanchor": "center",
-                "x": 0.5,
+                "orientation": "v",
+                "yanchor": "middle",
+                "y": .5,
+                "xanchor": "left",
+                "x": 1.02,
                 "title_text": "",
             },
-            uniformtext_minsize=10,
-            uniformtext_mode="hide",
+            margin={"l": 10, "r": 135, "t": 20, "b": 20},
+        )
+    else:
+        activity_mix_figure = empty_dashboard_figure(
+            "Activity distribution will appear after records are saved.",
+            donut=True,
         )
 
-    chart_col1, chart_col2 = st.columns(2)
-    with chart_col1:
-        chart_card(
-            "Total earnings over time",
-            "Contract take-home plus recorded ore sales for the selected date range.",
-            total_earnings_figure,
-            "dashboard_total_earnings_time",
-        )
-    with chart_col2:
-        chart_card(
-            "Contract earnings by type",
-            "Top contract categories ranked by total net payout.",
-            contract_type_figure,
-            "dashboard_contract_type",
-        )
+    top_col1, top_col2, top_col3 = st.columns(3, gap="medium")
+    with top_col1:
+        with st.container(border=True):
+            analytics_heading(
+                "Total earnings over time",
+                "Combined earnings from contracts, ore sales, and commodity sales.",
+                "Combined Performance",
+            )
+            st.plotly_chart(
+                total_earnings_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
 
-    chart_col3, chart_col4 = st.columns(2)
-    with chart_col3:
-        chart_card(
-            "Ore value by mineral",
-            "Compare mined, purchased, and sold value by resource.",
-            ore_value_figure,
-            "dashboard_ore_value",
-        )
-    with chart_col4:
-        chart_card(
-            "Ore activity mix",
-            "Share of total recorded ore value by activity type.",
-            ore_mix_figure,
-            "dashboard_ore_mix",
-        )
+    with top_col2:
+        with st.container(border=True):
+            analytics_heading(
+                "Earnings by source",
+                "Recorded income across contracts, mining, and commodities.",
+                "Income Mix",
+            )
+            st.plotly_chart(
+                source_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
+
+    with top_col3:
+        with st.container(border=True):
+            analytics_heading(
+                "Ore value by mineral",
+                "Compare mined, purchased, and sold mineral value.",
+                "Mining Performance",
+            )
+            st.plotly_chart(
+                ore_value_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
+
+    bottom_col1, bottom_col2, bottom_col3 = st.columns(3, gap="medium")
+    with bottom_col1:
+        with st.container(border=True):
+            analytics_heading(
+                "Commodity trade profit",
+                "Net commodity profit after purchases, fees, and shipment losses.",
+                "Trade Performance",
+            )
+            st.plotly_chart(
+                commodity_profit_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
+
+    with bottom_col2:
+        with st.container(border=True):
+            analytics_heading(
+                "Contract earnings by type",
+                "Contract categories ranked by total net payout.",
+                "Mission Performance",
+            )
+            st.plotly_chart(
+                contract_type_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
+
+    with bottom_col3:
+        with st.container(border=True):
+            analytics_heading(
+                "Activity mix",
+                "Share of saved records across contracts, ore, and commodities.",
+                "Operational Mix",
+            )
+            st.plotly_chart(
+                activity_mix_figure,
+                width="stretch",
+                config={"displayModeBar": False},
+            )
 
     st.markdown(
         """
         <div class="section-heading">
-            <div>
-                <div class="section-title">Recent records</div>
-                <div class="section-copy">Review the underlying contract and ore entries without leaving the dashboard.</div>
+            <div class="section-title">Earnings summary</div>
+            <div class="section-copy">
+                Income, spending, inventory, and profitability totals for the selected period.
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    contract_tab, ore_tab = st.tabs(["Contracts", "Ore ledger"])
-    with contract_tab:
-        display_contract_table(contracts)
-    with ore_tab:
-        display_ore_table(ores)
-
-
+    render_dashboard_summary(
+        [
+            {
+                "icon": "◉",
+                "label": "Total Earnings",
+                "value": format_money(total_recorded_earnings),
+                "detail": "All recorded income",
+                "class": "green",
+            },
+            {
+                "icon": "▤",
+                "label": "Contract Take-Home",
+                "value": format_money(contract_take_home),
+                "detail": f"{len(contracts):,} contracts",
+                "class": "blue",
+            },
+            {
+                "icon": "◆",
+                "label": "Ore Sales",
+                "value": format_money(ore_sales),
+                "detail": f"{ore_on_hand_scu:,.2f} SCU on hand",
+                "class": "blue",
+            },
+            {
+                "icon": "⬡",
+                "label": "Commodity Sales",
+                "value": format_money(commodity_sales),
+                "detail": f"{commodity_on_hand_scu:,.2f} SCU on hand",
+                "class": "orange",
+            },
+            {
+                "icon": "↗",
+                "label": "Commodity Net",
+                "value": format_money(commodity_net),
+                "detail": "Sales − purchases − losses",
+                "class": "green" if commodity_net >= 0 else "red",
+            },
+            {
+                "icon": "▣",
+                "label": "Total Spend",
+                "value": format_money(total_recorded_spend),
+                "detail": "Ore and commodity purchases",
+                "class": "purple",
+            },
+            {
+                "icon": "⚖",
+                "label": "Net Profit",
+                "value": format_money(overall_net_profit),
+                "detail": "Earnings after recorded spend",
+                "class": "green" if overall_net_profit >= 0 else "red",
+            },
+        ]
+    )
 
 def contract_page() -> None:
     page_banner(
@@ -8084,14 +8731,10 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         if st.button(
-            "Manage My Profile",
+            "✎",
             key="sidebar_manage_profile",
-            type=(
-                "primary"
-                if st.session_state.get("nav_page") == "My Profile"
-                else "secondary"
-            ),
-            width="stretch",
+            help="Edit profile and account settings",
+            type="secondary",
         ):
             st.session_state.nav_page = "My Profile"
             st.rerun()
