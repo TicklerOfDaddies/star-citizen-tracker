@@ -1695,6 +1695,318 @@ def apply_custom_theme() -> None:
                 flex: 1 1 100% !important;
             }
         }
+
+        /* ================================================================
+           Final control sizing and visibility repair
+           Applied last so it overrides earlier Streamlit/BaseWeb rules.
+           ================================================================ */
+
+        /* Keep normal widgets compact and prevent full-row stretching. */
+        [data-testid="stTextInput"],
+        [data-testid="stNumberInput"],
+        [data-testid="stSelectbox"],
+        [data-testid="stMultiSelect"],
+        [data-testid="stDateInput"],
+        [data-testid="stTimeInput"],
+        [data-testid="stSearchbox"] {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        /* Text, search, date and time input shells. */
+        [data-testid="stTextInput"] div[data-baseweb="input"],
+        [data-testid="stDateInput"] div[data-baseweb="input"],
+        [data-testid="stTimeInput"] div[data-baseweb="input"],
+        [data-testid="stSearchbox"] div[data-baseweb="input"] {
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 3.15rem !important;
+            height: 3.15rem !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #f8fcfe !important;
+            border: 2px solid #6aa7c4 !important;
+            border-radius: 11px !important;
+            box-sizing: border-box !important;
+            box-shadow:
+                0 2px 7px rgba(21, 76, 101, .08),
+                inset 0 1px 0 rgba(255,255,255,.9) !important;
+        }
+
+        [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
+            background: #ffffff !important;
+            border-color: #237f9f !important;
+        }
+
+        [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
+            background: #ffffff !important;
+            border-color: #047894 !important;
+            box-shadow:
+                0 0 0 3px rgba(4,120,148,.17),
+                0 5px 13px rgba(21,76,101,.11) !important;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTimeInput"] input,
+        [data-testid="stSearchbox"] input {
+            flex: 1 1 auto !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            padding: .65rem .78rem !important;
+            margin: 0 !important;
+            border: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #102f49 !important;
+            -webkit-text-fill-color: #102f49 !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Number inputs: compact value field with attached +/- controls. */
+        [data-testid="stNumberInput"] div[data-baseweb="input"] {
+            display: flex !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 3.15rem !important;
+            height: 3.15rem !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #f8fcfe !important;
+            border: 2px solid #6aa7c4 !important;
+            border-radius: 11px !important;
+            box-sizing: border-box !important;
+            box-shadow:
+                0 2px 7px rgba(21,76,101,.08),
+                inset 0 1px 0 rgba(255,255,255,.9) !important;
+        }
+
+        [data-testid="stNumberInput"] div[data-baseweb="input"]:hover {
+            background: #ffffff !important;
+            border-color: #237f9f !important;
+        }
+
+        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
+            background: #ffffff !important;
+            border-color: #047894 !important;
+            box-shadow:
+                0 0 0 3px rgba(4,120,148,.17),
+                0 5px 13px rgba(21,76,101,.11) !important;
+        }
+
+        [data-testid="stNumberInput"] input {
+            flex: 1 1 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            padding: .62rem .72rem !important;
+            margin: 0 !important;
+            border: 0 !important;
+            outline: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: #102f49 !important;
+            -webkit-text-fill-color: #102f49 !important;
+            box-sizing: border-box !important;
+        }
+
+        [data-testid="stNumberInput"] button {
+            flex: 0 0 2.45rem !important;
+            width: 2.45rem !important;
+            min-width: 2.45rem !important;
+            max-width: 2.45rem !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-left: 1px solid #bfd6e1 !important;
+            border-radius: 0 !important;
+            background: #e9f4f8 !important;
+            color: #07536c !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        [data-testid="stNumberInput"] button:hover {
+            background: #d2e9f0 !important;
+            color: #043d50 !important;
+            transform: none !important;
+        }
+
+        /* Select and multiselect shells. */
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+            display: flex !important;
+            align-items: center !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 3.15rem !important;
+            height: auto !important;
+            padding: .18rem .38rem !important;
+            background: #f8fcfe !important;
+            border: 2px solid #6aa7c4 !important;
+            border-radius: 11px !important;
+            box-sizing: border-box !important;
+            box-shadow:
+                0 2px 7px rgba(21,76,101,.08),
+                inset 0 1px 0 rgba(255,255,255,.9) !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
+            background: #ffffff !important;
+            border-color: #237f9f !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
+            background: #ffffff !important;
+            border-color: #047894 !important;
+            box-shadow:
+                0 0 0 3px rgba(4,120,148,.17),
+                0 5px 13px rgba(21,76,101,.11) !important;
+        }
+
+        [data-testid="stSelectbox"] [role="combobox"],
+        [data-testid="stMultiSelect"] [role="combobox"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 2.65rem !important;
+            border: 0 !important;
+            outline: 0 !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] *,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
+            color: #102f49 !important;
+            -webkit-text-fill-color: #102f49 !important;
+        }
+
+        /* Text areas remain larger, but no longer overflow their cards. */
+        [data-testid="stTextArea"] textarea {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 8rem !important;
+            max-width: 100% !important;
+            padding: .78rem .82rem !important;
+            margin: 0 !important;
+            background: #f8fcfe !important;
+            border: 2px solid #6aa7c4 !important;
+            border-radius: 11px !important;
+            box-sizing: border-box !important;
+            color: #102f49 !important;
+            -webkit-text-fill-color: #102f49 !important;
+            box-shadow:
+                0 2px 7px rgba(21,76,101,.08),
+                inset 0 1px 0 rgba(255,255,255,.9) !important;
+            resize: vertical !important;
+        }
+
+        [data-testid="stTextArea"] textarea:hover {
+            background: #ffffff !important;
+            border-color: #237f9f !important;
+        }
+
+        [data-testid="stTextArea"] textarea:focus {
+            background: #ffffff !important;
+            border-color: #047894 !important;
+            outline: 0 !important;
+            box-shadow:
+                0 0 0 3px rgba(4,120,148,.17),
+                0 5px 13px rgba(21,76,101,.11) !important;
+        }
+
+        /* Keep placeholders visible against the lightly tinted field fill. */
+        [data-testid="stTextInput"] input::placeholder,
+        [data-testid="stNumberInput"] input::placeholder,
+        [data-testid="stTextArea"] textarea::placeholder,
+        [data-testid="stDateInput"] input::placeholder,
+        [data-testid="stSearchbox"] input::placeholder {
+            color: #687f92 !important;
+            -webkit-text-fill-color: #687f92 !important;
+            opacity: 1 !important;
+        }
+
+        /* Avoid wide desktop forms looking excessively stretched. */
+        [data-testid="stForm"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 1.15rem 1.2rem !important;
+            box-sizing: border-box !important;
+        }
+
+        [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+            gap: 1rem !important;
+            align-items: flex-start !important;
+        }
+
+        /* Smaller profile edit pen. */
+        .st-key-sidebar_manage_profile {
+            width: 1.8rem !important;
+            margin-top: -4.15rem !important;
+            margin-right: .7rem !important;
+            margin-bottom: 2.35rem !important;
+        }
+
+        .st-key-sidebar_manage_profile button {
+            width: 1.8rem !important;
+            min-width: 1.8rem !important;
+            max-width: 1.8rem !important;
+            height: 1.8rem !important;
+            min-height: 1.8rem !important;
+            max-height: 1.8rem !important;
+            padding: 0 !important;
+            border-width: 1px !important;
+            font-size: .72rem !important;
+            line-height: 1 !important;
+            box-shadow: 0 4px 10px rgba(16,61,88,.14) !important;
+        }
+
+        .st-key-sidebar_manage_profile button * {
+            font-size: .72rem !important;
+            line-height: 1 !important;
+        }
+
+        /* Responsive breathing room without major layout changes. */
+        @media (max-width: 1100px) {
+            [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
+                gap: .75rem !important;
+            }
+        }
+
+        @media (max-width: 760px) {
+            [data-testid="stForm"] {
+                padding: .9rem !important;
+            }
+
+            [data-testid="stTextInput"] div[data-baseweb="input"],
+            [data-testid="stNumberInput"] div[data-baseweb="input"],
+            [data-testid="stDateInput"] div[data-baseweb="input"],
+            [data-testid="stTimeInput"] div[data-baseweb="input"],
+            [data-testid="stSearchbox"] div[data-baseweb="input"],
+            [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+            [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+                min-height: 3.3rem !important;
+                height: auto !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
