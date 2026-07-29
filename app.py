@@ -287,17 +287,56 @@ def apply_custom_theme() -> None:
         }
 
         .feature-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:.4rem 0 1rem; }
-        .feature-card { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 10px 26px rgba(24,62,103,.08); }
-        .feature-card img {
-            width:100%;
-            height:auto;
-            display:block;
-            background:#081624;
+
+        .dashboard-feature-image {
+            width: 100%;
+            aspect-ratio: 3 / 1;
+            height: auto;
+            display: block;
+            object-fit: cover;
+            object-position: center center;
+            border-radius: 12px;
+            background: #081624;
         }
-        .feature-card-body { padding:.85rem .9rem 1rem; }
-        .feature-card-title { color:var(--text); font-weight:780; font-size:.95rem; }
-        .feature-card-copy { color:var(--muted); font-size:.78rem; min-height:56px; margin:.3rem 0 .7rem; }
-        .feature-card-action { display:block; text-align:center; border:1px solid #8fc7ff; color:#1268c5; background:#f2f8ff; border-radius:9px; padding:.52rem; font-size:.78rem; font-weight:760; }
+
+        .feature-card-title {
+            color: var(--text);
+            font-weight: 780;
+            font-size: .95rem;
+            min-height: 1.45rem;
+            margin-top: .15rem;
+        }
+
+        .feature-card-copy {
+            color: var(--muted);
+            font-size: .78rem;
+            line-height: 1.55;
+            min-height: 3.75rem;
+            margin: .3rem 0 .2rem;
+        }
+
+        [class*="st-key-dashboard_feature_card_"] {
+            height: 100%;
+        }
+
+        [class*="st-key-dashboard_feature_card_"] > div {
+            height: 100%;
+        }
+
+        [class*="st-key-dashboard_feature_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
+            height: 100%;
+            min-height: 360px;
+        }
+
+        [class*="st-key-dashboard_feature_card_"] [data-testid="stVerticalBlock"] {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        [class*="st-key-dashboard_feature_card_"] .stButton {
+            margin-top: auto;
+        }
 
         .stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button, .stLinkButton > a {
             border:1px solid #85bfff; border-radius:10px; background:#f2f8ff; color:#1268c5 !important;
@@ -357,7 +396,6 @@ def apply_custom_theme() -> None:
         @media (max-width:720px) {
             .sc-banner { min-height:220px; }
             .feature-grid { grid-template-columns:1fr; }
-            .feature-card img { height:auto; }
         }
         </style>
         """,
@@ -1003,7 +1041,7 @@ def dashboard_hero() -> None:
 
 
 def feature_dashboard_cards() -> None:
-    """Render dashboard shortcuts with real, working Streamlit buttons."""
+    """Render equal-height dashboard shortcuts with working Streamlit buttons."""
     cards = [
         {
             "image": "contracts_feature.jpg",
@@ -1037,15 +1075,20 @@ def feature_dashboard_cards() -> None:
 
     columns = st.columns(4, gap="small")
 
-    for column, card in zip(columns, cards):
+    for index, (column, card) in enumerate(zip(columns, cards)):
         with column:
-            with st.container(border=True):
-                image_path = ASSETS_DIR / card["image"]
-                if image_path.exists():
-                    st.image(str(image_path), width="stretch")
-
+            with st.container(
+                border=True,
+                key=f"dashboard_feature_card_{index}",
+            ):
+                image_uri = image_data_uri(card["image"])
                 st.markdown(
                     f"""
+                    <img
+                        class="dashboard-feature-image"
+                        src="{image_uri}"
+                        alt="{card["title"]}"
+                    />
                     <div class="feature-card-title">{card["title"]}</div>
                     <div class="feature-card-copy">{card["copy"]}</div>
                     """,
