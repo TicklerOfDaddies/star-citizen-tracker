@@ -1511,6 +1511,7 @@ def commodity_trade_tracker(
     commodity_names: list[str],
     selected_commodity: str,
     uex_prices: pd.DataFrame,
+    default_quantity_scu: float,
 ) -> None:
     """Render the user's commodity buy, sell, and loss tracker."""
     st.markdown("### Commodity Buy, Sell, and Loss Tracker")
@@ -1595,7 +1596,7 @@ def commodity_trade_tracker(
                 quantity_scu = st.number_input(
                     "Quantity (SCU)",
                     min_value=0.01,
-                    value=float(cargo_scu),
+                    value=max(float(default_quantity_scu), 0.01),
                     step=1.0,
                     format="%.2f",
                     key="commodity_transaction_quantity",
@@ -3855,8 +3856,9 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
 def render_commodity_metric_cards(
     cards: list[dict[str, str]],
 ) -> None:
-    """Render readable commodity metrics without Streamlit truncation."""
-    card_html = []
+    """Render readable commodity metrics without Markdown code-block parsing."""
+    card_html: list[str] = []
+
     for card in cards:
         tone = card.get("tone", "")
         tone_class = (
@@ -3864,30 +3866,33 @@ def render_commodity_metric_cards(
         )
         detail = card.get("detail", "")
         detail_html = (
-            f'<div class="commodity-metric-detail">{html.escape(detail)}</div>'
+            '<div class="commodity-metric-detail">'
+            + html.escape(detail)
+            + "</div>"
             if detail
             else ""
         )
+
         card_html.append(
-            f"""
-            <div class="commodity-metric-card">
-                <div class="commodity-metric-label">
-                    {html.escape(card["label"])}
-                </div>
-                <div class="commodity-metric-value {tone_class}">
-                    {html.escape(card["value"])}
-                </div>
-                {detail_html}
-            </div>
-            """
+            '<div class="commodity-metric-card">'
+            '<div class="commodity-metric-label">'
+            + html.escape(card["label"])
+            + "</div>"
+            '<div class="commodity-metric-value '
+            + tone_class
+            + '">'
+            + html.escape(card["value"])
+            + "</div>"
+            + detail_html
+            + "</div>"
         )
 
-    st.markdown(
+    metric_markup = (
         '<div class="commodity-metric-grid">'
         + "".join(card_html)
-        + "</div>",
-        unsafe_allow_html=True,
+        + "</div>"
     )
+    st.markdown(metric_markup, unsafe_allow_html=True)
 
 
 def optional_secret(name: str) -> str:
@@ -5558,6 +5563,7 @@ def commodities_page() -> None:
             names,
             selected_commodity,
             uex_prices,
+            float(cargo_scu),
         )
 
 
