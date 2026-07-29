@@ -4919,64 +4919,61 @@ def commodities_page() -> None:
                 .rename(columns={"Terminal Buys at": "Player Receives"})
             )
 
-            terminal_buy_col, terminal_sell_col = st.columns(2)
-            with terminal_buy_col:
-                st.markdown("#### Best Places to Buy")
-                if buy_table.empty:
-                    st.info("No purchase terminals match the current filters.")
-                else:
-                    st.dataframe(
-                        buy_table[
-                            [
-                                "System",
-                                "Environment",
-                                "Area",
-                                "Terminal",
-                                "Player Pays",
-                                "Stock (SCU)",
-                                "Last Updated",
-                            ]
-                        ],
-                        width="stretch",
-                        hide_index=True,
-                        column_config={
-                            "Player Pays": st.column_config.NumberColumn(
-                                format="%,.0f aUEC/SCU"
-                            ),
-                            "Stock (SCU)": st.column_config.NumberColumn(
-                                format="%,.0f SCU"
-                            ),
-                        },
-                    )
+            st.markdown("#### Best Places to Buy")
+            if buy_table.empty:
+                st.info("No purchase terminals match the current filters.")
+            else:
+                st.dataframe(
+                    buy_table[
+                        [
+                            "System",
+                            "Environment",
+                            "Area",
+                            "Terminal",
+                            "Player Pays",
+                            "Stock (SCU)",
+                            "Last Updated",
+                        ]
+                    ],
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Player Pays": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Stock (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                    },
+                )
 
-            with terminal_sell_col:
-                st.markdown("#### Best Places to Sell")
-                if sell_table.empty:
-                    st.info("No sale terminals match the current filters.")
-                else:
-                    st.dataframe(
-                        sell_table[
-                            [
-                                "System",
-                                "Environment",
-                                "Area",
-                                "Terminal",
-                                "Player Receives",
-                                "Demand (SCU)",
-                                "Last Updated",
-                            ]
-                        ],
-                        width="stretch",
-                        hide_index=True,
-                        column_config={
-                            "Player Receives": st.column_config.NumberColumn(
-                                format="%,.0f aUEC/SCU"
-                            ),
-                            "Demand (SCU)": st.column_config.NumberColumn(
-                                format="%,.0f SCU"
-                            ),
-                        },
-                    )
+            st.markdown("#### Best Places to Sell")
+            if sell_table.empty:
+                st.info("No sale terminals match the current filters.")
+            else:
+                st.dataframe(
+                    sell_table[
+                        [
+                            "System",
+                            "Environment",
+                            "Area",
+                            "Terminal",
+                            "Player Receives",
+                            "Demand (SCU)",
+                            "Last Updated",
+                        ]
+                    ],
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Player Receives": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Demand (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                    },
+                )
 
             st.markdown("#### All Matching Terminal Listings")
             market_columns = [
