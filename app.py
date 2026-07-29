@@ -141,8 +141,8 @@ def apply_custom_theme() -> None:
             --accent-2: #4C7814;
             --accent-soft: #F6FDEB;
             --text: #1F2A16;
-            --muted: #607087;
-            --subtle: #8492A6;
+            --muted: #65704F;
+            --subtle: #89937D;
             --success: #20A36A;
         }
 
@@ -159,8 +159,8 @@ def apply_custom_theme() -> None:
         }
 
         [data-testid="stHeader"] {
-            background: rgba(248,251,255,.86);
-            border-bottom: 1px solid rgba(219,228,238,.82);
+            background: rgba(250,253,245,.86);
+            border-bottom: 1px solid rgba(228,238,210,.82);
             backdrop-filter: blur(16px);
         }
 
@@ -173,7 +173,7 @@ def apply_custom_theme() -> None:
         section[data-testid="stSidebar"] {
             background: rgba(255,255,255,.98);
             border-right: 1px solid var(--border);
-            box-shadow: 10px 0 34px rgba(30,68,110,.06);
+            box-shadow: 10px 0 34px rgba(54,82,22,.06);
         }
 
         section[data-testid="stSidebar"] > div { padding-top: 1rem; }
@@ -200,14 +200,14 @@ def apply_custom_theme() -> None:
             background-repeat: no-repeat;
             background-size: contain;
             background-color: #1F2A16;
-            box-shadow: 0 18px 44px rgba(24,62,103,.16);
+            box-shadow: 0 18px 44px rgba(54,82,22,.16);
         }
 
         .sc-banner::after {
             content: "";
             position: absolute;
             inset: 0;
-            background: linear-gradient(0deg, rgba(4,17,31,.88) 0%, rgba(4,17,31,.08) 66%);
+            background: linear-gradient(0deg, rgba(22,31,14,.88) 0%, rgba(26,38,16,.08) 66%);
         }
 
         .sc-banner-content { position: relative; z-index: 2; max-width: 830px; padding: 1.55rem 1.75rem; }
@@ -226,7 +226,7 @@ def apply_custom_theme() -> None:
             border: 1px solid #E4F8C8;
             margin-bottom: 1.15rem;
             background: linear-gradient(180deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 18px 44px rgba(24,62,103,.10);
+            box-shadow: 0 18px 44px rgba(54,82,22,.10);
         }
 
         .sc-page-banner-copy {
@@ -240,7 +240,7 @@ def apply_custom_theme() -> None:
             color: var(--text);
             background:
                 radial-gradient(circle at top left, rgba(96,145,24,.12), transparent 14rem),
-                linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(248,251,255,.98) 100%);
+                linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(250,253,245,.98) 100%);
         }
 
         .sc-page-banner-image-wrap {
@@ -256,9 +256,9 @@ def apply_custom_theme() -> None:
             width: 100%;
             overflow: hidden;
             border-radius: 16px;
-            border: 1px solid rgba(143,199,255,.45);
+            border: 1px solid rgba(152,251,23,.35);
             background: #1F2A16;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(24,62,103,.10);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(54,82,22,.10);
         }
 
         .sc-page-banner-image {
@@ -283,7 +283,7 @@ def apply_custom_theme() -> None:
 
         .dashboard-hero-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:14px; margin-bottom:1rem; }
         .dashboard-hero-grid .sc-banner { margin-bottom:0; min-height:315px; }
-        .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(24,62,103,.12); color:var(--text); }
+        .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(54,82,22,.12); color:var(--text); }
         .time-card .time-now { font-size:2rem; font-weight:800; margin:.15rem 0; }
         .time-card .time-date { font-size:.78rem; color:var(--muted); margin-bottom:.75rem; }
         .time-zone-row { display:flex; justify-content:space-between; gap:.75rem; padding:.23rem 0; font-size:.77rem; border-bottom:1px solid #F6FDEB; }
@@ -298,14 +298,14 @@ def apply_custom_theme() -> None:
 
         div[data-testid="stMetric"] {
             background:var(--surface); border:1px solid var(--border); border-radius:15px;
-            padding:1rem; min-height:118px; box-shadow:0 10px 26px rgba(24,62,103,.08);
+            padding:1rem; min-height:118px; box-shadow:0 10px 26px rgba(54,82,22,.08);
         }
-        [data-testid="stMetricLabel"] { color:#66768C !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
+        [data-testid="stMetricLabel"] { color:#69745A !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
         [data-testid="stMetricValue"] { color:var(--text) !important; font-weight:820; }
 
         [data-testid="stVerticalBlockBorderWrapper"] {
             background:var(--surface); border:1px solid var(--border) !important;
-            border-radius:16px !important; box-shadow:0 10px 26px rgba(24,62,103,.07);
+            border-radius:16px !important; box-shadow:0 10px 26px rgba(54,82,22,.07);
         }
 
         .feature-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:.4rem 0 1rem; }
@@ -399,7 +399,7 @@ def apply_custom_theme() -> None:
             border-color: #2A3B16;
             background: linear-gradient(135deg, #2A3B16 0%, #2A3B16 100%);
             color: #FFFFFF !important;
-            box-shadow: 0 10px 22px rgba(4,63,83,.28);
+            box-shadow: 0 10px 22px rgba(54,82,22,.28);
             transform: translateY(-1px);
         }
 
@@ -408,7 +408,7 @@ def apply_custom_theme() -> None:
         [data-testid="stFormSubmitButton"] > button:disabled {
             background: #BDF56F !important;
             border-color: #BDF56F !important;
-            color: #6E7E8B !important;
+            color: #707A64 !important;
             box-shadow: none !important;
             transform: none !important;
         }
@@ -440,7 +440,7 @@ def apply_custom_theme() -> None:
             background: #E4F8C8;
             border-color: #69A912;
             color: #2A3B16 !important;
-            box-shadow: 0 7px 16px rgba(30,104,126,.12);
+            box-shadow: 0 7px 16px rgba(76,120,20,.12);
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
@@ -492,7 +492,7 @@ def apply_custom_theme() -> None:
             font-size: .88rem !important;
             font-weight: 790 !important;
             line-height: 1.2 !important;
-            box-shadow: 0 4px 10px rgba(27,88,108,.07);
+            box-shadow: 0 4px 10px rgba(54,82,22,.07);
             transition:
                 background .15s ease,
                 border-color .15s ease,
@@ -512,7 +512,7 @@ def apply_custom_theme() -> None:
             border-color: #69A912 !important;
             color: #2A3B16 !important;
             transform: translateY(-1px);
-            box-shadow: 0 7px 16px rgba(27,88,108,.13);
+            box-shadow: 0 7px 16px rgba(54,82,22,.13);
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
@@ -581,7 +581,7 @@ def apply_custom_theme() -> None:
 
         .dashboard-metric-detail {
             margin-top: .32rem;
-            color: #718295;
+            color: #748069;
             font-size: .72rem;
             line-height: 1.35;
         }
@@ -623,7 +623,7 @@ def apply_custom_theme() -> None:
             flex: 0 0 52px;
             border-radius: 50%;
             border: 2px solid #98FB17;
-            box-shadow: 0 6px 16px rgba(10,85,107,.17);
+            box-shadow: 0 6px 16px rgba(75,105,34,.17);
             object-fit: cover;
             background: #36550F;
         }
@@ -653,7 +653,7 @@ def apply_custom_theme() -> None:
         }
 
         .sidebar-profile-email {
-            color: #60778A;
+            color: #637254;
             font-size: .71rem;
             line-height: 1.35;
             margin-top: .18rem;
@@ -685,7 +685,7 @@ def apply_custom_theme() -> None:
             border: 4px solid #FFFFFF;
             box-shadow:
                 0 0 0 2px #98FB17,
-                0 12px 28px rgba(8,70,91,.18);
+                0 12px 28px rgba(54,82,22,.18);
             object-fit: cover;
             background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%);
         }
@@ -718,7 +718,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-hero-email {
-            color: #607087;
+            color: #65704F;
             font-size: .9rem;
             margin-top: .38rem;
         }
@@ -749,7 +749,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-summary-label {
-            color: #637B8D;
+            color: #667457;
             font-size: .69rem;
             font-weight: 790;
             letter-spacing: .06em;
@@ -765,7 +765,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-summary-detail {
-            color: #7B8B9B;
+            color: #7D8970;
             font-size: .7rem;
             line-height: 1.35;
             margin-top: .25rem;
@@ -835,7 +835,7 @@ def apply_custom_theme() -> None:
             border: 1px solid #E4F8C8;
             border-radius: 13px;
             background: #FFFFFF;
-            box-shadow: 0 9px 22px rgba(24,62,103,.06);
+            box-shadow: 0 9px 22px rgba(54,82,22,.06);
         }
 
         .commodity-source-name {
@@ -846,7 +846,7 @@ def apply_custom_theme() -> None:
         }
 
         .commodity-source-copy {
-            color: #607087;
+            color: #65704F;
             font-size: .78rem;
             line-height: 1.5;
         }
@@ -913,7 +913,7 @@ def apply_custom_theme() -> None:
 
         .commodity-metric-detail {
             margin-top: .35rem;
-            color: #6D8092;
+            color: #6F7B62;
             font-size: .72rem;
             line-height: 1.3;
         }
@@ -963,8 +963,8 @@ def apply_custom_theme() -> None:
         input[type="text"]::placeholder,
         input[type="email"]::placeholder,
         input[type="password"]::placeholder {
-            color: #7B8BA0 !important;
-            -webkit-text-fill-color: #7B8BA0 !important;
+            color: #7E8970 !important;
+            -webkit-text-fill-color: #7E8970 !important;
             opacity: 1 !important;
         }
 
@@ -1038,13 +1038,13 @@ def apply_custom_theme() -> None:
             --premium-blue: #4C7814;
             --premium-green: #4C7814;
             --premium-red: #E54950;
-            --premium-orange: #F28A2A;
+            --premium-orange: #98FB17;
             --premium-purple: #69A912;
             --premium-surface: #FFFFFF;
             --premium-surface-soft: #F6FDEB;
             --premium-border: #BDF56F;
             --premium-border-strong: #98FB17;
-            --premium-shadow: 0 12px 28px rgba(16, 61, 88, .09);
+            --premium-shadow: 0 12px 28px rgba(54, 82, 22, .09);
         }
 
         .stApp {
@@ -1104,7 +1104,7 @@ def apply_custom_theme() -> None:
             border: 1.5px solid var(--premium-border-strong) !important;
             border-radius: 11px !important;
             color: #2A3B16 !important;
-            box-shadow: inset 0 1px 2px rgba(8,48,72,.04);
+            box-shadow: inset 0 1px 2px rgba(54,82,22,.04);
         }
 
         [data-testid="stTextArea"] textarea {
@@ -1168,7 +1168,7 @@ def apply_custom_theme() -> None:
             background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%) !important;
             border-color: #2A3B16 !important;
             transform: translateY(-1px);
-            box-shadow: 0 11px 22px rgba(4,78,97,.25);
+            box-shadow: 0 11px 22px rgba(54,82,22,.25);
         }
 
         .stButton > button[kind="secondary"] {
@@ -1259,7 +1259,7 @@ def apply_custom_theme() -> None:
         }
 
         .section-copy {
-            color: #6B8092;
+            color: #6D7A60;
             font-size: .8rem;
             margin-top: .18rem;
         }
@@ -1284,7 +1284,7 @@ def apply_custom_theme() -> None:
         }
 
         .analytics-copy {
-            color: #657C8F;
+            color: #68755B;
             font-size: .76rem;
             line-height: 1.45;
             margin-top: .2rem;
@@ -1340,7 +1340,7 @@ def apply_custom_theme() -> None:
         }
 
         .dashboard-summary-detail {
-            color: #718598;
+            color: #74816B;
             font-size: .66rem;
             line-height: 1.3;
             margin-top: .28rem;
@@ -1348,7 +1348,7 @@ def apply_custom_theme() -> None:
 
         .dashboard-summary-card.green { border-color: #BDF56F; }
         .dashboard-summary-card.blue { border-color: #BDF56F; }
-        .dashboard-summary-card.orange { border-color: #F4C691; }
+        .dashboard-summary-card.orange { border-color: #B8E986; }
         .dashboard-summary-card.purple { border-color: #BDF56F; }
         .dashboard-summary-card.red { border-color: #EDB0B4; }
 
@@ -1420,8 +1420,8 @@ def apply_custom_theme() -> None:
             border: 2px solid #98FB17 !important;
             border-radius: 11px !important;
             box-shadow:
-                0 3px 9px rgba(24, 83, 108, .08),
-                inset 0 1px 2px rgba(15, 62, 84, .035) !important;
+                0 3px 9px rgba(54, 82, 22, .08),
+                inset 0 1px 2px rgba(54, 82, 22, .035) !important;
             overflow: hidden !important;
             transition:
                 border-color .15s ease,
@@ -1435,7 +1435,7 @@ def apply_custom_theme() -> None:
         [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
         [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
             border-color: #4C7814 !important;
-            box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
+            box-shadow: 0 5px 13px rgba(54, 82, 22, .13) !important;
         }
 
         [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
@@ -1446,8 +1446,8 @@ def apply_custom_theme() -> None:
             border-color: #36550F !important;
             background: #F6FDEB !important;
             box-shadow:
-                0 0 0 4px rgba(5, 124, 153, .16),
-                0 6px 15px rgba(24, 83, 108, .12) !important;
+                0 0 0 4px rgba(104, 159, 20, .16),
+                0 6px 15px rgba(54, 82, 22, .12) !important;
         }
 
         [data-testid="stTextInput"] input,
@@ -1477,8 +1477,8 @@ def apply_custom_theme() -> None:
             color: #2A3B16 !important;
             -webkit-text-fill-color: #2A3B16 !important;
             box-shadow:
-                0 3px 9px rgba(24, 83, 108, .08),
-                inset 0 1px 2px rgba(15, 62, 84, .035) !important;
+                0 3px 9px rgba(54, 82, 22, .08),
+                inset 0 1px 2px rgba(54, 82, 22, .035) !important;
             font-size: .9rem !important;
             line-height: 1.48 !important;
             transition:
@@ -1493,8 +1493,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea:focus {
             border-color: #36550F !important;
             box-shadow:
-                0 0 0 4px rgba(5, 124, 153, .16),
-                0 6px 15px rgba(24, 83, 108, .12) !important;
+                0 0 0 4px rgba(104, 159, 20, .16),
+                0 6px 15px rgba(54, 82, 22, .12) !important;
             outline: none !important;
         }
 
@@ -1508,7 +1508,7 @@ def apply_custom_theme() -> None:
             border: 2px solid #98FB17 !important;
             border-radius: 11px !important;
             color: #2A3B16 !important;
-            box-shadow: 0 3px 9px rgba(24, 83, 108, .08) !important;
+            box-shadow: 0 3px 9px rgba(54, 82, 22, .08) !important;
             transition:
                 border-color .15s ease,
                 box-shadow .15s ease !important;
@@ -1517,15 +1517,15 @@ def apply_custom_theme() -> None:
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
             border-color: #4C7814 !important;
-            box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
+            box-shadow: 0 5px 13px rgba(54, 82, 22, .13) !important;
         }
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
             border-color: #36550F !important;
             box-shadow:
-                0 0 0 4px rgba(5, 124, 153, .16),
-                0 6px 15px rgba(24, 83, 108, .12) !important;
+                0 0 0 4px rgba(104, 159, 20, .16),
+                0 6px 15px rgba(54, 82, 22, .12) !important;
         }
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] *,
@@ -1540,8 +1540,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea::placeholder,
         [data-testid="stDateInput"] input::placeholder,
         [data-testid="stSearchbox"] input::placeholder {
-            color: #73889A !important;
-            -webkit-text-fill-color: #73889A !important;
+            color: #758269 !important;
+            -webkit-text-fill-color: #758269 !important;
             opacity: 1 !important;
             font-weight: 500 !important;
         }
@@ -1731,7 +1731,7 @@ def apply_custom_theme() -> None:
             border-radius: 11px !important;
             box-sizing: border-box !important;
             box-shadow:
-                0 2px 7px rgba(21, 76, 101, .08),
+                0 2px 7px rgba(54, 82, 22, .08),
                 inset 0 1px 0 rgba(255,255,255,.9) !important;
         }
 
@@ -1939,8 +1939,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea::placeholder,
         [data-testid="stDateInput"] input::placeholder,
         [data-testid="stSearchbox"] input::placeholder {
-            color: #687F92 !important;
-            -webkit-text-fill-color: #687F92 !important;
+            color: #6A785A !important;
+            -webkit-text-fill-color: #6A785A !important;
             opacity: 1 !important;
         }
 
@@ -2426,6 +2426,309 @@ def apply_custom_theme() -> None:
         [data-testid="stTabs"] [role="tablist"] > div:last-child {
             display: initial;
         }
+
+        /* ================================================================
+           FINAL FLAT CHARTREUSE THEME
+           Solid controls, no button/tab shadows, no blue text.
+           ================================================================ */
+
+        :root {
+            --flat-accent: #98FB17;
+            --flat-accent-hover: #B8FF61;
+            --flat-green: #4C7814;
+            --flat-green-dark: #36550F;
+            --flat-green-deep: #243713;
+            --flat-border: #91B95B;
+            --flat-border-soft: #C9DDA9;
+            --flat-text: #2C3B1D;
+            --flat-muted: #66734F;
+            --flat-pale: #F7FCEB;
+            --flat-soft: #EDF6DF;
+            --flat-white: #FFFFFF;
+        }
+
+        /* Global text colors */
+        .stApp,
+        .stApp p,
+        .stApp span,
+        .stApp label,
+        .stApp li,
+        .stApp td,
+        .stApp th {
+            color: var(--flat-text);
+        }
+
+        .stApp h1,
+        .stApp h2,
+        .stApp h3,
+        .stApp h4,
+        .stApp h5,
+        .stApp h6 {
+            color: var(--flat-green-deep) !important;
+        }
+
+        .stApp a,
+        .stMarkdown a {
+            color: var(--flat-green) !important;
+            text-decoration-color: var(--flat-accent) !important;
+        }
+
+        main [data-testid="stCaptionContainer"] p,
+        main .stCaption,
+        main .section-copy,
+        main .analytics-copy,
+        main .commodity-metric-detail,
+        main .dashboard-metric-detail,
+        main .dashboard-summary-detail,
+        main .profile-summary-detail,
+        main .profile-hero-bio,
+        main .profile-hero-email,
+        main .sc-page-subtitle,
+        main .sc-banner-subtitle {
+            color: var(--flat-muted) !important;
+        }
+
+        main .section-title,
+        main .analytics-title,
+        main .chart-heading,
+        main .commodity-metric-value,
+        main .dashboard-metric-value,
+        main .dashboard-summary-value,
+        main .profile-summary-value,
+        main [data-testid="stMetricValue"] {
+            color: var(--flat-green-deep) !important;
+        }
+
+        main .analytics-kicker,
+        main .commodity-metric-label,
+        main .dashboard-metric-label,
+        main .dashboard-summary-label,
+        main .profile-summary-label,
+        main [data-testid="stMetricLabel"] p,
+        main [data-testid="stWidgetLabel"] p,
+        main label p {
+            color: var(--flat-green) !important;
+        }
+
+        /* Flat primary buttons */
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            background: var(--flat-green) !important;
+            background-image: none !important;
+            border: 1.5px solid var(--flat-green-dark) !important;
+            color: #FFFFFF !important;
+            box-shadow: none !important;
+            filter: none !important;
+            text-shadow: none !important;
+            transform: none !important;
+        }
+
+        .stButton > button *,
+        .stDownloadButton > button *,
+        [data-testid="stFormSubmitButton"] > button *,
+        .stLinkButton > a * {
+            color: #FFFFFF !important;
+            text-shadow: none !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            background: var(--flat-green-dark) !important;
+            background-image: none !important;
+            border-color: var(--flat-green-deep) !important;
+            color: #FFFFFF !important;
+            box-shadow: none !important;
+            filter: none !important;
+            transform: none !important;
+        }
+
+        .stButton > button:focus,
+        .stDownloadButton > button:focus,
+        [data-testid="stFormSubmitButton"] > button:focus,
+        .stLinkButton > a:focus {
+            box-shadow: 0 0 0 3px rgba(152,251,23,.25) !important;
+        }
+
+        /* Flat secondary buttons */
+        .stButton > button[kind="secondary"] {
+            background: var(--flat-white) !important;
+            background-image: none !important;
+            border: 1.5px solid var(--flat-border) !important;
+            color: var(--flat-green-dark) !important;
+            box-shadow: none !important;
+        }
+
+        .stButton > button[kind="secondary"] * {
+            color: var(--flat-green-dark) !important;
+        }
+
+        .stButton > button[kind="secondary"]:hover {
+            background: var(--flat-soft) !important;
+            border-color: var(--flat-green) !important;
+            color: var(--flat-green-deep) !important;
+            box-shadow: none !important;
+        }
+
+        /* Flat tabs */
+        [data-testid="stTabs"] [role="tablist"],
+        div[data-baseweb="tab-list"] {
+            background: var(--flat-soft) !important;
+            background-image: none !important;
+            border: 1.5px solid var(--flat-border-soft) !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"],
+        button[data-baseweb="tab"] {
+            background: var(--flat-white) !important;
+            background-image: none !important;
+            border: 1.5px solid var(--flat-border) !important;
+            color: var(--flat-green-dark) !important;
+            box-shadow: none !important;
+            filter: none !important;
+            text-shadow: none !important;
+            transform: none !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] *,
+        button[data-baseweb="tab"] * {
+            color: inherit !important;
+            text-shadow: none !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"]:hover,
+        button[data-baseweb="tab"]:hover {
+            background: var(--flat-accent-hover) !important;
+            background-image: none !important;
+            border-color: var(--flat-green) !important;
+            color: var(--flat-green-deep) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"],
+        button[data-baseweb="tab"][aria-selected="true"] {
+            background: var(--flat-green) !important;
+            background-image: none !important;
+            border-color: var(--flat-green-dark) !important;
+            color: #FFFFFF !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] *,
+        button[data-baseweb="tab"][aria-selected="true"] * {
+            color: #FFFFFF !important;
+        }
+
+        /* Sidebar navigation buttons remain flat */
+        section[data-testid="stSidebar"] .stButton > button {
+            box-shadow: none !important;
+            background-image: none !important;
+        }
+
+        /* Profile edit pen stays small and flat */
+        .st-key-sidebar_manage_profile button {
+            background: #FFFFFF !important;
+            background-image: none !important;
+            color: var(--flat-green-dark) !important;
+            border-color: var(--flat-border) !important;
+            box-shadow: none !important;
+        }
+
+        .st-key-sidebar_manage_profile button * {
+            color: var(--flat-green-dark) !important;
+        }
+
+        .st-key-sidebar_manage_profile button:hover {
+            background: var(--flat-accent) !important;
+            color: var(--flat-green-deep) !important;
+            box-shadow: none !important;
+        }
+
+        /* Flat cards and metric surfaces */
+        [data-testid="stMetric"],
+        [data-testid="stForm"],
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stExpander"],
+        [data-testid="stDataFrame"],
+        .commodity-metric-card,
+        .dashboard-metric-card,
+        .dashboard-summary-card,
+        .profile-summary-card,
+        .profile-section-card,
+        .sidebar-profile-card {
+            box-shadow: none !important;
+        }
+
+        /* Form fields */
+        [data-testid="stTextInput"] input,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTimeInput"] input,
+        [data-testid="stSearchbox"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stNumberInput"] div[data-baseweb="input"],
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+            background: #FFFFFF !important;
+            color: var(--flat-text) !important;
+            -webkit-text-fill-color: var(--flat-text) !important;
+            border-color: var(--flat-border) !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stDateInput"] input:focus,
+        [data-testid="stTimeInput"] input:focus,
+        [data-testid="stSearchbox"] input:focus,
+        [data-testid="stTextArea"] textarea:focus,
+        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
+            border-color: var(--flat-accent) !important;
+            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
+        }
+
+        [data-testid="stNumberInput"] button {
+            background: var(--flat-pale) !important;
+            color: var(--flat-green-dark) !important;
+            border-left-color: var(--flat-border-soft) !important;
+            box-shadow: none !important;
+        }
+
+        [data-baseweb="tag"] {
+            background: var(--flat-accent) !important;
+            color: var(--flat-green-deep) !important;
+            border-color: var(--flat-green) !important;
+            box-shadow: none !important;
+        }
+
+        [data-baseweb="tag"] * {
+            color: var(--flat-green-deep) !important;
+        }
+
+        /* Information alerts use the green theme instead of blue */
+        [data-testid="stAlert"] {
+            box-shadow: none !important;
+        }
+
+        [data-testid="stAlert"] p,
+        [data-testid="stAlert"] span {
+            color: #4C5E38 !important;
+        }
+
+        /* Tables and dataframe labels */
+        [data-testid="stDataFrame"] {
+            border-color: var(--flat-border-soft) !important;
+        }
+
+        /* No positional tab hiding */
+        [data-testid="stTabs"] [role="tablist"] > div:last-child {
+            display: initial;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -2527,8 +2830,20 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
         hoverlabel={"bgcolor": "#FFFFFF", "bordercolor": "#BDF56F", "font_color": "#1F2A16"},
     )
-    figure.update_xaxes(gridcolor="#F6FDEB", zerolinecolor="#E4F8C8", linecolor="#E4F8C8", tickfont={"color": "#6F8095"}, title_font={"color": "#607087"})
-    figure.update_yaxes(gridcolor="#F6FDEB", zerolinecolor="#E4F8C8", linecolor="#E4F8C8", tickfont={"color": "#6F8095"}, title_font={"color": "#607087"})
+    figure.update_xaxes(
+        gridcolor="#EEF5E2",
+        zerolinecolor="#C9DDA9",
+        linecolor="#C9DDA9",
+        tickfont={"color": "#66734F"},
+        title_font={"color": "#4C7814"},
+    )
+    figure.update_yaxes(
+        gridcolor="#EEF5E2",
+        zerolinecolor="#C9DDA9",
+        linecolor="#C9DDA9",
+        tickfont={"color": "#66734F"},
+        title_font={"color": "#4C7814"},
+    )
 
 
 def empty_dashboard_figure(message: str, *, donut: bool = False):
@@ -2544,7 +2859,7 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
             y0=0.16,
             x1=0.69,
             y1=0.84,
-            line={"color": "rgba(137,157,181,0.20)", "width": 18},
+            line={"color": "rgba(120,150,80,0.20)", "width": 18},
         )
         figure.update_xaxes(visible=False, range=[0, 1])
         figure.update_yaxes(visible=False, range=[0, 1])
@@ -2569,7 +2884,7 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
         y=0.5,
         xref="paper",
         yref="paper",
-        text=f"<b>No data yet</b><br><span style='color:#6F8095'>{message}</span>",
+        text=f"<b>No data yet</b><br><span style='color:#66734F'>{message}</span>",
         showarrow=False,
         align="center",
         font={"size": 14, "color": "#2A3B16"},
@@ -5347,7 +5662,7 @@ def dashboard_hero() -> None:
                 </div>
             </section>
             <aside class="time-card">
-                <div style="font-size:.76rem;color:#607087;font-weight:750;">SELECTED TIMEZONE</div>
+                <div style="font-size:.76rem;color:#65704F;font-weight:750;">SELECTED TIMEZONE</div>
                 <div class="time-now">{local_now.strftime('%I:%M %p')}</div>
                 <div class="time-date">{local_now.strftime('%A, %B %d, %Y')}<br>{preferred}</div>
                 {rows}
@@ -6053,8 +6368,8 @@ def dashboard_page() -> None:
             color="Activity",
             color_discrete_map={
                 "Contracts": "#4C7814",
-                "Ore / Mining": "#69A912",
-                "Commodities": "#F28A2A",
+                "Ore / Mining": "#78C814",
+                "Commodities": "#98FB17",
             },
         )
         activity_mix_figure.update_traces(
