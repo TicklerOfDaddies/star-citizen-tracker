@@ -518,6 +518,74 @@ def apply_custom_theme() -> None:
             font-weight: 780;
         }
 
+        .commodity-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin: .75rem 0 1rem;
+        }
+
+        .commodity-metric-card {
+            min-width: 0;
+            min-height: 126px;
+            padding: 1rem 1.05rem;
+            border: 1px solid #c7dce6;
+            border-radius: 16px;
+            background:
+                linear-gradient(145deg, #ffffff 0%, #f1f8fb 100%);
+            box-shadow: 0 10px 24px rgba(18,74,99,.09);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .commodity-metric-label {
+            color: #49647a;
+            font-size: .72rem;
+            font-weight: 790;
+            line-height: 1.25;
+            letter-spacing: .065em;
+            text-transform: uppercase;
+            margin-bottom: .55rem;
+        }
+
+        .commodity-metric-value {
+            color: #0b526b;
+            font-size: clamp(1.35rem, 2.25vw, 2.2rem);
+            font-weight: 850;
+            line-height: 1.08;
+            letter-spacing: -.025em;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .commodity-metric-value.positive {
+            color: #16825a;
+        }
+
+        .commodity-metric-value.negative {
+            color: #d43f48;
+        }
+
+        .commodity-metric-detail {
+            margin-top: .35rem;
+            color: #6d8092;
+            font-size: .72rem;
+            line-height: 1.3;
+        }
+
+        @media (max-width: 1180px) {
+            .commodity-metric-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .commodity-metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 820px) {
             .commodity-source-grid {
                 grid-template-columns: 1fr;
@@ -1325,6 +1393,530 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     ).fillna(0.0)
 
     return contracts, ores
+
+
+def empty_commodity_transaction_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=[
+            "id",
+            "user_id",
+            "date_saved",
+            "commodity_name",
+            "action",
+            "quantity_scu",
+            "unit_price",
+            "fees",
+            "total_value",
+            "origin",
+            "destination",
+            "shipment_reference",
+            "notes",
+        ]
+    )
+
+
+def load_commodity_transactions() -> pd.DataFrame:
+    """Load the signed-in user's commodity buy, sell, and loss records."""
+    try:
+        trades = fetch_table("commodity_transactions")
+        st.session_state.commodity_tracker_ready = True
+        st.session_state.pop("commodity_tracker_error", None)
+    except Exception as exc:
+        st.session_state.commodity_tracker_ready = False
+        st.session_state.commodity_tracker_error = str(exc)
+        return empty_commodity_transaction_frame()
+
+    if not trades.empty and "date_saved" in trades.columns:
+        trades["date_saved"] = pd.to_datetime(
+            trades["date_saved"],
+            errors="coerce",
+            utc=True,
+        ).dt.tz_convert(APP_TIMEZONE)
+
+    for column in (
+        "quantity_scu",
+        "unit_price",
+        "fees",
+        "total_value",
+    ):
+        if column not in trades.columns:
+            trades[column] = 0.0
+        trades[column] = pd.to_numeric(
+            trades[column],
+            errors="coerce",
+        ).fillna(0.0)
+
+    return trades
+
+
+def insert_commodity_transaction(payload: dict[str, Any]) -> None:
+    get_supabase().table("commodity_transactions").insert(payload).execute()
+
+
+def build_commodity_inventory(
+    trades: pd.DataFrame,
+) -> pd.DataFrame:
+    """Calculate current commodity quantities from buy, sell, and loss records."""
+    columns = [
+        "Commodity",
+        "Bought (SCU)",
+        "Sold (SCU)",
+        "Lost / Destroyed (SCU)",
+        "On Hand (SCU)",
+        "Purchase Value (aUEC)",
+        "Sales Value (aUEC)",
+        "Recorded Loss Value (aUEC)",
+        "Net Cash Flow (aUEC)",
+    ]
+    if trades.empty:
+        return pd.DataFrame(columns=columns)
+
+    rows: list[dict[str, Any]] = []
+    for commodity, group in trades.groupby("commodity_name"):
+        bought = group[group["action"] == "Bought"]
+        sold = group[group["action"] == "Sold"]
+        lost = group[group["action"] == "Lost / Destroyed"]
+
+        bought_scu = float(bought["quantity_scu"].sum())
+        sold_scu = float(sold["quantity_scu"].sum())
+        lost_scu = float(lost["quantity_scu"].sum())
+        purchase_value = float(
+            (bought["total_value"] + bought["fees"]).sum()
+        )
+        sales_value = float(
+            (sold["total_value"] - sold["fees"]).sum()
+        )
+        loss_value = float(
+            (lost["total_value"] + lost["fees"]).sum()
+        )
+
+        rows.append(
+            {
+                "Commodity": commodity,
+                "Bought (SCU)": bought_scu,
+                "Sold (SCU)": sold_scu,
+                "Lost / Destroyed (SCU)": lost_scu,
+                "On Hand (SCU)": bought_scu - sold_scu - lost_scu,
+                "Purchase Value (aUEC)": purchase_value,
+                "Sales Value (aUEC)": sales_value,
+                "Recorded Loss Value (aUEC)": loss_value,
+                "Net Cash Flow (aUEC)": sales_value - purchase_value,
+            }
+        )
+
+    return pd.DataFrame(rows, columns=columns).sort_values("Commodity")
+
+
+def commodity_trade_tracker(
+    commodity_names: list[str],
+    selected_commodity: str,
+    uex_prices: pd.DataFrame,
+) -> None:
+    """Render the user's commodity buy, sell, and loss tracker."""
+    st.markdown("### Commodity Buy, Sell, and Loss Tracker")
+    st.caption(
+        "Record purchases, sales, and shipments that were destroyed or lost. "
+        "The tracker calculates commodity quantities on hand and keeps a private "
+        "ledger for the signed-in user."
+    )
+
+    trades = load_commodity_transactions()
+
+    if not st.session_state.get("commodity_tracker_ready", False):
+        st.warning(
+            "The Commodity Tracker database table is not installed yet. Run "
+            "`schema_migration_v4_commodity_tracker.sql` in Supabase SQL Editor, "
+            "wait about 10 seconds, then reload the app."
+        )
+        tracker_error = st.session_state.get(
+            "commodity_tracker_error",
+            "",
+        )
+        if tracker_error:
+            with st.expander("Show database error details"):
+                st.code(tracker_error)
+
+    record_tab, inventory_tab, history_tab = st.tabs(
+        ["Record Activity", "On-Hand Inventory", "Trade History"]
+    )
+
+    with record_tab:
+        default_index = (
+            commodity_names.index(selected_commodity)
+            if selected_commodity in commodity_names
+            else 0
+        )
+
+        default_buy_price = 0.0
+        default_sell_price = 0.0
+        if not uex_prices.empty:
+            buy_rows = uex_prices[
+                uex_prices["Terminal Sells at"] > 0
+            ]
+            sell_rows = uex_prices[
+                uex_prices["Terminal Buys at"] > 0
+            ]
+            if not buy_rows.empty:
+                default_buy_price = float(
+                    buy_rows["Terminal Sells at"].min()
+                )
+            if not sell_rows.empty:
+                default_sell_price = float(
+                    sell_rows["Terminal Buys at"].max()
+                )
+
+        with st.form("commodity_transaction_form"):
+            form_col1, form_col2, form_col3 = st.columns(3)
+            with form_col1:
+                tracked_commodity = st.selectbox(
+                    "Commodity",
+                    commodity_names,
+                    index=default_index,
+                    key="tracked_commodity_name",
+                )
+            with form_col2:
+                transaction_type = st.selectbox(
+                    "Activity",
+                    ["Bought", "Sold"],
+                    key="commodity_transaction_type",
+                )
+            with form_col3:
+                shipment_lost = st.checkbox(
+                    "Shipment destroyed or lost",
+                    key="commodity_shipment_lost",
+                    help=(
+                        "This overrides the activity and records the cargo as "
+                        "Lost / Destroyed."
+                    ),
+                )
+
+            value_col1, value_col2, value_col3 = st.columns(3)
+            with value_col1:
+                quantity_scu = st.number_input(
+                    "Quantity (SCU)",
+                    min_value=0.01,
+                    value=float(cargo_scu),
+                    step=1.0,
+                    format="%.2f",
+                    key="commodity_transaction_quantity",
+                )
+            with value_col2:
+                suggested_price = (
+                    default_sell_price
+                    if transaction_type == "Sold"
+                    else default_buy_price
+                )
+                unit_price = st.number_input(
+                    (
+                        "Estimated cost basis per SCU"
+                        if shipment_lost
+                        else "Unit price (aUEC/SCU)"
+                    ),
+                    min_value=0.0,
+                    value=float(suggested_price),
+                    step=100.0,
+                    key="commodity_transaction_unit_price",
+                )
+            with value_col3:
+                fees = st.number_input(
+                    "Fees and operating costs (aUEC)",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1000.0,
+                    key="commodity_transaction_fees",
+                )
+
+            location_col1, location_col2 = st.columns(2)
+            with location_col1:
+                origin = st.text_input(
+                    "Purchase or departure location",
+                    placeholder="Area18, Lorville, Pyro...",
+                    key="commodity_transaction_origin",
+                )
+            with location_col2:
+                destination = st.text_input(
+                    "Sale or intended destination",
+                    placeholder="New Babbage, station, outpost...",
+                    key="commodity_transaction_destination",
+                )
+
+            shipment_reference = st.text_input(
+                "Shipment name or reference",
+                placeholder="Optional run name, ship, or cargo reference",
+                key="commodity_shipment_reference",
+            )
+            transaction_notes = st.text_area(
+                "Notes",
+                placeholder=(
+                    "Reason for loss, route notes, stock limitations, "
+                    "escort costs, or other details"
+                ),
+                key="commodity_transaction_notes",
+            )
+
+            final_action = (
+                "Lost / Destroyed"
+                if shipment_lost
+                else transaction_type
+            )
+            total_value = float(quantity_scu) * float(unit_price)
+
+            st.info(
+                f"Record type: {final_action}. Cargo value: "
+                f"{total_value:,.0f} aUEC. Fees: {fees:,.0f} aUEC."
+            )
+
+            submitted = st.form_submit_button(
+                (
+                    "Record Destroyed / Lost Shipment"
+                    if shipment_lost
+                    else f"Record Commodity {transaction_type[:-1] if transaction_type.endswith('s') else transaction_type}"
+                ),
+                width="stretch",
+            )
+
+        if submitted:
+            payload = {
+                "user_id": st.session_state.user_id,
+                "commodity_name": tracked_commodity,
+                "action": final_action,
+                "quantity_scu": float(quantity_scu),
+                "unit_price": float(unit_price),
+                "fees": float(fees),
+                "total_value": float(total_value),
+                "origin": origin.strip(),
+                "destination": destination.strip(),
+                "shipment_reference": shipment_reference.strip(),
+                "notes": transaction_notes.strip(),
+            }
+            try:
+                insert_commodity_transaction(payload)
+                st.success(f"{final_action} activity recorded.")
+                st.rerun()
+            except Exception as exc:
+                st.error(
+                    "The activity could not be saved. Confirm that "
+                    "`schema_migration_v4_commodity_tracker.sql` was run in "
+                    f"Supabase. Details: {exc}"
+                )
+
+    with inventory_tab:
+        inventory = build_commodity_inventory(trades)
+        if inventory.empty:
+            st.info("No commodity activity has been recorded yet.")
+        else:
+            total_on_hand = float(inventory["On Hand (SCU)"].sum())
+            total_sales = float(
+                inventory["Sales Value (aUEC)"].sum()
+            )
+            total_losses = float(
+                inventory["Recorded Loss Value (aUEC)"].sum()
+            )
+            net_cash = float(
+                inventory["Net Cash Flow (aUEC)"].sum()
+            )
+
+            render_commodity_metric_cards(
+                [
+                    {
+                        "label": "Commodities Tracked",
+                        "value": f"{len(inventory):,}",
+                    },
+                    {
+                        "label": "Total On Hand",
+                        "value": f"{total_on_hand:,.2f} SCU",
+                        "tone": "positive" if total_on_hand > 0 else "",
+                    },
+                    {
+                        "label": "Sales Received",
+                        "value": f"{total_sales:,.0f} aUEC",
+                        "tone": "positive" if total_sales > 0 else "",
+                    },
+                    {
+                        "label": "Recorded Cargo Loss",
+                        "value": f"{total_losses:,.0f} aUEC",
+                        "tone": "negative" if total_losses > 0 else "",
+                    },
+                    {
+                        "label": "Net Cash Flow",
+                        "value": f"{net_cash:,.0f} aUEC",
+                        "tone": (
+                            "positive"
+                            if net_cash > 0
+                            else "negative"
+                            if net_cash < 0
+                            else ""
+                        ),
+                    },
+                ]
+            )
+
+            st.dataframe(
+                inventory,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Bought (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Sold (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Lost / Destroyed (SCU)": (
+                        st.column_config.NumberColumn(
+                            format="%,.2f SCU"
+                        )
+                    ),
+                    "On Hand (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Purchase Value (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
+                    ),
+                    "Sales Value (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
+                    ),
+                    "Recorded Loss Value (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
+                    ),
+                    "Net Cash Flow (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
+                    ),
+                },
+            )
+            st.download_button(
+                "Download Commodity Inventory CSV",
+                data=dataframe_csv_bytes(inventory),
+                file_name="star_citizen_commodity_inventory.csv",
+                mime="text/csv",
+                width="stretch",
+            )
+
+    with history_tab:
+        if trades.empty:
+            st.info("No commodity activity has been recorded yet.")
+        else:
+            history = trades.rename(
+                columns={
+                    "date_saved": "Date",
+                    "commodity_name": "Commodity",
+                    "action": "Activity",
+                    "quantity_scu": "Quantity (SCU)",
+                    "unit_price": "Unit Price (aUEC/SCU)",
+                    "fees": "Fees (aUEC)",
+                    "total_value": "Cargo Value (aUEC)",
+                    "origin": "Origin",
+                    "destination": "Destination",
+                    "shipment_reference": "Shipment Reference",
+                    "notes": "Notes",
+                }
+            ).copy()
+            display_columns = [
+                "Date",
+                "Commodity",
+                "Activity",
+                "Quantity (SCU)",
+                "Unit Price (aUEC/SCU)",
+                "Cargo Value (aUEC)",
+                "Fees (aUEC)",
+                "Origin",
+                "Destination",
+                "Shipment Reference",
+                "Notes",
+            ]
+            st.dataframe(
+                history[
+                    [
+                        column
+                        for column in display_columns
+                        if column in history.columns
+                    ]
+                ],
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Quantity (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Unit Price (aUEC/SCU)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        )
+                    ),
+                    "Cargo Value (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
+                    ),
+                    "Fees (aUEC)": st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
+                    ),
+                },
+            )
+
+            download_col, delete_col = st.columns([2, 1])
+            with download_col:
+                st.download_button(
+                    "Download Commodity Trade History CSV",
+                    data=dataframe_csv_bytes(
+                        history[
+                            [
+                                column
+                                for column in display_columns
+                                if column in history.columns
+                            ]
+                        ]
+                    ),
+                    file_name="star_citizen_commodity_trade_history.csv",
+                    mime="text/csv",
+                    width="stretch",
+                )
+            with delete_col:
+                trade_options = {
+                    int(row["id"]): (
+                        f'ID {int(row["id"])} | '
+                        f'{row["commodity_name"]} | {row["action"]} | '
+                        f'{float(row["quantity_scu"]):,.2f} SCU'
+                    )
+                    for _, row in trades.iterrows()
+                }
+                selected_trade_id = st.selectbox(
+                    "Select record",
+                    options=list(trade_options),
+                    format_func=lambda value: trade_options[value],
+                    key="delete_commodity_trade_select",
+                    label_visibility="collapsed",
+                )
+                confirm_delete = st.checkbox(
+                    "Confirm deletion",
+                    key="delete_commodity_trade_confirm",
+                )
+                if st.button(
+                    "Delete Selected Record",
+                    disabled=not confirm_delete,
+                    type="primary",
+                    key="delete_commodity_trade_button",
+                    width="stretch",
+                ):
+                    try:
+                        delete_record(
+                            "commodity_transactions",
+                            selected_trade_id,
+                        )
+                        st.success("Commodity record deleted.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(
+                            f"The commodity record could not be deleted: {exc}"
+                        )
 
 
 def empty_blueprint_frame() -> pd.DataFrame:
@@ -3260,6 +3852,44 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 st.error(f"The ore entry could not be deleted: {exc}")
 
 
+def render_commodity_metric_cards(
+    cards: list[dict[str, str]],
+) -> None:
+    """Render readable commodity metrics without Streamlit truncation."""
+    card_html = []
+    for card in cards:
+        tone = card.get("tone", "")
+        tone_class = (
+            tone if tone in {"positive", "negative"} else ""
+        )
+        detail = card.get("detail", "")
+        detail_html = (
+            f'<div class="commodity-metric-detail">{html.escape(detail)}</div>'
+            if detail
+            else ""
+        )
+        card_html.append(
+            f"""
+            <div class="commodity-metric-card">
+                <div class="commodity-metric-label">
+                    {html.escape(card["label"])}
+                </div>
+                <div class="commodity-metric-value {tone_class}">
+                    {html.escape(card["value"])}
+                </div>
+                {detail_html}
+            </div>
+            """
+        )
+
+    st.markdown(
+        '<div class="commodity-metric-grid">'
+        + "".join(card_html)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def optional_secret(name: str) -> str:
     """Read an optional Streamlit secret without interrupting the app."""
     try:
@@ -4115,11 +4745,19 @@ def commodities_page() -> None:
     else:
         uex_error = "This commodity name was not matched to a UEX commodity ID."
 
-    market_tab, routes_tab, planner_tab, sc_tab, calculator_tab = st.tabs(
+    (
+        market_tab,
+        routes_tab,
+        planner_tab,
+        tracker_tab,
+        sc_tab,
+        calculator_tab,
+    ) = st.tabs(
         [
             "Market Snapshot",
             "Trade Routes",
             "Route Planner",
+            "My Trade Tracker",
             "SC Trade Tools",
             "Cargo Calculator",
         ]
@@ -4220,15 +4858,37 @@ def commodities_page() -> None:
             spread = max(best_sale - best_purchase, 0.0)
             estimated_profit = spread * float(cargo_scu)
 
-            metric1, metric2, metric3, metric4, metric5 = st.columns(5)
-            metric1.metric("Best Player Buy", f"{best_purchase:,.0f} aUEC/SCU")
-            metric2.metric("Best Player Sale", f"{best_sale:,.0f} aUEC/SCU")
-            metric3.metric("Maximum Spread", f"{spread:,.0f} aUEC/SCU")
-            metric4.metric(
-                f"Gross Profit at {cargo_scu:,.0f} SCU",
-                f"{estimated_profit:,.0f} aUEC",
+            render_commodity_metric_cards(
+                [
+                    {
+                        "label": "Best Player Buy",
+                        "value": f"{best_purchase:,.0f} aUEC/SCU",
+                        "detail": "Lowest terminal purchase price",
+                    },
+                    {
+                        "label": "Best Player Sale",
+                        "value": f"{best_sale:,.0f} aUEC/SCU",
+                        "detail": "Highest terminal sale price",
+                    },
+                    {
+                        "label": "Maximum Spread",
+                        "value": f"{spread:,.0f} aUEC/SCU",
+                        "tone": "positive" if spread > 0 else "",
+                        "detail": "Best sale minus best purchase",
+                    },
+                    {
+                        "label": f"Gross Profit at {cargo_scu:,.0f} SCU",
+                        "value": f"{estimated_profit:,.0f} aUEC",
+                        "tone": "positive" if estimated_profit > 0 else "",
+                        "detail": "Before fuel, fees, risk, and losses",
+                    },
+                    {
+                        "label": "Matching Terminals",
+                        "value": f"{len(filtered_prices):,}",
+                        "detail": "After current filters",
+                    },
+                ]
             )
-            metric5.metric("Matching Terminals", f"{len(filtered_prices):,}")
 
             st.markdown("### Best Trading Terminals")
             st.caption(
@@ -4893,6 +5553,14 @@ def commodities_page() -> None:
                 )
 
 
+    with tracker_tab:
+        commodity_trade_tracker(
+            names,
+            selected_commodity,
+            uex_prices,
+        )
+
+
     with sc_tab:
         public_col1, public_col2, public_col3, public_col4 = st.columns(4)
         try:
@@ -4945,6 +5613,11 @@ def commodities_page() -> None:
                 st.code(
                     'SC_TRADE_TOOLS_TOKEN = "your-sc-trade-tools-api-token"',
                     language="toml",
+                )
+                st.link_button(
+                    "Open Official SC Trade Tools API Licence",
+                    "https://www.patreon.com/cw/sc_trade_tools/membership",
+                    width="stretch",
                 )
                 st.caption(
                     "Keep the token in Streamlit Secrets. Never commit it to GitHub."
