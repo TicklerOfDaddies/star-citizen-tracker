@@ -106,9 +106,9 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 DATA_DIR = Path(__file__).parent / "data"
 MINING_LOCATIONS_FILE = DATA_DIR / "mining_locations.csv"
 UEX_API_BASE = "https://api.uexcorp.uk/2.0"
-UEX_CACHE_SECONDS = 3600
+UEX_CACHE_SECONDS = 840
 SC_TRADE_TOOLS_API_BASE = "https://sc-trade.tools/api"
-SC_TRADE_TOOLS_CACHE_SECONDS = 1800
+SC_TRADE_TOOLS_CACHE_SECONDS = 840
 SC_TRADE_TOOLS_URL = "https://sc-trade.tools/"
 
 STAR_CITIZEN_COLORS = [
@@ -2211,17 +2211,19 @@ def dashboard_page() -> None:
         ore_value_figure.update_xaxes(title_text="Ore or mineral")
         style_plotly_figure(ore_value_figure, height=430)
         ore_value_figure.update_layout(
-            margin={"l": 38, "r": 24, "t": 32, "b": 88},
+            margin={"l": 44, "r": 24, "t": 72, "b": 62},
             legend={
                 "orientation": "h",
-                "yanchor": "top",
-                "y": -0.20,
+                "yanchor": "bottom",
+                "y": 1.03,
                 "xanchor": "center",
                 "x": 0.5,
                 "title_text": "",
             },
             bargap=0.18,
             bargroupgap=0.06,
+            uniformtext_minsize=10,
+            uniformtext_mode="hide",
         )
 
         ore_mix_data = (
@@ -2242,14 +2244,30 @@ def dashboard_page() -> None:
             textinfo="label+percent+value",
             texttemplate="%{label}<br>%{value:,.0f} aUEC<br>%{percent}",
             textposition="inside",
+            insidetextorientation="horizontal",
+            textfont={"size": 12},
             hovertemplate=(
                 "<b>%{label}</b><br>"
                 "Value: %{value:,.0f} aUEC<br>"
                 "Share: %{percent}<extra></extra>"
             ),
             marker={"line": {"color": "#ffffff", "width": 3}},
+            sort=False,
         )
         style_plotly_figure(ore_mix_figure, height=430)
+        ore_mix_figure.update_layout(
+            margin={"l": 24, "r": 24, "t": 28, "b": 82},
+            legend={
+                "orientation": "h",
+                "yanchor": "top",
+                "y": -0.08,
+                "xanchor": "center",
+                "x": 0.5,
+                "title_text": "",
+            },
+            uniformtext_minsize=10,
+            uniformtext_mode="hide",
+        )
 
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
@@ -3734,10 +3752,27 @@ def normalize_uex_prices(rows: list[dict[str, Any]]) -> pd.DataFrame:
     for row in rows:
         terminal_buys = safe_float(row.get("price_buy"))
         terminal_sells = safe_float(row.get("price_sell"))
+
+        area_parts = [
+            row.get("planet_name"),
+            row.get("moon_name"),
+            row.get("orbit_name"),
+            row.get("space_station_name"),
+            row.get("city_name"),
+            row.get("outpost_name"),
+        ]
+        area_values: list[str] = []
+        for part in area_parts:
+            value = str(part or "").strip()
+            if value and value not in area_values:
+                area_values.append(value)
+        area = " > ".join(area_values) or "System location"
+
         output.append(
             {
                 "System": row.get("star_system_name") or "Unknown",
                 "Environment": uex_trade_environment(row),
+                "Area": area,
                 "Location": uex_trade_location(row),
                 "Terminal": row.get("terminal_name") or "Unknown",
                 "Terminal Buys at": terminal_buys,
@@ -3968,6 +4003,7 @@ def selected_sc_report(
     ]
 
 
+@st.fragment(run_every="15m")
 def commodities_page() -> None:
     page_banner(
         "records_banner.jpg",
@@ -3976,20 +4012,15 @@ def commodities_page() -> None:
         "Trade Operations",
     )
 
-    refresh_col, link_col1, link_col2 = st.columns([1, 1, 1])
-    with refresh_col:
-        if st.button(
-            "Refresh Commodity Data",
-            key="refresh_commodity_data",
-            width="stretch",
-        ):
-            fetch_uex_resource.clear()
-            fetch_uex_commodity_prices.clear()
-            fetch_uex_commodity_routes.clear()
-            fetch_sc_trade_tools_resource.clear()
-            fetch_sc_trade_tools_transactions.clear()
-            fetch_sc_trade_tools_reports.clear()
-            st.rerun()
+    checked_at = datetime.now(ZoneInfo(selected_timezone())).strftime(
+        "%b %d, %Y at %I:%M %p %Z"
+    )
+    status_col, link_col1, link_col2 = st.columns([1.5, 1, 1])
+    with status_col:
+        st.info(
+            "Auto-refresh: every 15 minutes while this page remains open. "
+            f"Last checked {checked_at}."
+        )
     with link_col1:
         st.link_button(
             "Open UEX Trade Routes",
@@ -4084,10 +4115,11 @@ def commodities_page() -> None:
     else:
         uex_error = "This commodity name was not matched to a UEX commodity ID."
 
-    market_tab, routes_tab, sc_tab, calculator_tab = st.tabs(
+    market_tab, routes_tab, planner_tab, sc_tab, calculator_tab = st.tabs(
         [
             "Market Snapshot",
             "Trade Routes",
+            "Route Planner",
             "SC Trade Tools",
             "Cargo Calculator",
         ]
@@ -4198,44 +4230,95 @@ def commodities_page() -> None:
             )
             metric5.metric("Matching Terminals", f"{len(filtered_prices):,}")
 
-            chart_rows = filtered_prices.copy()
-            chart_rows["Best Market Value"] = chart_rows[
-                ["Terminal Buys at", "Terminal Sells at"]
-            ].max(axis=1)
-            chart_rows = chart_rows.nlargest(18, "Best Market Value")
-            if not chart_rows.empty:
-                chart_data = chart_rows.melt(
-                    id_vars=["Location"],
-                    value_vars=["Terminal Buys at", "Terminal Sells at"],
-                    var_name="Listing",
-                    value_name="aUEC per SCU",
-                )
-                chart_data = chart_data[chart_data["aUEC per SCU"] > 0]
-                market_figure = px.bar(
-                    chart_data,
-                    x="aUEC per SCU",
-                    y="Location",
-                    color="Listing",
-                    orientation="h",
-                    barmode="group",
-                    text_auto=",.0f",
-                )
-                market_figure.update_traces(
-                    textposition="inside",
-                    textfont={"color": "#ffffff"},
-                )
-                market_figure.update_yaxes(categoryorder="total ascending")
-                style_plotly_figure(market_figure, height=570)
-                st.plotly_chart(
-                    market_figure,
-                    width="stretch",
-                    config={"displayModeBar": False},
-                )
+            st.markdown("### Best Trading Terminals")
+            st.caption(
+                "Player buys show where you purchase the commodity. Player sells "
+                "show where you deliver it. System, area, and terminal are separated "
+                "to make the listings easier to read."
+            )
 
-            st.markdown("#### Terminal Market Details")
+            buy_table = (
+                player_buy_rows.sort_values(
+                    ["Terminal Sells at", "Stock (SCU)"],
+                    ascending=[True, False],
+                )
+                .head(12)
+                .rename(columns={"Terminal Sells at": "Player Pays"})
+            )
+            sell_table = (
+                player_sell_rows.sort_values(
+                    ["Terminal Buys at", "Demand (SCU)"],
+                    ascending=[False, False],
+                )
+                .head(12)
+                .rename(columns={"Terminal Buys at": "Player Receives"})
+            )
+
+            terminal_buy_col, terminal_sell_col = st.columns(2)
+            with terminal_buy_col:
+                st.markdown("#### Best Places to Buy")
+                if buy_table.empty:
+                    st.info("No purchase terminals match the current filters.")
+                else:
+                    st.dataframe(
+                        buy_table[
+                            [
+                                "System",
+                                "Environment",
+                                "Area",
+                                "Terminal",
+                                "Player Pays",
+                                "Stock (SCU)",
+                                "Last Updated",
+                            ]
+                        ],
+                        width="stretch",
+                        hide_index=True,
+                        column_config={
+                            "Player Pays": st.column_config.NumberColumn(
+                                format="%,.0f aUEC/SCU"
+                            ),
+                            "Stock (SCU)": st.column_config.NumberColumn(
+                                format="%,.0f SCU"
+                            ),
+                        },
+                    )
+
+            with terminal_sell_col:
+                st.markdown("#### Best Places to Sell")
+                if sell_table.empty:
+                    st.info("No sale terminals match the current filters.")
+                else:
+                    st.dataframe(
+                        sell_table[
+                            [
+                                "System",
+                                "Environment",
+                                "Area",
+                                "Terminal",
+                                "Player Receives",
+                                "Demand (SCU)",
+                                "Last Updated",
+                            ]
+                        ],
+                        width="stretch",
+                        hide_index=True,
+                        column_config={
+                            "Player Receives": st.column_config.NumberColumn(
+                                format="%,.0f aUEC/SCU"
+                            ),
+                            "Demand (SCU)": st.column_config.NumberColumn(
+                                format="%,.0f SCU"
+                            ),
+                        },
+                    )
+
+            st.markdown("#### All Matching Terminal Listings")
             market_columns = [
                 "System",
                 "Environment",
+                "Area",
+                "Terminal",
                 "Location",
                 "Terminal Buys at",
                 "Terminal Sells at",
@@ -4474,6 +4557,341 @@ def commodities_page() -> None:
                     mime="text/csv",
                     width="stretch",
                 )
+
+    with planner_tab:
+        st.markdown("### Commodity Route Planner")
+        st.caption(
+            "Plan a practical run using cargo capacity, available funds, reserve "
+            "cash, system preferences, and terminal environment. The route load is "
+            "limited by cargo space, funds, origin stock, and destination demand."
+        )
+
+        if uex_routes.empty:
+            st.info(
+                "No UEX route data is available for the selected commodity and "
+                "investment limit."
+            )
+        else:
+            planner_routes = uex_routes.copy()
+            planner_routes["Origin System"] = planner_routes["Origin"].astype(
+                str
+            ).str.split(" > ").str[0]
+            planner_routes["Destination System"] = planner_routes[
+                "Destination"
+            ].astype(str).str.split(" > ").str[0]
+
+            system_options = sorted(
+                set(planner_routes["Origin System"].dropna().astype(str))
+                | set(
+                    planner_routes["Destination System"].dropna().astype(str)
+                )
+            )
+
+            planner_col1, planner_col2, planner_col3, planner_col4 = st.columns(4)
+            with planner_col1:
+                planner_cargo = st.number_input(
+                    "Ship cargo capacity (SCU)",
+                    min_value=1.0,
+                    max_value=1000000.0,
+                    value=float(cargo_scu),
+                    step=10.0,
+                    key="planner_cargo_capacity",
+                )
+            with planner_col2:
+                planner_funds = st.number_input(
+                    "Available trading funds",
+                    min_value=0.0,
+                    max_value=1000000000.0,
+                    value=float(investment_limit),
+                    step=100000.0,
+                    key="planner_available_funds",
+                )
+            with planner_col3:
+                reserve_funds = st.number_input(
+                    "Funds to keep in reserve",
+                    min_value=0.0,
+                    max_value=1000000000.0,
+                    value=0.0,
+                    step=50000.0,
+                    key="planner_reserve_funds",
+                )
+            with planner_col4:
+                planner_priority = st.selectbox(
+                    "Rank routes by",
+                    [
+                        "Highest Planned Profit",
+                        "Highest Planned ROI",
+                        "Shortest Distance",
+                        "Lowest Investment",
+                    ],
+                    key="planner_priority",
+                )
+
+            pref_col1, pref_col2, pref_col3, pref_col4 = st.columns(4)
+            with pref_col1:
+                origin_systems = st.multiselect(
+                    "Origin systems",
+                    system_options,
+                    default=system_options,
+                    key="planner_origin_systems",
+                )
+            with pref_col2:
+                destination_systems = st.multiselect(
+                    "Destination systems",
+                    system_options,
+                    default=system_options,
+                    key="planner_destination_systems",
+                )
+            with pref_col3:
+                origin_environments = st.multiselect(
+                    "Origin environment",
+                    ["Ground", "Space", "Other"],
+                    default=["Ground", "Space", "Other"],
+                    key="planner_origin_environment",
+                )
+            with pref_col4:
+                destination_environments = st.multiselect(
+                    "Destination environment",
+                    ["Ground", "Space", "Other"],
+                    default=["Ground", "Space", "Other"],
+                    key="planner_destination_environment",
+                )
+
+            usable_funds = max(
+                float(planner_funds) - float(reserve_funds),
+                0.0,
+            )
+            planned_rows: list[dict[str, Any]] = []
+
+            for _, route in planner_routes.iterrows():
+                if route["Origin System"] not in origin_systems:
+                    continue
+                if route["Destination System"] not in destination_systems:
+                    continue
+                if route["Origin Environment"] not in origin_environments:
+                    continue
+                if (
+                    route["Destination Environment"]
+                    not in destination_environments
+                ):
+                    continue
+
+                buy_price = float(route["Buy Price / SCU"])
+                sell_price = float(route["Sell Price / SCU"])
+                if buy_price <= 0 or sell_price <= 0:
+                    continue
+
+                load_limits = [
+                    float(planner_cargo),
+                    usable_funds / buy_price,
+                ]
+
+                origin_stock = float(route["Origin Stock (SCU)"])
+                destination_demand = float(
+                    route["Destination Demand (SCU)"]
+                )
+                if origin_stock > 0:
+                    load_limits.append(origin_stock)
+                if destination_demand > 0:
+                    load_limits.append(destination_demand)
+
+                planned_scu = max(min(load_limits), 0.0)
+                if planned_scu <= 0:
+                    continue
+
+                actual_investment = planned_scu * buy_price
+                planned_revenue = planned_scu * sell_price
+                planned_profit = planned_revenue - actual_investment
+                planned_roi = (
+                    planned_profit / actual_investment * 100
+                    if actual_investment > 0
+                    else 0.0
+                )
+
+                planned_rows.append(
+                    {
+                        "Origin": route["Origin"],
+                        "Destination": route["Destination"],
+                        "Load (SCU)": planned_scu,
+                        "Buy Price / SCU": buy_price,
+                        "Sell Price / SCU": sell_price,
+                        "Investment": actual_investment,
+                        "Planned Revenue": planned_revenue,
+                        "Planned Profit": planned_profit,
+                        "Planned ROI": planned_roi,
+                        "Distance (GM)": float(route["Distance (GM)"]),
+                        "Origin Stock (SCU)": origin_stock,
+                        "Destination Demand (SCU)": destination_demand,
+                        "Origin Freight Elevator": route[
+                            "Origin Freight Elevator"
+                        ],
+                        "Destination Freight Elevator": route[
+                            "Destination Freight Elevator"
+                        ],
+                        "Origin Loading Dock": route["Origin Loading Dock"],
+                        "Destination Loading Dock": route[
+                            "Destination Loading Dock"
+                        ],
+                        "Origin Refuel": route["Origin Refuel"],
+                        "Destination Refuel": route["Destination Refuel"],
+                    }
+                )
+
+            planned_routes = pd.DataFrame(planned_rows)
+
+            if planned_routes.empty:
+                st.info(
+                    "No route can be funded and loaded with the current planner "
+                    "settings."
+                )
+            else:
+                sort_map = {
+                    "Highest Planned Profit": ("Planned Profit", False),
+                    "Highest Planned ROI": ("Planned ROI", False),
+                    "Shortest Distance": ("Distance (GM)", True),
+                    "Lowest Investment": ("Investment", True),
+                }
+                sort_column, sort_ascending = sort_map[planner_priority]
+                planned_routes = planned_routes.sort_values(
+                    sort_column,
+                    ascending=sort_ascending,
+                ).reset_index(drop=True)
+
+                best_route = planned_routes.iloc[0]
+
+                metric1, metric2, metric3, metric4, metric5 = st.columns(5)
+                metric1.metric(
+                    "Recommended Load",
+                    f"{best_route['Load (SCU)']:,.1f} SCU",
+                )
+                metric2.metric(
+                    "Investment",
+                    f"{best_route['Investment']:,.0f} aUEC",
+                )
+                metric3.metric(
+                    "Planned Profit",
+                    f"{best_route['Planned Profit']:,.0f} aUEC",
+                )
+                metric4.metric(
+                    "Planned ROI",
+                    f"{best_route['Planned ROI']:,.1f}%",
+                )
+                metric5.metric(
+                    "Distance",
+                    f"{best_route['Distance (GM)']:,.1f} GM",
+                )
+
+                st.markdown("#### Recommended Run")
+                origin_col, destination_col = st.columns(2)
+                with origin_col:
+                    st.markdown("**Purchase terminal**")
+                    st.write(best_route["Origin"])
+                    st.caption(
+                        f"Load {best_route['Load (SCU)']:,.1f} SCU at "
+                        f"{best_route['Buy Price / SCU']:,.0f} aUEC/SCU."
+                    )
+                    st.write(
+                        "Freight elevator: "
+                        + (
+                            "Yes"
+                            if best_route["Origin Freight Elevator"]
+                            else "No"
+                        )
+                    )
+                    st.write(
+                        "Loading dock: "
+                        + (
+                            "Yes"
+                            if best_route["Origin Loading Dock"]
+                            else "No"
+                        )
+                    )
+
+                with destination_col:
+                    st.markdown("**Sale terminal**")
+                    st.write(best_route["Destination"])
+                    st.caption(
+                        f"Sell at {best_route['Sell Price / SCU']:,.0f} "
+                        f"aUEC/SCU for about "
+                        f"{best_route['Planned Revenue']:,.0f} aUEC."
+                    )
+                    st.write(
+                        "Freight elevator: "
+                        + (
+                            "Yes"
+                            if best_route["Destination Freight Elevator"]
+                            else "No"
+                        )
+                    )
+                    st.write(
+                        "Refueling available: "
+                        + (
+                            "Yes"
+                            if best_route["Destination Refuel"]
+                            else "No"
+                        )
+                    )
+
+                st.markdown("#### Ranked Route Options")
+                planner_columns = [
+                    "Origin",
+                    "Destination",
+                    "Load (SCU)",
+                    "Buy Price / SCU",
+                    "Sell Price / SCU",
+                    "Investment",
+                    "Planned Revenue",
+                    "Planned Profit",
+                    "Planned ROI",
+                    "Distance (GM)",
+                    "Origin Stock (SCU)",
+                    "Destination Demand (SCU)",
+                ]
+                st.dataframe(
+                    planned_routes[planner_columns].head(50),
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Load (SCU)": st.column_config.NumberColumn(
+                            format="%,.1f SCU"
+                        ),
+                        "Buy Price / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Sell Price / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Investment": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                        "Planned Revenue": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                        "Planned Profit": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                        "Planned ROI": st.column_config.NumberColumn(
+                            format="%.1f%%"
+                        ),
+                        "Distance (GM)": st.column_config.NumberColumn(
+                            format="%,.1f GM"
+                        ),
+                    },
+                )
+                st.download_button(
+                    "Download Planned Routes CSV",
+                    data=dataframe_csv_bytes(
+                        planned_routes[planner_columns]
+                    ),
+                    file_name=(
+                        "star_citizen_"
+                        f"{re.sub(r'[^a-z0-9]+', '_', selected_commodity.lower()).strip('_')}"
+                        "_route_plan.csv"
+                    ),
+                    mime="text/csv",
+                    width="stretch",
+                )
+
 
     with sc_tab:
         public_col1, public_col2, public_col3, public_col4 = st.columns(4)
