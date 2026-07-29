@@ -3057,27 +3057,107 @@ def empty_commodity_transaction_frame() -> pd.DataFrame:
             "destination",
             "shipment_reference",
             "notes",
+            "cash_effect",
         ]
     )
 
 
-def load_commodity_transactions() -> pd.DataFrame:
-    """Load the signed-in user's commodity buy, sell, and loss records."""
-    try:
-        trades = fetch_table("commodity_transactions")
-        st.session_state.commodity_tracker_ready = True
-        st.session_state.pop("commodity_tracker_error", None)
-    except Exception as exc:
-        st.session_state.commodity_tracker_ready = False
-        st.session_state.commodity_tracker_error = str(exc)
+def normalize_commodity_action(value: Any) -> str:
+    """Map records created by older app versions to current action names."""
+    normalized = re.sub(
+        r"[^a-z]+",
+        " ",
+        str(value or "").strip().casefold(),
+    ).strip()
+
+    buy_aliases = {
+        "buy",
+        "bought",
+        "purchase",
+        "purchased",
+        "player buy",
+    }
+    sell_aliases = {
+        "sell",
+        "sold",
+        "sale",
+        "player sell",
+    }
+    loss_aliases = {
+        "lost",
+        "destroyed",
+        "lost destroyed",
+        "destroyed lost",
+        "shipment lost",
+        "shipment destroyed",
+        "loss",
+    }
+
+    if normalized in buy_aliases:
+        return "Bought"
+    if normalized in sell_aliases:
+        return "Sold"
+    if normalized in loss_aliases:
+        return "Lost / Destroyed"
+
+    if "destroy" in normalized or "lost" in normalized:
+        return "Lost / Destroyed"
+    if "sell" in normalized or "sold" in normalized or "sale" in normalized:
+        return "Sold"
+    if "buy" in normalized or "bought" in normalized or "purchas" in normalized:
+        return "Bought"
+
+    return str(value or "Unknown").strip() or "Unknown"
+
+
+def normalize_commodity_transactions(
+    trades: pd.DataFrame,
+) -> pd.DataFrame:
+    """Normalize legacy rows and derive reliable totals for every app section."""
+    expected_columns = [
+        "id",
+        "user_id",
+        "date_saved",
+        "commodity_name",
+        "action",
+        "quantity_scu",
+        "unit_price",
+        "fees",
+        "total_value",
+        "origin",
+        "destination",
+        "shipment_reference",
+        "notes",
+    ]
+
+    if trades is None or trades.empty:
         return empty_commodity_transaction_frame()
 
-    if not trades.empty and "date_saved" in trades.columns:
-        trades["date_saved"] = pd.to_datetime(
-            trades["date_saved"],
-            errors="coerce",
-            utc=True,
-        ).dt.tz_convert(APP_TIMEZONE)
+    normalized = trades.copy()
+    for column in expected_columns:
+        if column not in normalized.columns:
+            normalized[column] = (
+                0.0
+                if column
+                in {
+                    "quantity_scu",
+                    "unit_price",
+                    "fees",
+                    "total_value",
+                }
+                else ""
+            )
+
+    normalized["commodity_name"] = (
+        normalized["commodity_name"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .replace("", "Unknown Commodity")
+    )
+    normalized["action"] = normalized["action"].map(
+        normalize_commodity_action
+    )
 
     for column in (
         "quantity_scu",
@@ -3085,72 +3165,215 @@ def load_commodity_transactions() -> pd.DataFrame:
         "fees",
         "total_value",
     ):
-        if column not in trades.columns:
-            trades[column] = 0.0
-        trades[column] = pd.to_numeric(
-            trades[column],
+        normalized[column] = pd.to_numeric(
+            normalized[column],
             errors="coerce",
         ).fillna(0.0)
+        normalized[column] = normalized[column].clip(lower=0.0)
+
+    calculated_value = (
+        normalized["quantity_scu"]
+        * normalized["unit_price"]
+    )
+    needs_calculated_value = (
+        normalized["total_value"] <= 0
+    ) & (calculated_value > 0)
+    normalized.loc[
+        needs_calculated_value,
+        "total_value",
+    ] = calculated_value.loc[needs_calculated_value]
+
+    if "date_saved" in normalized.columns:
+        normalized["date_saved"] = pd.to_datetime(
+            normalized["date_saved"],
+            errors="coerce",
+            utc=True,
+        )
+        try:
+            normalized["date_saved"] = normalized[
+                "date_saved"
+            ].dt.tz_convert(APP_TIMEZONE)
+        except (TypeError, AttributeError):
+            pass
+
+    for column in (
+        "origin",
+        "destination",
+        "shipment_reference",
+        "notes",
+    ):
+        normalized[column] = (
+            normalized[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+    normalized["cash_effect"] = 0.0
+    bought_mask = normalized["action"] == "Bought"
+    sold_mask = normalized["action"] == "Sold"
+    loss_mask = normalized["action"] == "Lost / Destroyed"
+
+    normalized.loc[bought_mask, "cash_effect"] = -(
+        normalized.loc[bought_mask, "total_value"]
+        + normalized.loc[bought_mask, "fees"]
+    )
+    normalized.loc[sold_mask, "cash_effect"] = (
+        normalized.loc[sold_mask, "total_value"]
+        - normalized.loc[sold_mask, "fees"]
+    )
+    normalized.loc[loss_mask, "cash_effect"] = -(
+        normalized.loc[loss_mask, "total_value"]
+        + normalized.loc[loss_mask, "fees"]
+    )
+
+    ordered_columns = [
+        *expected_columns,
+        "cash_effect",
+    ]
+    return normalized[ordered_columns]
+
+
+def load_commodity_transactions() -> pd.DataFrame:
+    """Load and normalize the signed-in user's commodity records."""
+    try:
+        raw_trades = fetch_table("commodity_transactions")
+        trades = normalize_commodity_transactions(raw_trades)
+        st.session_state.commodity_tracker_ready = True
+        st.session_state.pop("commodity_tracker_error", None)
+        st.session_state.commodity_tracker_row_count = len(trades)
+    except Exception as exc:
+        st.session_state.commodity_tracker_ready = False
+        st.session_state.commodity_tracker_error = str(exc)
+        st.session_state.commodity_tracker_row_count = 0
+        return empty_commodity_transaction_frame()
 
     return trades
 
 
 def insert_commodity_transaction(payload: dict[str, Any]) -> None:
-    get_supabase().table("commodity_transactions").insert(payload).execute()
+    """Insert one validated commodity activity record."""
+    action = normalize_commodity_action(payload.get("action"))
+    quantity = max(safe_float(payload.get("quantity_scu")), 0.0)
+    unit_price = max(safe_float(payload.get("unit_price")), 0.0)
+    fees = max(safe_float(payload.get("fees")), 0.0)
+    total_value = max(
+        safe_float(payload.get("total_value")),
+        quantity * unit_price,
+    )
+
+    cleaned_payload = {
+        **payload,
+        "commodity_name": str(
+            payload.get("commodity_name", "")
+        ).strip(),
+        "action": action,
+        "quantity_scu": quantity,
+        "unit_price": unit_price,
+        "fees": fees,
+        "total_value": total_value,
+    }
+    get_supabase().table("commodity_transactions").insert(
+        cleaned_payload
+    ).execute()
+
+
+def commodity_summary_values(
+    trades: pd.DataFrame,
+) -> dict[str, float]:
+    """Calculate consistent commodity totals used by every page and export."""
+    normalized = normalize_commodity_transactions(trades)
+
+    if normalized.empty:
+        return {
+            "records": 0.0,
+            "bought_records": 0.0,
+            "sold_records": 0.0,
+            "loss_records": 0.0,
+            "bought_scu": 0.0,
+            "sold_scu": 0.0,
+            "lost_scu": 0.0,
+            "on_hand_scu": 0.0,
+            "purchase_cost": 0.0,
+            "sales_revenue": 0.0,
+            "loss_value": 0.0,
+            "net_cash_flow": 0.0,
+        }
+
+    bought = normalized[normalized["action"] == "Bought"]
+    sold = normalized[normalized["action"] == "Sold"]
+    lost = normalized[
+        normalized["action"] == "Lost / Destroyed"
+    ]
+
+    purchase_cost = -float(bought["cash_effect"].sum())
+    sales_revenue = float(sold["cash_effect"].sum())
+    loss_value = -float(lost["cash_effect"].sum())
+
+    bought_scu = float(bought["quantity_scu"].sum())
+    sold_scu = float(sold["quantity_scu"].sum())
+    lost_scu = float(lost["quantity_scu"].sum())
+
+    return {
+        "records": float(len(normalized)),
+        "bought_records": float(len(bought)),
+        "sold_records": float(len(sold)),
+        "loss_records": float(len(lost)),
+        "bought_scu": bought_scu,
+        "sold_scu": sold_scu,
+        "lost_scu": lost_scu,
+        "on_hand_scu": bought_scu - sold_scu - lost_scu,
+        "purchase_cost": purchase_cost,
+        "sales_revenue": sales_revenue,
+        "loss_value": loss_value,
+        "net_cash_flow": float(normalized["cash_effect"].sum()),
+    }
 
 
 def build_commodity_inventory(
     trades: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Calculate current commodity quantities from buy, sell, and loss records."""
+    """Calculate commodity inventory and money movement by commodity."""
     columns = [
         "Commodity",
         "Bought (SCU)",
         "Sold (SCU)",
         "Lost / Destroyed (SCU)",
         "On Hand (SCU)",
-        "Purchase Value (aUEC)",
-        "Sales Value (aUEC)",
+        "Purchase Cost (aUEC)",
+        "Sales Revenue (aUEC)",
         "Recorded Loss Value (aUEC)",
         "Net Cash Flow (aUEC)",
     ]
-    if trades.empty:
+    normalized = normalize_commodity_transactions(trades)
+    if normalized.empty:
         return pd.DataFrame(columns=columns)
 
     rows: list[dict[str, Any]] = []
-    for commodity, group in trades.groupby("commodity_name"):
-        bought = group[group["action"] == "Bought"]
-        sold = group[group["action"] == "Sold"]
-        lost = group[group["action"] == "Lost / Destroyed"]
-
-        bought_scu = float(bought["quantity_scu"].sum())
-        sold_scu = float(sold["quantity_scu"].sum())
-        lost_scu = float(lost["quantity_scu"].sum())
-        purchase_value = float(
-            (bought["total_value"] + bought["fees"]).sum()
-        )
-        sales_value = float(
-            (sold["total_value"] - sold["fees"]).sum()
-        )
-        loss_value = float(
-            (lost["total_value"] + lost["fees"]).sum()
-        )
-
+    for commodity, group in normalized.groupby(
+        "commodity_name",
+        dropna=False,
+    ):
+        totals = commodity_summary_values(group)
         rows.append(
             {
                 "Commodity": commodity,
-                "Bought (SCU)": bought_scu,
-                "Sold (SCU)": sold_scu,
-                "Lost / Destroyed (SCU)": lost_scu,
-                "On Hand (SCU)": bought_scu - sold_scu - lost_scu,
-                "Purchase Value (aUEC)": purchase_value,
-                "Sales Value (aUEC)": sales_value,
-                "Recorded Loss Value (aUEC)": loss_value,
-                "Net Cash Flow (aUEC)": sales_value - purchase_value,
+                "Bought (SCU)": totals["bought_scu"],
+                "Sold (SCU)": totals["sold_scu"],
+                "Lost / Destroyed (SCU)": totals["lost_scu"],
+                "On Hand (SCU)": totals["on_hand_scu"],
+                "Purchase Cost (aUEC)": totals["purchase_cost"],
+                "Sales Revenue (aUEC)": totals["sales_revenue"],
+                "Recorded Loss Value (aUEC)": totals["loss_value"],
+                "Net Cash Flow (aUEC)": totals["net_cash_flow"],
             }
         )
 
-    return pd.DataFrame(rows, columns=columns).sort_values("Commodity")
+    return (
+        pd.DataFrame(rows, columns=columns)
+        .sort_values("Commodity")
+        .reset_index(drop=True)
+    )
 
 
 def commodity_trade_tracker(
@@ -3159,12 +3382,12 @@ def commodity_trade_tracker(
     uex_prices: pd.DataFrame,
     default_quantity_scu: float,
 ) -> None:
-    """Render the user's commodity buy, sell, and loss tracker."""
+    """Render the user's commodity buy, sell, inventory, and loss tracker."""
     st.markdown("### Commodity Buy, Sell, and Loss Tracker")
     st.caption(
-        "Record purchases, sales, and shipments that were destroyed or lost. "
-        "The tracker calculates commodity quantities on hand and keeps a private "
-        "ledger for the signed-in user."
+        "Record purchases, sales, and destroyed or lost shipments. "
+        "Every commodity page, dashboard graph, saved-record table, and "
+        "export uses this same normalized ledger."
     )
 
     prefill_notice = st.session_state.pop(
@@ -3175,12 +3398,13 @@ def commodity_trade_tracker(
         st.success(prefill_notice)
 
     trades = load_commodity_transactions()
+    totals = commodity_summary_values(trades)
 
     if not st.session_state.get("commodity_tracker_ready", False):
         st.warning(
-            "The Commodity Tracker database table is not installed yet. Run "
-            "`schema_migration_v4_commodity_tracker.sql` in Supabase SQL Editor, "
-            "wait about 10 seconds, then reload the app."
+            "The Commodity Tracker database connection is not ready. "
+            "Run `schema_migration_v4_commodity_tracker.sql` in Supabase, "
+            "then reload the app."
         )
         tracker_error = st.session_state.get(
             "commodity_tracker_error",
@@ -3195,20 +3419,56 @@ def commodity_trade_tracker(
     )
 
     with record_tab:
-        default_index = (
-            commodity_names.index(selected_commodity)
-            if selected_commodity in commodity_names
-            else 0
+        available_names = list(
+            dict.fromkeys(
+                [
+                    name
+                    for name in commodity_names
+                    if str(name).strip()
+                ]
+            )
         )
+        if not available_names:
+            available_names = [selected_commodity or "Unknown Commodity"]
+
+        if (
+            "tracked_commodity_name" not in st.session_state
+            or st.session_state["tracked_commodity_name"]
+            not in available_names
+        ):
+            st.session_state["tracked_commodity_name"] = (
+                selected_commodity
+                if selected_commodity in available_names
+                else available_names[0]
+            )
+        if "commodity_transaction_type" not in st.session_state:
+            st.session_state["commodity_transaction_type"] = "Bought"
+        if "commodity_shipment_lost" not in st.session_state:
+            st.session_state["commodity_shipment_lost"] = False
+        if "commodity_transaction_quantity" not in st.session_state:
+            st.session_state["commodity_transaction_quantity"] = max(
+                float(default_quantity_scu),
+                0.01,
+            )
+        if "commodity_transaction_fees" not in st.session_state:
+            st.session_state["commodity_transaction_fees"] = 0.0
 
         default_buy_price = 0.0
         default_sell_price = 0.0
         if not uex_prices.empty:
             buy_rows = uex_prices[
-                uex_prices["Terminal Sells at"] > 0
+                pd.to_numeric(
+                    uex_prices["Terminal Sells at"],
+                    errors="coerce",
+                ).fillna(0.0)
+                > 0
             ]
             sell_rows = uex_prices[
-                uex_prices["Terminal Buys at"] > 0
+                pd.to_numeric(
+                    uex_prices["Terminal Buys at"],
+                    errors="coerce",
+                ).fillna(0.0)
+                > 0
             ]
             if not buy_rows.empty:
                 default_buy_price = float(
@@ -3219,13 +3479,17 @@ def commodity_trade_tracker(
                     sell_rows["Terminal Buys at"].max()
                 )
 
+        if "commodity_transaction_unit_price" not in st.session_state:
+            st.session_state["commodity_transaction_unit_price"] = (
+                default_buy_price
+            )
+
         with st.form("commodity_transaction_form"):
             form_col1, form_col2, form_col3 = st.columns(3)
             with form_col1:
                 tracked_commodity = st.selectbox(
                     "Commodity",
-                    commodity_names,
-                    index=default_index,
+                    available_names,
                     key="tracked_commodity_name",
                 )
             with form_col2:
@@ -3239,8 +3503,8 @@ def commodity_trade_tracker(
                     "Shipment destroyed or lost",
                     key="commodity_shipment_lost",
                     help=(
-                        "This overrides the activity and records the cargo as "
-                        "Lost / Destroyed."
+                        "Records cargo as Lost / Destroyed and removes it "
+                        "from on-hand inventory."
                     ),
                 )
 
@@ -3249,25 +3513,18 @@ def commodity_trade_tracker(
                 quantity_scu = st.number_input(
                     "Quantity (SCU)",
                     min_value=0.01,
-                    value=max(float(default_quantity_scu), 0.01),
                     step=1.0,
                     format="%.2f",
                     key="commodity_transaction_quantity",
                 )
             with value_col2:
-                suggested_price = (
-                    default_sell_price
-                    if transaction_type == "Sold"
-                    else default_buy_price
-                )
                 unit_price = st.number_input(
                     (
-                        "Estimated cost basis per SCU"
+                        "Estimated cargo value per SCU"
                         if shipment_lost
                         else "Unit price (aUEC/SCU)"
                     ),
                     min_value=0.0,
-                    value=float(suggested_price),
                     step=100.0,
                     key="commodity_transaction_unit_price",
                 )
@@ -3275,8 +3532,7 @@ def commodity_trade_tracker(
                 fees = st.number_input(
                     "Fees and operating costs (aUEC)",
                     min_value=0.0,
-                    value=0.0,
-                    step=1000.0,
+                    step=100.0,
                     key="commodity_transaction_fees",
                 )
 
@@ -3302,8 +3558,8 @@ def commodity_trade_tracker(
             transaction_notes = st.text_area(
                 "Notes",
                 placeholder=(
-                    "Reason for loss, route notes, stock limitations, "
-                    "escort costs, or other details"
+                    "Route notes, stock limits, loss reason, escort costs, "
+                    "or other details"
                 ),
                 key="commodity_transaction_notes",
             )
@@ -3314,62 +3570,67 @@ def commodity_trade_tracker(
                 else transaction_type
             )
             total_value = float(quantity_scu) * float(unit_price)
+            if final_action == "Sold":
+                cash_effect = total_value - float(fees)
+            else:
+                cash_effect = -(total_value + float(fees))
 
             st.info(
                 f"Record type: {final_action}. Cargo value: "
-                f"{total_value:,.0f} aUEC. Fees: {fees:,.0f} aUEC."
+                f"{total_value:,.0f} aUEC. Net cash effect: "
+                f"{cash_effect:+,.0f} aUEC."
             )
 
             submitted = st.form_submit_button(
                 (
                     "Record Destroyed / Lost Shipment"
                     if shipment_lost
-                    else f"Record Commodity {transaction_type[:-1] if transaction_type.endswith('s') else transaction_type}"
+                    else (
+                        "Record Commodity Purchase"
+                        if transaction_type == "Bought"
+                        else "Record Commodity Sale"
+                    )
                 ),
                 width="stretch",
             )
 
         if submitted:
-            payload = {
-                "user_id": st.session_state.user_id,
-                "commodity_name": tracked_commodity,
-                "action": final_action,
-                "quantity_scu": float(quantity_scu),
-                "unit_price": float(unit_price),
-                "fees": float(fees),
-                "total_value": float(total_value),
-                "origin": origin.strip(),
-                "destination": destination.strip(),
-                "shipment_reference": shipment_reference.strip(),
-                "notes": transaction_notes.strip(),
-            }
-            try:
-                insert_commodity_transaction(payload)
-                st.success(f"{final_action} activity recorded.")
-                st.rerun()
-            except Exception as exc:
-                st.error(
-                    "The activity could not be saved. Confirm that "
-                    "`schema_migration_v4_commodity_tracker.sql` was run in "
-                    f"Supabase. Details: {exc}"
-                )
+            if not tracked_commodity.strip():
+                st.error("Choose a commodity.")
+            elif quantity_scu <= 0:
+                st.error("Enter a quantity greater than zero.")
+            elif unit_price <= 0:
+                st.error("Enter the price or estimated cargo value per SCU.")
+            else:
+                payload = {
+                    "user_id": st.session_state.user_id,
+                    "commodity_name": tracked_commodity,
+                    "action": final_action,
+                    "quantity_scu": float(quantity_scu),
+                    "unit_price": float(unit_price),
+                    "fees": float(fees),
+                    "total_value": float(total_value),
+                    "origin": origin.strip(),
+                    "destination": destination.strip(),
+                    "shipment_reference": shipment_reference.strip(),
+                    "notes": transaction_notes.strip(),
+                }
+                try:
+                    insert_commodity_transaction(payload)
+                    st.success(f"{final_action} activity recorded.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        "The activity could not be saved. Confirm the "
+                        "commodity migration and Supabase permissions. "
+                        f"Details: {exc}"
+                    )
 
     with inventory_tab:
         inventory = build_commodity_inventory(trades)
         if inventory.empty:
             st.info("No commodity activity has been recorded yet.")
         else:
-            total_on_hand = float(inventory["On Hand (SCU)"].sum())
-            total_sales = float(
-                inventory["Sales Value (aUEC)"].sum()
-            )
-            total_losses = float(
-                inventory["Recorded Loss Value (aUEC)"].sum()
-            )
-            net_cash = float(
-                inventory["Net Cash Flow (aUEC)"].sum()
-            )
-
             render_commodity_metric_cards(
                 [
                     {
@@ -3378,27 +3639,41 @@ def commodity_trade_tracker(
                     },
                     {
                         "label": "Total On Hand",
-                        "value": f"{total_on_hand:,.2f} SCU",
-                        "tone": "positive" if total_on_hand > 0 else "",
+                        "value": f"{totals['on_hand_scu']:,.2f} SCU",
+                        "tone": (
+                            "positive"
+                            if totals["on_hand_scu"] > 0
+                            else "negative"
+                            if totals["on_hand_scu"] < 0
+                            else ""
+                        ),
                     },
                     {
-                        "label": "Sales Received",
-                        "value": f"{total_sales:,.0f} aUEC",
-                        "tone": "positive" if total_sales > 0 else "",
+                        "label": "Sales Revenue",
+                        "value": f"{totals['sales_revenue']:,.0f} aUEC",
+                        "tone": (
+                            "positive"
+                            if totals["sales_revenue"] > 0
+                            else ""
+                        ),
                     },
                     {
                         "label": "Recorded Cargo Loss",
-                        "value": f"{total_losses:,.0f} aUEC",
-                        "tone": "negative" if total_losses > 0 else "",
+                        "value": f"{totals['loss_value']:,.0f} aUEC",
+                        "tone": (
+                            "negative"
+                            if totals["loss_value"] > 0
+                            else ""
+                        ),
                     },
                     {
                         "label": "Net Cash Flow",
-                        "value": f"{net_cash:,.0f} aUEC",
+                        "value": f"{totals['net_cash_flow']:+,.0f} aUEC",
                         "tone": (
                             "positive"
-                            if net_cash > 0
+                            if totals["net_cash_flow"] > 0
                             else "negative"
-                            if net_cash < 0
+                            if totals["net_cash_flow"] < 0
                             else ""
                         ),
                     },
@@ -3416,33 +3691,25 @@ def commodity_trade_tracker(
                     "Sold (SCU)": st.column_config.NumberColumn(
                         format="%,.2f SCU"
                     ),
-                    "Lost / Destroyed (SCU)": (
-                        st.column_config.NumberColumn(
-                            format="%,.2f SCU"
-                        )
+                    "Lost / Destroyed (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
                     ),
                     "On Hand (SCU)": st.column_config.NumberColumn(
                         format="%,.2f SCU"
                     ),
-                    "Purchase Value (aUEC)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC"
-                        )
+                    "Purchase Cost (aUEC)": st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
                     ),
-                    "Sales Value (aUEC)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC"
-                        )
+                    "Sales Revenue (aUEC)": st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
                     ),
                     "Recorded Loss Value (aUEC)": (
                         st.column_config.NumberColumn(
                             format="%,.0f aUEC"
                         )
                     ),
-                    "Net Cash Flow (aUEC)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC"
-                        )
+                    "Net Cash Flow (aUEC)": st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
                     ),
                 },
             )
@@ -3467,6 +3734,7 @@ def commodity_trade_tracker(
                     "unit_price": "Unit Price (aUEC/SCU)",
                     "fees": "Fees (aUEC)",
                     "total_value": "Cargo Value (aUEC)",
+                    "cash_effect": "Net Cash Effect (aUEC)",
                     "origin": "Origin",
                     "destination": "Destination",
                     "shipment_reference": "Shipment Reference",
@@ -3481,19 +3749,14 @@ def commodity_trade_tracker(
                 "Unit Price (aUEC/SCU)",
                 "Cargo Value (aUEC)",
                 "Fees (aUEC)",
+                "Net Cash Effect (aUEC)",
                 "Origin",
                 "Destination",
                 "Shipment Reference",
                 "Notes",
             ]
             st.dataframe(
-                history[
-                    [
-                        column
-                        for column in display_columns
-                        if column in history.columns
-                    ]
-                ],
+                history[display_columns],
                 width="stretch",
                 hide_index=True,
                 column_config={
@@ -3505,13 +3768,16 @@ def commodity_trade_tracker(
                             format="%,.0f aUEC/SCU"
                         )
                     ),
-                    "Cargo Value (aUEC)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC"
-                        )
+                    "Cargo Value (aUEC)": st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
                     ),
                     "Fees (aUEC)": st.column_config.NumberColumn(
                         format="%,.0f aUEC"
+                    ),
+                    "Net Cash Effect (aUEC)": (
+                        st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        )
                     ),
                 },
             )
@@ -3520,15 +3786,7 @@ def commodity_trade_tracker(
             with download_col:
                 st.download_button(
                     "Download Commodity Trade History CSV",
-                    data=dataframe_csv_bytes(
-                        history[
-                            [
-                                column
-                                for column in display_columns
-                                if column in history.columns
-                            ]
-                        ]
-                    ),
+                    data=dataframe_csv_bytes(history[display_columns]),
                     file_name="star_citizen_commodity_trade_history.csv",
                     mime="text/csv",
                     width="stretch",
@@ -3569,9 +3827,38 @@ def commodity_trade_tracker(
                         st.rerun()
                     except Exception as exc:
                         st.error(
-                            f"The commodity record could not be deleted: {exc}"
+                            "The commodity record could not be deleted: "
+                            f"{exc}"
                         )
 
+    with st.expander("Commodity data health", expanded=False):
+        action_counts = (
+            trades["action"].value_counts().to_dict()
+            if not trades.empty
+            else {}
+        )
+        health_rows = pd.DataFrame(
+            [
+                ["Database connection", "Ready" if st.session_state.get(
+                    "commodity_tracker_ready", False
+                ) else "Not ready"],
+                ["Loaded records", int(totals["records"])],
+                ["Bought records", int(totals["bought_records"])],
+                ["Sold records", int(totals["sold_records"])],
+                ["Lost / destroyed records", int(totals["loss_records"])],
+                ["Normalized actions", ", ".join(
+                    f"{key}: {value}"
+                    for key, value in action_counts.items()
+                ) or "None"],
+                ["Net cash flow", f"{totals['net_cash_flow']:+,.0f} aUEC"],
+            ],
+            columns=["Check", "Result"],
+        )
+        st.dataframe(
+            health_rows,
+            width="stretch",
+            hide_index=True,
+        )
 
 def empty_blueprint_frame() -> pd.DataFrame:
     return pd.DataFrame(
@@ -4241,62 +4528,27 @@ def dashboard_page() -> None:
         else 0.0
     )
 
-    commodity_sales_rows = (
-        commodity_trades[commodity_trades["action"] == "Sold"]
-        if not commodity_trades.empty
-        else commodity_trades
+    commodity_trades = normalize_commodity_transactions(
+        commodity_trades
     )
-    commodity_purchase_rows = (
-        commodity_trades[commodity_trades["action"] == "Bought"]
-        if not commodity_trades.empty
-        else commodity_trades
+    commodity_totals = commodity_summary_values(
+        commodity_trades
     )
-    commodity_loss_rows = (
-        commodity_trades[
-            commodity_trades["action"] == "Lost / Destroyed"
-        ]
-        if not commodity_trades.empty
-        else commodity_trades
-    )
+    commodity_sales_rows = commodity_trades[
+        commodity_trades["action"] == "Sold"
+    ]
+    commodity_purchase_rows = commodity_trades[
+        commodity_trades["action"] == "Bought"
+    ]
+    commodity_loss_rows = commodity_trades[
+        commodity_trades["action"] == "Lost / Destroyed"
+    ]
 
-    commodity_sales = (
-        float(
-            (
-                commodity_sales_rows["total_value"]
-                - commodity_sales_rows["fees"]
-            ).sum()
-        )
-        if not commodity_sales_rows.empty
-        else 0.0
-    )
-    commodity_spend = (
-        float(
-            (
-                commodity_purchase_rows["total_value"]
-                + commodity_purchase_rows["fees"]
-            ).sum()
-        )
-        if not commodity_purchase_rows.empty
-        else 0.0
-    )
-    commodity_losses = (
-        float(
-            (
-                commodity_loss_rows["total_value"]
-                + commodity_loss_rows["fees"]
-            ).sum()
-        )
-        if not commodity_loss_rows.empty
-        else 0.0
-    )
-    commodity_net = commodity_sales - commodity_spend - commodity_losses
-
-    commodity_inventory = build_commodity_inventory(commodity_trades)
-    commodity_on_hand_scu = (
-        float(commodity_inventory["On Hand (SCU)"].sum())
-        if not commodity_inventory.empty
-        else 0.0
-    )
+    commodity_sales = commodity_totals["sales_revenue"]
+    commodity_spend = commodity_totals["purchase_cost"]
+    commodity_losses = commodity_totals["loss_value"]
+    commodity_net = commodity_totals["net_cash_flow"]
+    commodity_on_hand_scu = commodity_totals["on_hand_scu"]
 
     total_recorded_earnings = (
         contract_take_home + ore_sales + commodity_sales
@@ -4513,68 +4765,59 @@ def dashboard_page() -> None:
             "Save a contract, ore sale, or commodity sale to begin tracking combined earnings."
         )
 
-    # Earnings by source
+    # Earnings and net contribution by source
     source_data = pd.DataFrame(
         {
-            "Source": ["Contracts", "Ore / Mining", "Commodities"],
-            "Value": [
-                max(contract_take_home, 0.0),
-                max(ore_sales, 0.0),
-                max(commodity_sales, 0.0),
+            "Source": [
+                "Contracts",
+                "Ore / Mining",
+                "Commodities",
+            ],
+            "Net Contribution": [
+                contract_take_home,
+                ore_sales - ore_purchases,
+                commodity_net,
             ],
         }
     )
-    if source_data["Value"].sum() > 0:
-        source_figure = px.pie(
-            source_data,
-            names="Source",
-            values="Value",
-            hole=.55,
-            color="Source",
-            color_discrete_map={
-                "Contracts": "#22A66F",
-                "Ore / Mining": "#347FD1",
-                "Commodities": "#F28A2A",
-            },
-        )
-        source_figure.update_traces(
-            texttemplate="%{percent:.1%}",
-            textposition="inside",
-            marker={"line": {"color": "#ffffff", "width": 3}},
-            sort=False,
-            hovertemplate=(
-                "<b>%{label}</b><br>"
-                "%{value:,.0f} aUEC<br>%{percent}<extra></extra>"
-            ),
-        )
-        source_figure.add_annotation(
-            text=(
-                f"<b>{total_recorded_earnings:,.0f}</b><br>"
-                "aUEC<br><span style='font-size:10px'>Total Earnings</span>"
-            ),
-            x=.5,
-            y=.5,
-            showarrow=False,
-            font={"size": 14, "color": "#0D2D49"},
-        )
-        style_plotly_figure(source_figure, height=390)
-        source_figure.update_layout(
-            legend={
-                "orientation": "v",
-                "yanchor": "middle",
-                "y": .5,
-                "xanchor": "left",
-                "x": 1.02,
-                "title_text": "",
-            },
-            margin={"l": 10, "r": 135, "t": 20, "b": 20},
-        )
-    else:
-        source_figure = empty_dashboard_figure(
-            "Earnings by source will appear after income is recorded.",
-            donut=True,
-        )
+    source_data["Plot Value"] = source_data[
+        "Net Contribution"
+    ].abs()
+    source_data["Label"] = source_data[
+        "Net Contribution"
+    ].map(lambda value: f"{value:+,.0f} aUEC")
 
+    source_figure = px.bar(
+        source_data,
+        x="Plot Value",
+        y="Source",
+        orientation="h",
+        text="Label",
+        custom_data=["Net Contribution"],
+        labels={
+            "Plot Value": "Contribution magnitude in aUEC",
+            "Source": "Source",
+        },
+    )
+    source_figure.update_traces(
+        marker_color=[
+            "#22A66F" if value >= 0 else "#E54950"
+            for value in source_data["Net Contribution"]
+        ],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont={"color": "#ffffff"},
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Net contribution: %{customdata[0]:+,.0f} aUEC"
+            "<extra></extra>"
+        ),
+    )
+    style_plotly_figure(source_figure, height=390)
+    source_figure.update_layout(
+        showlegend=False,
+        margin={"l": 32, "r": 20, "t": 26, "b": 52},
+    )
     # Ore value by mineral
     if not ores.empty:
         ore_value_data = (
@@ -4842,9 +5085,9 @@ def dashboard_page() -> None:
     with top_col2:
         with st.container(border=True):
             analytics_heading(
-                "Earnings by source",
-                "Recorded income across contracts, mining, and commodities.",
-                "Income Mix",
+                "Net contribution by source",
+                "Contracts, ore trading, and commodities remain visible even when a source is negative.",
+                "Income & Cost Mix",
             )
             st.plotly_chart(
                 source_figure,
@@ -5271,6 +5514,55 @@ def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
     return export
 
 
+def prepare_commodity_export(
+    commodity_trades: pd.DataFrame,
+) -> pd.DataFrame:
+    """Prepare normalized commodity records for Excel, CSV, and Sheets."""
+    trades = normalize_commodity_transactions(
+        commodity_trades
+    )
+    columns = {
+        "date_saved": "Date",
+        "commodity_name": "Commodity",
+        "action": "Activity",
+        "quantity_scu": "Quantity (SCU)",
+        "unit_price": "Unit Price (aUEC/SCU)",
+        "total_value": "Cargo Value (aUEC)",
+        "fees": "Fees (aUEC)",
+        "cash_effect": "Net Cash Effect (aUEC)",
+        "origin": "Origin",
+        "destination": "Destination",
+        "shipment_reference": "Shipment Reference",
+        "notes": "Notes",
+    }
+    export = trades.rename(columns=columns).copy()
+    ordered = [
+        "Date",
+        "Commodity",
+        "Activity",
+        "Quantity (SCU)",
+        "Unit Price (aUEC/SCU)",
+        "Cargo Value (aUEC)",
+        "Fees (aUEC)",
+        "Net Cash Effect (aUEC)",
+        "Origin",
+        "Destination",
+        "Shipment Reference",
+        "Notes",
+    ]
+    export = export[
+        [column for column in ordered if column in export.columns]
+    ]
+    if "Date" in export.columns:
+        export["Date"] = pd.to_datetime(
+            export["Date"],
+            errors="coerce",
+        )
+        if getattr(export["Date"].dt, "tz", None) is not None:
+            export["Date"] = export["Date"].dt.tz_localize(None)
+    return export
+
+
 def set_export_column_widths(worksheet: Any, frame: pd.DataFrame) -> None:
     for column_index, column_name in enumerate(frame.columns):
         values = frame[column_name].fillna("").astype(str)
@@ -5281,6 +5573,7 @@ def set_export_column_widths(worksheet: Any, frame: pd.DataFrame) -> None:
 def export_summary_values(
     contracts: pd.DataFrame,
     ores: pd.DataFrame,
+    commodity_trades: pd.DataFrame,
 ) -> list[list[Any]]:
     """Return export-summary rows shared by Excel, CSV, and Google Sheets."""
     gross_payout = (
@@ -5309,7 +5602,14 @@ def export_summary_values(
         if not inventory.empty
         else 0.0
     )
-    total_earnings = contract_take_home + ore_sales
+    commodity_totals = commodity_summary_values(
+        commodity_trades
+    )
+    total_earnings = (
+        contract_take_home
+        + ore_sales
+        + commodity_totals["sales_revenue"]
+    )
 
     return [
         ["Metric", "Value"],
@@ -5323,6 +5623,12 @@ def export_summary_values(
         ["Ore Purchases", ore_purchases],
         ["Ore Trade Net", ore_sales - ore_purchases],
         ["Ore On Hand (SCU)", on_hand],
+        ["Commodity Records", int(commodity_totals["records"])],
+        ["Commodity Purchases", commodity_totals["purchase_cost"]],
+        ["Commodity Sales", commodity_totals["sales_revenue"]],
+        ["Commodity Losses", commodity_totals["loss_value"]],
+        ["Commodity Net Cash Flow", commodity_totals["net_cash_flow"]],
+        ["Commodity On Hand (SCU)", commodity_totals["on_hand_scu"]],
         ["Total Earnings", total_earnings],
     ]
 
@@ -5330,12 +5636,23 @@ def export_summary_values(
 def build_excel_export(
     contracts: pd.DataFrame,
     ores: pd.DataFrame,
+    commodity_trades: pd.DataFrame,
 ) -> bytes:
     """Create a verified multi-sheet workbook for Excel and Google Sheets."""
     contract_export = prepare_contract_export(contracts)
     ore_export = prepare_ore_export(ores)
     inventory_export = build_ore_inventory(ores)
-    summary_rows = export_summary_values(contracts, ores)
+    commodity_export = prepare_commodity_export(
+        commodity_trades
+    )
+    commodity_inventory_export = build_commodity_inventory(
+        commodity_trades
+    )
+    summary_rows = export_summary_values(
+        contracts,
+        ores,
+        commodity_trades,
+    )
 
     output = BytesIO()
     with pd.ExcelWriter(
@@ -5403,10 +5720,17 @@ def build_excel_export(
                 "Ore Sales",
                 "Ore Purchases",
                 "Ore Trade Net",
+                "Commodity Purchases",
+                "Commodity Sales",
+                "Commodity Losses",
+                "Commodity Net Cash Flow",
                 "Total Earnings",
             }:
                 summary.write_number(row_index, 1, float(value), money_format)
-            elif row[0] == "Ore On Hand (SCU)":
+            elif row[0] in {
+                "Ore On Hand (SCU)",
+                "Commodity On Hand (SCU)",
+            }:
                 summary.write_number(row_index, 1, float(value), quantity_format)
             elif isinstance(value, (int, float)):
                 summary.write_number(row_index, 1, float(value), value_format)
@@ -5434,12 +5758,32 @@ def build_excel_export(
                 "Sales Value": money_format,
                 "Purchase Value": money_format,
             }),
+            ("Commodity Ledger", commodity_export, {
+                "Date": date_format,
+                "Quantity (SCU)": quantity_format,
+                "Unit Price (aUEC/SCU)": money_format,
+                "Cargo Value (aUEC)": money_format,
+                "Fees (aUEC)": money_format,
+                "Net Cash Effect (aUEC)": money_format,
+            }),
+            ("Commodity Inventory", commodity_inventory_export, {
+                "Bought (SCU)": quantity_format,
+                "Sold (SCU)": quantity_format,
+                "Lost / Destroyed (SCU)": quantity_format,
+                "On Hand (SCU)": quantity_format,
+                "Purchase Cost (aUEC)": money_format,
+                "Sales Revenue (aUEC)": money_format,
+                "Recorded Loss Value (aUEC)": money_format,
+                "Net Cash Flow (aUEC)": money_format,
+            }),
         ]
 
         table_names = {
             "Contracts": "ContractsTable",
             "Ore Ledger": "OreLedgerTable",
             "Ore Inventory": "OreInventoryTable",
+            "Commodity Ledger": "CommodityLedgerTable",
+            "Commodity Inventory": "CommodityInventoryTable",
         }
 
         for sheet_name, frame, formats in sheet_specs:
@@ -5490,13 +5834,24 @@ def dataframe_csv_bytes(frame: pd.DataFrame) -> bytes:
 def build_csv_export_zip(
     contracts: pd.DataFrame,
     ores: pd.DataFrame,
+    commodity_trades: pd.DataFrame,
 ) -> bytes:
     """Create a ZIP with every export table as a separate CSV."""
     contract_export = prepare_contract_export(contracts)
     ore_export = prepare_ore_export(ores)
     inventory_export = build_ore_inventory(ores)
+    commodity_export = prepare_commodity_export(
+        commodity_trades
+    )
+    commodity_inventory_export = build_commodity_inventory(
+        commodity_trades
+    )
     summary_export = pd.DataFrame(
-        export_summary_values(contracts, ores)[1:],
+        export_summary_values(
+            contracts,
+            ores,
+            commodity_trades,
+        )[1:],
         columns=["Metric", "Value"],
     )
 
@@ -5505,7 +5860,18 @@ def build_csv_export_zip(
         archive.writestr("Summary.csv", dataframe_csv_bytes(summary_export))
         archive.writestr("Contracts.csv", dataframe_csv_bytes(contract_export))
         archive.writestr("Ore Ledger.csv", dataframe_csv_bytes(ore_export))
-        archive.writestr("Ore Inventory.csv", dataframe_csv_bytes(inventory_export))
+        archive.writestr(
+            "Ore Inventory.csv",
+            dataframe_csv_bytes(inventory_export),
+        )
+        archive.writestr(
+            "Commodity Ledger.csv",
+            dataframe_csv_bytes(commodity_export),
+        )
+        archive.writestr(
+            "Commodity Inventory.csv",
+            dataframe_csv_bytes(commodity_inventory_export),
+        )
     return output.getvalue()
 
 
@@ -5527,6 +5893,7 @@ def google_service_account_config() -> dict[str, Any] | None:
 def create_filled_google_sheet(
     contracts: pd.DataFrame,
     ores: pd.DataFrame,
+    commodity_trades: pd.DataFrame,
 ) -> str:
     """Create and share a populated Google Sheet when credentials are configured."""
     credentials = google_service_account_config()
@@ -5542,7 +5909,11 @@ def create_filled_google_sheet(
     spreadsheet = client.create(title)
 
     summary_frame = pd.DataFrame(
-        export_summary_values(contracts, ores)[1:],
+        export_summary_values(
+            contracts,
+            ores,
+            commodity_trades,
+        )[1:],
         columns=["Metric", "Value"],
     )
     frames = {
@@ -5550,6 +5921,12 @@ def create_filled_google_sheet(
         "Contracts": prepare_contract_export(contracts),
         "Ore Ledger": prepare_ore_export(ores),
         "Ore Inventory": build_ore_inventory(ores),
+        "Commodity Ledger": prepare_commodity_export(
+            commodity_trades
+        ),
+        "Commodity Inventory": build_commodity_inventory(
+            commodity_trades
+        ),
     }
 
     first_sheet = spreadsheet.sheet1
@@ -5675,9 +6052,15 @@ def records_page() -> None:
 def display_commodity_table(
     commodity_trades: pd.DataFrame,
 ) -> None:
-    """Display the user's commodity purchases, sales, and cargo losses."""
+    """Display normalized commodity records and their signed cash effect."""
+    commodity_trades = normalize_commodity_transactions(
+        commodity_trades
+    )
     if commodity_trades.empty:
-        st.info("No commodity records have been saved yet.")
+        st.info(
+            "No commodity records have been saved yet. Add one under "
+            "Commodities → My Trade Tracker."
+        )
         return
 
     display = commodity_trades.rename(
@@ -5690,6 +6073,7 @@ def display_commodity_table(
             "unit_price": "Unit Price",
             "fees": "Fees",
             "total_value": "Cargo Value",
+            "cash_effect": "Net Cash Effect",
             "origin": "Origin",
             "destination": "Destination",
             "shipment_reference": "Shipment Reference",
@@ -5706,6 +6090,7 @@ def display_commodity_table(
         "Unit Price",
         "Cargo Value",
         "Fees",
+        "Net Cash Effect",
         "Origin",
         "Destination",
         "Shipment Reference",
@@ -5713,73 +6098,60 @@ def display_commodity_table(
     ]
 
     st.dataframe(
-        display[
-            [
-                column
-                for column in display_columns
-                if column in display.columns
-            ]
-        ],
+        display[display_columns],
         width="stretch",
         hide_index=True,
         column_config={
             "ID": st.column_config.NumberColumn(
-                "ID",
                 format="%d",
                 width="small",
             ),
             "Date": st.column_config.DatetimeColumn(
-                "Date",
                 format="YYYY-MM-DD hh:mm A",
                 width="medium",
             ),
             "Commodity": st.column_config.TextColumn(
-                "Commodity",
                 width="medium",
             ),
             "Activity": st.column_config.TextColumn(
-                "Activity",
                 width="medium",
             ),
             "Quantity (SCU)": st.column_config.NumberColumn(
-                "Quantity (SCU)",
                 format="%,.2f SCU",
                 width="small",
             ),
             "Unit Price": st.column_config.NumberColumn(
-                "Unit Price",
                 format="%,.0f aUEC/SCU",
                 width="small",
             ),
             "Cargo Value": st.column_config.NumberColumn(
-                "Cargo Value",
                 format="%,.0f aUEC",
                 width="small",
             ),
             "Fees": st.column_config.NumberColumn(
-                "Fees",
                 format="%,.0f aUEC",
                 width="small",
             ),
-            "Origin": st.column_config.TextColumn(
-                "Origin",
-                width="large",
+            "Net Cash Effect": st.column_config.NumberColumn(
+                format="%,.0f aUEC",
+                width="small",
             ),
-            "Destination": st.column_config.TextColumn(
-                "Destination",
-                width="large",
-            ),
+            "Origin": st.column_config.TextColumn(width="large"),
+            "Destination": st.column_config.TextColumn(width="large"),
             "Shipment Reference": st.column_config.TextColumn(
-                "Shipment Reference",
                 width="medium",
             ),
-            "Notes": st.column_config.TextColumn(
-                "Notes",
-                width="large",
-            ),
+            "Notes": st.column_config.TextColumn(width="large"),
         },
     )
 
+    st.download_button(
+        "Download Commodity Records CSV",
+        data=dataframe_csv_bytes(display[display_columns]),
+        file_name="star_citizen_commodity_records.csv",
+        mime="text/csv",
+        width="stretch",
+    )
 
 def saved_records_page() -> None:
     page_banner(
@@ -8769,7 +9141,7 @@ def blueprints_page() -> None:
         "contractors, and systems. If embedded viewing is blocked by the provider, "
         "use the external database button above."
     )
-    components.iframe(
+    st.iframe(
         SC_CRAFT_TOOLS_URL,
         height=920,
         scrolling=True,
@@ -9224,13 +9596,25 @@ def export_page() -> None:
         "Data Portability",
     )
     contracts, ores = load_data()
-    workbook_bytes = build_excel_export(contracts, ores)
-    csv_zip_bytes = build_csv_export_zip(contracts, ores)
+    commodity_trades = load_commodity_transactions()
+    workbook_bytes = build_excel_export(
+        contracts,
+        ores,
+        commodity_trades,
+    )
+    csv_zip_bytes = build_csv_export_zip(
+        contracts,
+        ores,
+        commodity_trades,
+    )
     inventory = build_ore_inventory(ores)
+    commodity_inventory = build_commodity_inventory(
+        commodity_trades
+    )
 
     st.markdown("### Verified Complete Export")
     st.caption(
-        "The workbook contains Summary, Contracts, Ore Ledger, and Ore Inventory worksheets."
+        "The workbook contains Summary, Contracts, Ore Ledger, Ore Inventory, Commodity Ledger, and Commodity Inventory worksheets."
     )
     download_col1, download_col2 = st.columns(2)
     with download_col1:
@@ -9265,7 +9649,11 @@ def export_page() -> None:
         if st.button("Create a Filled Google Sheet", width="stretch"):
             try:
                 with st.spinner("Creating and filling your Google Sheet..."):
-                    sheet_url = create_filled_google_sheet(contracts, ores)
+                    sheet_url = create_filled_google_sheet(
+                        contracts,
+                        ores,
+                        commodity_trades,
+                    )
                 st.session_state.created_google_sheet_url = sheet_url
                 st.success("Google Sheet created and filled with your current data.")
             except Exception as exc:
@@ -9299,7 +9687,10 @@ def export_page() -> None:
     st.markdown("### Individual Files")
     contract_export = prepare_contract_export(contracts)
     ore_export = prepare_ore_export(ores)
-    csv_col1, csv_col2, csv_col3 = st.columns(3)
+    commodity_export = prepare_commodity_export(
+        commodity_trades
+    )
+    csv_col1, csv_col2, csv_col3, csv_col4 = st.columns(4)
     with csv_col1:
         st.download_button(
             "Contracts CSV",
@@ -9321,6 +9712,21 @@ def export_page() -> None:
             "Ore Inventory CSV",
             dataframe_csv_bytes(inventory),
             "star_citizen_ore_inventory.csv",
+            "text/csv",
+            width="stretch",
+        )
+    with csv_col4:
+        st.download_button(
+            "Commodity Ledger CSV",
+            dataframe_csv_bytes(commodity_export),
+            "star_citizen_commodity_ledger.csv",
+            "text/csv",
+            width="stretch",
+        )
+        st.download_button(
+            "Commodity Inventory CSV",
+            dataframe_csv_bytes(commodity_inventory),
+            "star_citizen_commodity_inventory.csv",
             "text/csv",
             width="stretch",
         )
