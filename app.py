@@ -6,6 +6,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 import base64
 import html
 import json
@@ -106,6 +107,9 @@ DATA_DIR = Path(__file__).parent / "data"
 MINING_LOCATIONS_FILE = DATA_DIR / "mining_locations.csv"
 UEX_API_BASE = "https://api.uexcorp.uk/2.0"
 UEX_CACHE_SECONDS = 3600
+SC_TRADE_TOOLS_API_BASE = "https://sc-trade.tools/api"
+SC_TRADE_TOOLS_CACHE_SECONDS = 1800
+SC_TRADE_TOOLS_URL = "https://sc-trade.tools/"
 
 STAR_CITIZEN_COLORS = [
     "#00C8FF",
@@ -473,6 +477,51 @@ def apply_custom_theme() -> None:
 
         .rights-notice strong {
             color: #123850;
+        }
+
+        .commodity-source-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: .35rem 0 1rem;
+        }
+
+        .commodity-source-card {
+            padding: .9rem 1rem;
+            border: 1px solid #cbdde5;
+            border-radius: 13px;
+            background: #ffffff;
+            box-shadow: 0 9px 22px rgba(24,62,103,.06);
+        }
+
+        .commodity-source-name {
+            color: #10233f;
+            font-size: .95rem;
+            font-weight: 780;
+            margin-bottom: .2rem;
+        }
+
+        .commodity-source-copy {
+            color: #607087;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+
+        .commodity-source-status {
+            display: inline-block;
+            margin-top: .55rem;
+            padding: .22rem .52rem;
+            border-radius: 999px;
+            background: #e7f7f1;
+            color: #16724d;
+            font-size: .7rem;
+            font-weight: 780;
+        }
+
+        @media (max-width: 820px) {
+            .commodity-source-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         div[data-baseweb="select"] > div,
@@ -3564,6 +3613,1164 @@ def load_mining_locations() -> pd.DataFrame:
         return load_mining_locations_local()
 
 
+def safe_float(value: Any, default: float = 0.0) -> float:
+    """Convert a mixed API value into a finite float."""
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return default
+    if pd.isna(numeric):
+        return default
+    return numeric
+
+
+def unix_datetime_label(value: Any) -> str:
+    """Format an API Unix timestamp with date and time."""
+    try:
+        return datetime.fromtimestamp(
+            int(value),
+            tz=ZoneInfo("UTC"),
+        ).strftime("%Y-%m-%d %H:%M UTC")
+    except (TypeError, ValueError, OSError):
+        return ""
+
+
+def uex_trade_location(row: dict[str, Any] | pd.Series) -> str:
+    """Build a readable UEX terminal location path."""
+    parts = [
+        row.get("star_system_name"),
+        row.get("planet_name"),
+        row.get("orbit_name"),
+        row.get("moon_name"),
+        row.get("space_station_name"),
+        row.get("city_name"),
+        row.get("outpost_name"),
+        row.get("terminal_name"),
+    ]
+    cleaned: list[str] = []
+    for part in parts:
+        value = str(part or "").strip()
+        if value and value not in cleaned:
+            cleaned.append(value)
+    return " > ".join(cleaned) or "Unknown terminal"
+
+
+def uex_trade_environment(row: dict[str, Any] | pd.Series) -> str:
+    """Classify a trade terminal as ground or space based."""
+    if row.get("space_station_name") or row.get("orbit_name"):
+        return "Space"
+    if row.get("planet_name") or row.get("moon_name"):
+        return "Ground"
+    return "Other"
+
+
+@st.cache_data(ttl=SC_TRADE_TOOLS_CACHE_SECONDS, show_spinner=False)
+def fetch_sc_trade_tools_resource(
+    path: str,
+    *,
+    token_required: bool = False,
+) -> Any:
+    """Fetch one SC Trade Tools API resource."""
+    token = optional_secret("SC_TRADE_TOOLS_TOKEN")
+    if token_required and not token:
+        raise RuntimeError(
+            "SC_TRADE_TOOLS_TOKEN is not configured in Streamlit Secrets."
+        )
+
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Star-Citizen-Tracker/1.0",
+    }
+    if token:
+        headers["token"] = token
+
+    url = f"{SC_TRADE_TOOLS_API_BASE}/{path.lstrip('/')}"
+    response = requests.get(url, headers=headers, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+
+@st.cache_data(ttl=UEX_CACHE_SECONDS, show_spinner=False)
+def fetch_uex_commodity_prices(commodity_id: int) -> list[dict[str, Any]]:
+    return fetch_uex_resource(
+        f"commodities_prices?id_commodity={int(commodity_id)}"
+    )
+
+
+@st.cache_data(ttl=UEX_CACHE_SECONDS, show_spinner=False)
+def fetch_uex_commodity_routes(
+    commodity_id: int,
+    investment: int,
+) -> list[dict[str, Any]]:
+    resource = f"commodities_routes?id_commodity={int(commodity_id)}"
+    if investment > 0:
+        resource += f"&investment={int(investment)}"
+    return fetch_uex_resource(resource)
+
+
+@st.cache_data(ttl=SC_TRADE_TOOLS_CACHE_SECONDS, show_spinner=False)
+def fetch_sc_trade_tools_transactions(
+    commodity_name: str,
+) -> list[dict[str, Any]]:
+    encoded_name = quote(commodity_name, safe="")
+    payload = fetch_sc_trade_tools_resource(
+        f"commodity/items/{encoded_name}/transactions",
+        token_required=True,
+    )
+    return payload if isinstance(payload, list) else []
+
+
+@st.cache_data(ttl=SC_TRADE_TOOLS_CACHE_SECONDS, show_spinner=False)
+def fetch_sc_trade_tools_reports() -> list[dict[str, Any]]:
+    payload = fetch_sc_trade_tools_resource(
+        "commodity/reports",
+        token_required=True,
+    )
+    return payload if isinstance(payload, list) else []
+
+
+def normalize_uex_prices(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    output: list[dict[str, Any]] = []
+    for row in rows:
+        terminal_buys = safe_float(row.get("price_buy"))
+        terminal_sells = safe_float(row.get("price_sell"))
+        output.append(
+            {
+                "System": row.get("star_system_name") or "Unknown",
+                "Environment": uex_trade_environment(row),
+                "Location": uex_trade_location(row),
+                "Terminal": row.get("terminal_name") or "Unknown",
+                "Terminal Buys at": terminal_buys,
+                "Terminal Sells at": terminal_sells,
+                "Demand (SCU)": safe_float(row.get("scu_buy")),
+                "Stock (SCU)": safe_float(row.get("scu_sell_stock")),
+                "Forecast Demand (SCU)": safe_float(row.get("scu_sell")),
+                "User Buy Avg": safe_float(row.get("price_buy_users")),
+                "User Sell Avg": safe_float(row.get("price_sell_users")),
+                "Weekly Buy Avg": safe_float(row.get("price_buy_avg_week")),
+                "Weekly Sell Avg": safe_float(row.get("price_sell_avg_week")),
+                "Monthly Buy Avg": safe_float(row.get("price_buy_avg_month")),
+                "Monthly Sell Avg": safe_float(row.get("price_sell_avg_month")),
+                "Buy Volatility": safe_float(row.get("volatility_price_buy")),
+                "Sell Volatility": safe_float(row.get("volatility_price_sell")),
+                "Quality": safe_float(row.get("quality")),
+                "Container Sizes": str(row.get("container_sizes") or ""),
+                "Game Version": str(row.get("game_version") or ""),
+                "Last Updated": unix_datetime_label(row.get("date_modified")),
+                "Terminal ID": int(row.get("id_terminal") or 0),
+                "Commodity ID": int(row.get("id_commodity") or 0),
+            }
+        )
+    return pd.DataFrame(output)
+
+
+def normalize_uex_routes(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    output: list[dict[str, Any]] = []
+    for row in rows:
+        origin_parts = [
+            row.get("origin_star_system_name"),
+            row.get("origin_planet_name"),
+            row.get("origin_orbit_name"),
+            row.get("origin_terminal_name"),
+        ]
+        destination_parts = [
+            row.get("destination_star_system_name"),
+            row.get("destination_planet_name"),
+            row.get("destination_orbit_name"),
+            row.get("destination_terminal_name"),
+        ]
+        origin = " > ".join(
+            dict.fromkeys(
+                str(value).strip()
+                for value in origin_parts
+                if str(value or "").strip()
+            )
+        )
+        destination = " > ".join(
+            dict.fromkeys(
+                str(value).strip()
+                for value in destination_parts
+                if str(value or "").strip()
+            )
+        )
+        output.append(
+            {
+                "Commodity": row.get("commodity_name") or "Unknown",
+                "Origin": origin or "Unknown",
+                "Destination": destination or "Unknown",
+                "Buy Price / SCU": safe_float(row.get("price_origin")),
+                "Sell Price / SCU": safe_float(row.get("price_destination")),
+                "Margin / SCU": safe_float(row.get("price_margin")),
+                "ROI": safe_float(row.get("price_roi")),
+                "Investment": safe_float(row.get("investment")),
+                "Expected Profit": safe_float(row.get("profit")),
+                "Distance (GM)": safe_float(row.get("distance")),
+                "Score": safe_float(row.get("score")),
+                "Origin Stock (SCU)": safe_float(row.get("scu_origin")),
+                "Destination Demand (SCU)": safe_float(
+                    row.get("scu_destination")
+                ),
+                "Origin Volatility": safe_float(
+                    row.get("volatility_origin")
+                ),
+                "Destination Volatility": safe_float(
+                    row.get("volatility_destination")
+                ),
+                "Origin Containers": str(
+                    row.get("container_sizes_origin") or ""
+                ),
+                "Destination Containers": str(
+                    row.get("container_sizes_destination") or ""
+                ),
+                "Origin Environment": (
+                    "Space"
+                    if uex_flag(row.get("is_space_station_origin"))
+                    else "Ground"
+                    if uex_flag(row.get("is_on_ground_origin"))
+                    else "Other"
+                ),
+                "Destination Environment": (
+                    "Space"
+                    if uex_flag(row.get("is_space_station_destination"))
+                    else "Ground"
+                    if uex_flag(row.get("is_on_ground_destination"))
+                    else "Other"
+                ),
+                "Origin Monitored": bool(
+                    uex_flag(row.get("is_monitored_origin"))
+                ),
+                "Destination Monitored": bool(
+                    uex_flag(row.get("is_monitored_destination"))
+                ),
+                "Origin Freight Elevator": bool(
+                    uex_flag(row.get("has_freight_elevator_origin"))
+                ),
+                "Destination Freight Elevator": bool(
+                    uex_flag(row.get("has_freight_elevator_destination"))
+                ),
+                "Origin Loading Dock": bool(
+                    uex_flag(row.get("has_loading_dock_origin"))
+                ),
+                "Destination Loading Dock": bool(
+                    uex_flag(row.get("has_loading_dock_destination"))
+                ),
+                "Origin Refuel": bool(
+                    uex_flag(row.get("has_refuel_origin"))
+                ),
+                "Destination Refuel": bool(
+                    uex_flag(row.get("has_refuel_destination"))
+                ),
+                "UEX Route Code": str(row.get("code") or ""),
+            }
+        )
+    return pd.DataFrame(output)
+
+
+def normalize_sc_transactions(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    output: list[dict[str, Any]] = []
+    for row in rows:
+        output.append(
+            {
+                "Location": row.get("location") or "Unknown",
+                "Shop": row.get("shop") or "Unknown",
+                "Action": str(row.get("action") or "").upper(),
+                "Commodity": row.get("itemName") or "",
+                "Price / SCU": safe_float(row.get("price")),
+                "Fees": safe_float(row.get("fees")),
+                "Quantity (SCU)": safe_float(row.get("quantityInScu")),
+                "Max Quantity (SCU)": safe_float(
+                    row.get("maxQuantityInScu")
+                ),
+                "Requested Quantity (SCU)": safe_float(
+                    row.get("itemQuantityInScu")
+                ),
+                "Security Level": row.get("securityLevel"),
+                "Faction": row.get("faction") or "",
+                "Box Sizes": ", ".join(
+                    str(value) for value in row.get("boxSizesInScu", [])
+                ),
+                "Hidden Location": bool(row.get("isHidden")),
+            }
+        )
+    return pd.DataFrame(output)
+
+
+def normalize_sc_reports(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    report_rows: dict[str, dict[str, Any]] = {}
+    for series in rows:
+        metric = str(series.get("name") or "Metric").strip()
+        for point in series.get("series", []) or []:
+            commodity = str(point.get("name") or "").strip()
+            if not commodity:
+                continue
+            report_rows.setdefault(
+                commodity,
+                {"Commodity": commodity},
+            )[metric] = safe_float(point.get("value"))
+    return pd.DataFrame(report_rows.values())
+
+
+def commodity_catalog() -> tuple[list[str], dict[str, dict[str, Any]], dict[str, Any]]:
+    """Build a union commodity catalog from UEX and SC Trade Tools."""
+    uex_rows: list[dict[str, Any]] = []
+    sc_rows: list[dict[str, Any]] = []
+    errors: dict[str, Any] = {}
+
+    try:
+        uex_rows = fetch_uex_resource("commodities")
+    except Exception as exc:
+        errors["UEX"] = str(exc)
+
+    try:
+        payload = fetch_sc_trade_tools_resource("commodity/items")
+        sc_rows = payload if isinstance(payload, list) else []
+    except Exception as exc:
+        errors["SC Trade Tools"] = str(exc)
+
+    uex_map: dict[str, dict[str, Any]] = {}
+    for row in uex_rows:
+        name = str(row.get("name") or "").strip()
+        if not name:
+            continue
+        if row.get("is_visible") is not None and not uex_flag(
+            row.get("is_visible")
+        ):
+            continue
+        if row.get("is_available_live") is not None and not uex_flag(
+            row.get("is_available_live")
+        ):
+            continue
+        uex_map[name.casefold()] = row
+
+    names = {
+        str(row.get("name") or "").strip()
+        for row in uex_rows
+        if str(row.get("name") or "").strip()
+    }
+    names.update(
+        str(row.get("name") or "").strip()
+        for row in sc_rows
+        if str(row.get("name") or "").strip()
+    )
+
+    return sorted(names, key=str.casefold), uex_map, errors
+
+
+def selected_sc_report(
+    reports: pd.DataFrame,
+    commodity_name: str,
+) -> pd.DataFrame:
+    if reports.empty or "Commodity" not in reports.columns:
+        return pd.DataFrame()
+    return reports[
+        reports["Commodity"].astype(str).str.casefold()
+        == commodity_name.casefold()
+    ]
+
+
+def commodities_page() -> None:
+    page_banner(
+        "records_banner.jpg",
+        "Commodity Trading",
+        "Compare market prices, cargo availability, demand, route profitability, risk, and cross-source trade intelligence.",
+        "Trade Operations",
+    )
+
+    refresh_col, link_col1, link_col2 = st.columns([1, 1, 1])
+    with refresh_col:
+        if st.button(
+            "Refresh Commodity Data",
+            key="refresh_commodity_data",
+            width="stretch",
+        ):
+            fetch_uex_resource.clear()
+            fetch_uex_commodity_prices.clear()
+            fetch_uex_commodity_routes.clear()
+            fetch_sc_trade_tools_resource.clear()
+            fetch_sc_trade_tools_transactions.clear()
+            fetch_sc_trade_tools_reports.clear()
+            st.rerun()
+    with link_col1:
+        st.link_button(
+            "Open UEX Trade Routes",
+            "https://uexcorp.space/trade/routes",
+            width="stretch",
+        )
+    with link_col2:
+        st.link_button(
+            "Open SC Trade Tools",
+            "https://sc-trade.tools/trade-routes",
+            width="stretch",
+        )
+
+    names, uex_map, catalog_errors = commodity_catalog()
+    sc_token_available = bool(optional_secret("SC_TRADE_TOOLS_TOKEN"))
+
+    st.markdown(
+        f"""
+        <div class="commodity-source-grid">
+            <div class="commodity-source-card">
+                <div class="commodity-source-name">UEX Live Market Data</div>
+                <div class="commodity-source-copy">Prices, stock, demand, quality, volatility, terminal history, and calculated commodity routes.</div>
+                <span class="commodity-source-status">{'Connected' if 'UEX' not in catalog_errors else 'Unavailable'}</span>
+            </div>
+            <div class="commodity-source-card">
+                <div class="commodity-source-name">SC Trade Tools Market Intelligence</div>
+                <div class="commodity-source-copy">Commodity directory, shops, locations, market analytics, and selected-commodity shop transactions.</div>
+                <span class="commodity-source-status">{'Licensed API connected' if sc_token_available else 'Public data connected; analytics token optional'}</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if catalog_errors:
+        with st.expander("Show data-source connection details"):
+            for source, message in catalog_errors.items():
+                st.write(f"**{source}:** {message}")
+
+    if not names:
+        st.error("No commodity catalog could be loaded from either provider.")
+        render_rights_notice()
+        return
+
+    default_name = "Agricium" if "Agricium" in names else names[0]
+    control_col1, control_col2, control_col3 = st.columns([2, 1, 1])
+    with control_col1:
+        selected_commodity = st.selectbox(
+            "Commodity",
+            names,
+            index=names.index(default_name),
+            key="commodity_selected_name",
+        )
+    with control_col2:
+        cargo_scu = st.number_input(
+            "Cargo amount (SCU)",
+            min_value=1.0,
+            max_value=1000000.0,
+            value=100.0,
+            step=10.0,
+            key="commodity_cargo_scu",
+        )
+    with control_col3:
+        investment_limit = st.number_input(
+            "Investment limit (aUEC)",
+            min_value=0.0,
+            max_value=1000000000.0,
+            value=1000000.0,
+            step=100000.0,
+            key="commodity_investment_limit",
+        )
+
+    selected_uex = uex_map.get(selected_commodity.casefold())
+    uex_prices = pd.DataFrame()
+    uex_routes = pd.DataFrame()
+    uex_error = ""
+
+    if selected_uex:
+        try:
+            commodity_id = int(selected_uex.get("id") or 0)
+            uex_prices = normalize_uex_prices(
+                fetch_uex_commodity_prices(commodity_id)
+            )
+            uex_routes = normalize_uex_routes(
+                fetch_uex_commodity_routes(
+                    commodity_id,
+                    int(investment_limit),
+                )
+            )
+        except Exception as exc:
+            uex_error = str(exc)
+    else:
+        uex_error = "This commodity name was not matched to a UEX commodity ID."
+
+    market_tab, routes_tab, sc_tab, calculator_tab = st.tabs(
+        [
+            "Market Snapshot",
+            "Trade Routes",
+            "SC Trade Tools",
+            "Cargo Calculator",
+        ]
+    )
+
+    with market_tab:
+        if uex_error:
+            st.warning(f"UEX market data could not be loaded: {uex_error}")
+
+        if uex_prices.empty:
+            st.info("No UEX terminal listings were returned for this commodity.")
+        else:
+            filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
+            with filter_col1:
+                systems = sorted(
+                    uex_prices["System"].dropna().astype(str).unique()
+                )
+                selected_systems = st.multiselect(
+                    "System",
+                    systems,
+                    default=systems,
+                    key="commodity_market_system_filter",
+                )
+            with filter_col2:
+                selected_environments = st.multiselect(
+                    "Environment",
+                    ["Ground", "Space", "Other"],
+                    default=["Ground", "Space", "Other"],
+                    key="commodity_market_environment_filter",
+                )
+            with filter_col3:
+                market_side = st.selectbox(
+                    "Market side",
+                    ["All listings", "Player can buy", "Player can sell"],
+                    key="commodity_market_side_filter",
+                )
+            with filter_col4:
+                market_search = st.text_input(
+                    "Search locations",
+                    placeholder="Lorville, Levski, Pyro...",
+                    key="commodity_market_search",
+                )
+
+            filtered_prices = uex_prices.copy()
+            if selected_systems:
+                filtered_prices = filtered_prices[
+                    filtered_prices["System"].isin(selected_systems)
+                ]
+            else:
+                filtered_prices = filtered_prices.iloc[0:0]
+
+            if selected_environments:
+                filtered_prices = filtered_prices[
+                    filtered_prices["Environment"].isin(
+                        selected_environments
+                    )
+                ]
+            else:
+                filtered_prices = filtered_prices.iloc[0:0]
+
+            if market_side == "Player can buy":
+                filtered_prices = filtered_prices[
+                    filtered_prices["Terminal Sells at"] > 0
+                ]
+            elif market_side == "Player can sell":
+                filtered_prices = filtered_prices[
+                    filtered_prices["Terminal Buys at"] > 0
+                ]
+
+            if market_search.strip():
+                query = market_search.strip()
+                search_mask = filtered_prices.astype(str).apply(
+                    lambda column: column.str.contains(
+                        query,
+                        case=False,
+                        na=False,
+                        regex=False,
+                    )
+                ).any(axis=1)
+                filtered_prices = filtered_prices[search_mask]
+
+            player_buy_rows = filtered_prices[
+                filtered_prices["Terminal Sells at"] > 0
+            ]
+            player_sell_rows = filtered_prices[
+                filtered_prices["Terminal Buys at"] > 0
+            ]
+            best_purchase = (
+                float(player_buy_rows["Terminal Sells at"].min())
+                if not player_buy_rows.empty
+                else 0.0
+            )
+            best_sale = (
+                float(player_sell_rows["Terminal Buys at"].max())
+                if not player_sell_rows.empty
+                else 0.0
+            )
+            spread = max(best_sale - best_purchase, 0.0)
+            estimated_profit = spread * float(cargo_scu)
+
+            metric1, metric2, metric3, metric4, metric5 = st.columns(5)
+            metric1.metric("Best Player Buy", f"{best_purchase:,.0f} aUEC/SCU")
+            metric2.metric("Best Player Sale", f"{best_sale:,.0f} aUEC/SCU")
+            metric3.metric("Maximum Spread", f"{spread:,.0f} aUEC/SCU")
+            metric4.metric(
+                f"Gross Profit at {cargo_scu:,.0f} SCU",
+                f"{estimated_profit:,.0f} aUEC",
+            )
+            metric5.metric("Matching Terminals", f"{len(filtered_prices):,}")
+
+            chart_rows = filtered_prices.copy()
+            chart_rows["Best Market Value"] = chart_rows[
+                ["Terminal Buys at", "Terminal Sells at"]
+            ].max(axis=1)
+            chart_rows = chart_rows.nlargest(18, "Best Market Value")
+            if not chart_rows.empty:
+                chart_data = chart_rows.melt(
+                    id_vars=["Location"],
+                    value_vars=["Terminal Buys at", "Terminal Sells at"],
+                    var_name="Listing",
+                    value_name="aUEC per SCU",
+                )
+                chart_data = chart_data[chart_data["aUEC per SCU"] > 0]
+                market_figure = px.bar(
+                    chart_data,
+                    x="aUEC per SCU",
+                    y="Location",
+                    color="Listing",
+                    orientation="h",
+                    barmode="group",
+                    text_auto=",.0f",
+                )
+                market_figure.update_traces(
+                    textposition="inside",
+                    textfont={"color": "#ffffff"},
+                )
+                market_figure.update_yaxes(categoryorder="total ascending")
+                style_plotly_figure(market_figure, height=570)
+                st.plotly_chart(
+                    market_figure,
+                    width="stretch",
+                    config={"displayModeBar": False},
+                )
+
+            st.markdown("#### Terminal Market Details")
+            market_columns = [
+                "System",
+                "Environment",
+                "Location",
+                "Terminal Buys at",
+                "Terminal Sells at",
+                "Demand (SCU)",
+                "Stock (SCU)",
+                "Forecast Demand (SCU)",
+                "User Buy Avg",
+                "User Sell Avg",
+                "Weekly Buy Avg",
+                "Weekly Sell Avg",
+                "Monthly Buy Avg",
+                "Monthly Sell Avg",
+                "Buy Volatility",
+                "Sell Volatility",
+                "Quality",
+                "Container Sizes",
+                "Game Version",
+                "Last Updated",
+            ]
+            st.dataframe(
+                filtered_prices[market_columns],
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Terminal Buys at": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Terminal Sells at": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Demand (SCU)": st.column_config.NumberColumn(
+                        format="%,.0f SCU"
+                    ),
+                    "Stock (SCU)": st.column_config.NumberColumn(
+                        format="%,.0f SCU"
+                    ),
+                    "Forecast Demand (SCU)": st.column_config.NumberColumn(
+                        format="%,.0f SCU"
+                    ),
+                    "User Buy Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "User Sell Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Weekly Buy Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Weekly Sell Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Monthly Buy Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                    "Monthly Sell Avg": st.column_config.NumberColumn(
+                        format="%,.0f aUEC/SCU"
+                    ),
+                },
+            )
+            st.download_button(
+                "Download Filtered Commodity Market CSV",
+                data=dataframe_csv_bytes(filtered_prices[market_columns]),
+                file_name=(
+                    f"star_citizen_{re.sub(r'[^a-z0-9]+', '_', selected_commodity.lower()).strip('_')}_market.csv"
+                ),
+                mime="text/csv",
+                width="stretch",
+            )
+
+    with routes_tab:
+        if uex_routes.empty:
+            st.info("No UEX routes were returned for this commodity and investment.")
+        else:
+            route_filter1, route_filter2, route_filter3, route_filter4 = st.columns(4)
+            with route_filter1:
+                min_profit = st.number_input(
+                    "Minimum expected profit",
+                    min_value=0.0,
+                    value=0.0,
+                    step=10000.0,
+                    key="commodity_route_min_profit",
+                )
+            with route_filter2:
+                min_roi = st.number_input(
+                    "Minimum ROI",
+                    min_value=0.0,
+                    value=0.0,
+                    step=1.0,
+                    key="commodity_route_min_roi",
+                )
+            with route_filter3:
+                route_environment = st.multiselect(
+                    "Origin environment",
+                    ["Ground", "Space", "Other"],
+                    default=["Ground", "Space", "Other"],
+                    key="commodity_route_environment",
+                )
+            with route_filter4:
+                route_search = st.text_input(
+                    "Search route locations",
+                    placeholder="Stanton, Pyro, Levski...",
+                    key="commodity_route_search",
+                )
+
+            filtered_routes = uex_routes[
+                (uex_routes["Expected Profit"] >= min_profit)
+                & (uex_routes["ROI"] >= min_roi)
+            ].copy()
+            if route_environment:
+                filtered_routes = filtered_routes[
+                    filtered_routes["Origin Environment"].isin(
+                        route_environment
+                    )
+                ]
+            else:
+                filtered_routes = filtered_routes.iloc[0:0]
+            if route_search.strip():
+                route_query = route_search.strip()
+                route_mask = filtered_routes.astype(str).apply(
+                    lambda column: column.str.contains(
+                        route_query,
+                        case=False,
+                        na=False,
+                        regex=False,
+                    )
+                ).any(axis=1)
+                filtered_routes = filtered_routes[route_mask]
+
+            if filtered_routes.empty:
+                st.info("No routes match the selected filters.")
+            else:
+                top_profit = float(filtered_routes["Expected Profit"].max())
+                top_roi = float(filtered_routes["ROI"].max())
+                median_distance = float(
+                    filtered_routes["Distance (GM)"].median()
+                )
+                route_metric1, route_metric2, route_metric3, route_metric4 = st.columns(4)
+                route_metric1.metric("Matching Routes", f"{len(filtered_routes):,}")
+                route_metric2.metric("Highest Profit", f"{top_profit:,.0f} aUEC")
+                route_metric3.metric("Highest ROI", f"{top_roi:,.1f}%")
+                route_metric4.metric("Median Distance", f"{median_distance:,.1f} GM")
+
+                route_chart = filtered_routes.nlargest(
+                    15,
+                    "Expected Profit",
+                ).copy()
+                route_chart["Route"] = (
+                    route_chart["Origin"]
+                    + " → "
+                    + route_chart["Destination"]
+                )
+                route_figure = px.bar(
+                    route_chart,
+                    x="Expected Profit",
+                    y="Route",
+                    color="ROI",
+                    orientation="h",
+                    text_auto=",.0f",
+                    color_continuous_scale="Teal",
+                )
+                route_figure.update_traces(
+                    textposition="inside",
+                    textfont={"color": "#ffffff"},
+                )
+                route_figure.update_yaxes(categoryorder="total ascending")
+                style_plotly_figure(route_figure, height=590)
+                route_figure.update_layout(coloraxis_colorbar_title="ROI %")
+                st.plotly_chart(
+                    route_figure,
+                    width="stretch",
+                    config={"displayModeBar": False},
+                )
+
+                route_columns = [
+                    "Commodity",
+                    "Origin",
+                    "Destination",
+                    "Buy Price / SCU",
+                    "Sell Price / SCU",
+                    "Margin / SCU",
+                    "ROI",
+                    "Investment",
+                    "Expected Profit",
+                    "Distance (GM)",
+                    "Score",
+                    "Origin Stock (SCU)",
+                    "Destination Demand (SCU)",
+                    "Origin Volatility",
+                    "Destination Volatility",
+                    "Origin Containers",
+                    "Destination Containers",
+                    "Origin Environment",
+                    "Destination Environment",
+                    "Origin Monitored",
+                    "Destination Monitored",
+                    "Origin Freight Elevator",
+                    "Destination Freight Elevator",
+                    "Origin Loading Dock",
+                    "Destination Loading Dock",
+                    "Origin Refuel",
+                    "Destination Refuel",
+                    "UEX Route Code",
+                ]
+                st.dataframe(
+                    filtered_routes[route_columns].sort_values(
+                        "Expected Profit",
+                        ascending=False,
+                    ),
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Buy Price / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Sell Price / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Margin / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "ROI": st.column_config.NumberColumn(format="%.1f%%"),
+                        "Investment": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                        "Expected Profit": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                    },
+                )
+                st.download_button(
+                    "Download Filtered Trade Routes CSV",
+                    data=dataframe_csv_bytes(filtered_routes[route_columns]),
+                    file_name=(
+                        f"star_citizen_{re.sub(r'[^a-z0-9]+', '_', selected_commodity.lower()).strip('_')}_routes.csv"
+                    ),
+                    mime="text/csv",
+                    width="stretch",
+                )
+
+    with sc_tab:
+        public_col1, public_col2, public_col3, public_col4 = st.columns(4)
+        try:
+            sc_items = fetch_sc_trade_tools_resource("commodity/items")
+        except Exception:
+            sc_items = []
+        try:
+            sc_shops = fetch_sc_trade_tools_resource("commodity/shops")
+        except Exception:
+            sc_shops = []
+        try:
+            sc_locations = fetch_sc_trade_tools_resource("locations")
+        except Exception:
+            sc_locations = []
+        try:
+            sc_ships = fetch_sc_trade_tools_resource("ships")
+        except Exception:
+            sc_ships = []
+
+        public_col1.metric("SC Trade Commodities", f"{len(sc_items):,}")
+        public_col2.metric("Commodity Shops", f"{len(sc_shops):,}")
+        public_col3.metric("Trade Locations", f"{len(sc_locations):,}")
+        public_col4.metric("Supported Ships", f"{len(sc_ships):,}")
+
+        source_presence = pd.DataFrame(
+            [
+                {
+                    "Commodity": selected_commodity,
+                    "Available in UEX": selected_uex is not None,
+                    "Available in SC Trade Tools": any(
+                        str(row.get("name") or "").casefold()
+                        == selected_commodity.casefold()
+                        for row in sc_items
+                    ),
+                    "UEX Terminals": len(uex_prices),
+                    "UEX Routes": len(uex_routes),
+                }
+            ]
+        )
+        st.markdown("#### Cross-Source Coverage")
+        st.dataframe(source_presence, width="stretch", hide_index=True)
+
+        if not sc_token_available:
+            st.info(
+                "SC Trade Tools public directory data is connected. Add a licensed "
+                "SC_TRADE_TOOLS_TOKEN in Streamlit Secrets to unlock its selected-"
+                "commodity transactions and aggregate market reports inside this app."
+            )
+            with st.expander("SC Trade Tools API token setup"):
+                st.code(
+                    'SC_TRADE_TOOLS_TOKEN = "your-sc-trade-tools-api-token"',
+                    language="toml",
+                )
+                st.caption(
+                    "Keep the token in Streamlit Secrets. Never commit it to GitHub."
+                )
+        else:
+            try:
+                sc_transactions = normalize_sc_transactions(
+                    fetch_sc_trade_tools_transactions(selected_commodity)
+                )
+            except Exception as exc:
+                sc_transactions = pd.DataFrame()
+                st.warning(
+                    f"SC Trade Tools commodity transactions could not be loaded: {exc}"
+                )
+
+            try:
+                sc_reports = normalize_sc_reports(
+                    fetch_sc_trade_tools_reports()
+                )
+            except Exception as exc:
+                sc_reports = pd.DataFrame()
+                st.warning(f"SC Trade Tools market reports could not be loaded: {exc}")
+
+            selected_report = selected_sc_report(
+                sc_reports,
+                selected_commodity,
+            )
+            if not selected_report.empty:
+                st.markdown("#### SC Trade Tools Aggregate Analytics")
+                report_long = selected_report.melt(
+                    id_vars=["Commodity"],
+                    var_name="Metric",
+                    value_name="Value",
+                )
+                st.dataframe(report_long, width="stretch", hide_index=True)
+
+            st.markdown("#### SC Trade Tools Shop Transactions")
+            if sc_transactions.empty:
+                st.info("No SC Trade Tools transaction rows were returned.")
+            else:
+                sc_filter1, sc_filter2 = st.columns(2)
+                with sc_filter1:
+                    actions = sorted(
+                        sc_transactions["Action"].dropna().astype(str).unique()
+                    )
+                    selected_actions = st.multiselect(
+                        "Shop action",
+                        actions,
+                        default=actions,
+                        key="sc_trade_action_filter",
+                    )
+                with sc_filter2:
+                    sc_search = st.text_input(
+                        "Search SC Trade Tools locations",
+                        key="sc_trade_location_search",
+                    )
+
+                filtered_sc = sc_transactions.copy()
+                if selected_actions:
+                    filtered_sc = filtered_sc[
+                        filtered_sc["Action"].isin(selected_actions)
+                    ]
+                else:
+                    filtered_sc = filtered_sc.iloc[0:0]
+                if sc_search.strip():
+                    sc_query = sc_search.strip()
+                    sc_mask = filtered_sc.astype(str).apply(
+                        lambda column: column.str.contains(
+                            sc_query,
+                            case=False,
+                            na=False,
+                            regex=False,
+                        )
+                    ).any(axis=1)
+                    filtered_sc = filtered_sc[sc_mask]
+
+                st.dataframe(
+                    filtered_sc.sort_values("Price / SCU", ascending=False),
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Price / SCU": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Fees": st.column_config.NumberColumn(
+                            format="%,.0f aUEC"
+                        ),
+                        "Quantity (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                        "Max Quantity (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                    },
+                )
+
+            if not sc_reports.empty:
+                with st.expander("Browse all SC Trade Tools commodity analytics"):
+                    report_search = st.text_input(
+                        "Search analytics commodities",
+                        key="sc_trade_report_search",
+                    )
+                    filtered_reports = sc_reports.copy()
+                    if report_search.strip():
+                        filtered_reports = filtered_reports[
+                            filtered_reports["Commodity"].astype(str).str.contains(
+                                report_search.strip(),
+                                case=False,
+                                na=False,
+                                regex=False,
+                            )
+                        ]
+                    st.dataframe(
+                        filtered_reports,
+                        width="stretch",
+                        hide_index=True,
+                    )
+
+    with calculator_tab:
+        st.markdown("### Cargo Run Calculator")
+        st.caption(
+            "Use UEX best-market prices as defaults, then adjust the numbers for the "
+            "terminal and route you intend to run."
+        )
+
+        default_buy = 0.0
+        default_sell = 0.0
+        if not uex_prices.empty:
+            purchase_rows = uex_prices[uex_prices["Terminal Sells at"] > 0]
+            sale_rows = uex_prices[uex_prices["Terminal Buys at"] > 0]
+            if not purchase_rows.empty:
+                default_buy = float(purchase_rows["Terminal Sells at"].min())
+            if not sale_rows.empty:
+                default_sell = float(sale_rows["Terminal Buys at"].max())
+
+        calc_col1, calc_col2, calc_col3 = st.columns(3)
+        with calc_col1:
+            planned_scu = st.number_input(
+                "Planned cargo (SCU)",
+                min_value=0.0,
+                value=float(cargo_scu),
+                step=10.0,
+                key="commodity_calc_scu",
+            )
+            buy_price = st.number_input(
+                "Purchase price per SCU",
+                min_value=0.0,
+                value=float(default_buy),
+                step=100.0,
+                key="commodity_calc_buy_price",
+            )
+        with calc_col2:
+            sell_price = st.number_input(
+                "Sale price per SCU",
+                min_value=0.0,
+                value=float(default_sell),
+                step=100.0,
+                key="commodity_calc_sell_price",
+            )
+            loading_fees = st.number_input(
+                "Loading and unloading fees",
+                min_value=0.0,
+                value=0.0,
+                step=1000.0,
+                key="commodity_calc_fees",
+            )
+        with calc_col3:
+            operating_cost = st.number_input(
+                "Fuel, repair, escort, and other costs",
+                min_value=0.0,
+                value=0.0,
+                step=1000.0,
+                key="commodity_calc_operating_cost",
+            )
+            loss_reserve_percent = st.number_input(
+                "Risk reserve",
+                min_value=0.0,
+                max_value=100.0,
+                value=0.0,
+                step=1.0,
+                key="commodity_calc_risk_reserve",
+            )
+
+        purchase_cost = planned_scu * buy_price
+        gross_revenue = planned_scu * sell_price
+        gross_profit = gross_revenue - purchase_cost
+        risk_reserve = max(gross_profit, 0.0) * (
+            loss_reserve_percent / 100.0
+        )
+        net_profit = (
+            gross_profit
+            - loading_fees
+            - operating_cost
+            - risk_reserve
+        )
+        roi = (net_profit / purchase_cost * 100.0) if purchase_cost > 0 else 0.0
+        break_even_sale = (
+            buy_price
+            + (loading_fees + operating_cost) / planned_scu
+            if planned_scu > 0
+            else 0.0
+        )
+
+        calc_metric1, calc_metric2, calc_metric3, calc_metric4, calc_metric5 = st.columns(5)
+        calc_metric1.metric("Purchase Cost", f"{purchase_cost:,.0f} aUEC")
+        calc_metric2.metric("Gross Revenue", f"{gross_revenue:,.0f} aUEC")
+        calc_metric3.metric("Gross Profit", f"{gross_profit:,.0f} aUEC")
+        calc_metric4.metric("Net Profit", f"{net_profit:,.0f} aUEC")
+        calc_metric5.metric("Net ROI", f"{roi:,.1f}%")
+
+        st.info(
+            f"Break-even sale price: {break_even_sale:,.0f} aUEC/SCU. "
+            f"Risk reserve held back: {risk_reserve:,.0f} aUEC."
+        )
+
+        calculator_export = pd.DataFrame(
+            [
+                {
+                    "Commodity": selected_commodity,
+                    "Cargo (SCU)": planned_scu,
+                    "Purchase Price / SCU": buy_price,
+                    "Sale Price / SCU": sell_price,
+                    "Purchase Cost": purchase_cost,
+                    "Gross Revenue": gross_revenue,
+                    "Loading Fees": loading_fees,
+                    "Operating Cost": operating_cost,
+                    "Risk Reserve": risk_reserve,
+                    "Net Profit": net_profit,
+                    "Net ROI (%)": roi,
+                    "Break-even Sale Price / SCU": break_even_sale,
+                }
+            ]
+        )
+        st.download_button(
+            "Download Cargo Run Plan CSV",
+            data=dataframe_csv_bytes(calculator_export),
+            file_name="star_citizen_commodity_run_plan.csv",
+            mime="text/csv",
+            width="stretch",
+        )
+
+    render_rights_notice()
+
+
 def mining_environment_tags(row: pd.Series) -> str:
     """Classify a mining row into broad searchable environment groups."""
     site_type = str(row.get("Site Type", "") or "").casefold()
@@ -4466,6 +5673,7 @@ def main() -> None:
             "Dashboard",
             "Contract Calculator",
             "Ore Ledger",
+            "Commodities",
             "Mining Locations",
             "Blueprints",
             "Saved Records",
@@ -4519,6 +5727,8 @@ def main() -> None:
         contract_page()
     elif page == "Ore Ledger":
         ore_page()
+    elif page == "Commodities":
+        commodities_page()
     elif page == "Mining Locations":
         mining_locations_page()
     elif page == "Blueprints":
