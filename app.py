@@ -597,24 +597,36 @@ def get_supabase() -> Client:
 
 
 def get_cookie_manager() -> EncryptedCookieManager | None:
-    """Load encrypted browser cookies when a cookie password is configured."""
+    """Load encrypted browser cookies without blocking the whole app."""
     try:
         cookie_password = st.secrets["COOKIE_PASSWORD"]
     except KeyError:
         return None
+
     if not cookie_password:
         return None
 
-    if "cookie_manager" not in st.session_state:
-        st.session_state.cookie_manager = EncryptedCookieManager(
-            prefix=COOKIE_PREFIX,
-            password=str(cookie_password),
-        )
+    try:
+        if "cookie_manager" not in st.session_state:
+            st.session_state.cookie_manager = EncryptedCookieManager(
+                prefix=COOKIE_PREFIX,
+                password=str(cookie_password),
+            )
 
-    cookies = st.session_state.cookie_manager
-    if not cookies.ready():
-        st.stop()
-    return cookies
+        cookies = st.session_state.cookie_manager
+
+        # The browser cookie component may need one render cycle before it is
+        # ready. Returning None keeps the login page visible instead of
+        # stopping the entire Streamlit script on a blank screen.
+        if not cookies.ready():
+            return None
+
+        return cookies
+    except Exception:
+        # Persistent login is optional. The app should still load and allow a
+        # normal Supabase sign-in if browser cookie storage is unavailable.
+        st.session_state.pop("cookie_manager", None)
+        return None
 
 
 def save_cookie_value(
@@ -726,9 +738,9 @@ def login_screen(
 
     with login_tab:
         if cookies is None:
-            st.warning(
-                "Persistent sign-in is not configured yet. Add COOKIE_PASSWORD "
-                "to Streamlit Secrets to keep this device signed in after a refresh."
+            st.info(
+                "The app is ready for a normal sign-in. Browser-based persistent "
+                "login may take one page cycle to initialize."
             )
 
         with st.form("login_form"):
@@ -741,7 +753,7 @@ def login_screen(
             keep_signed_in = st.checkbox(
                 "Keep me signed in on this device",
                 value=True,
-                disabled=cookies is None,
+                disabled=False,
                 help=(
                     "Stores an encrypted Supabase refresh token in this browser. "
                     "Your password is never saved."
@@ -1973,8 +1985,8 @@ def edit_records_page() -> None:
 
 
 def main() -> None:
-    cookies = get_cookie_manager()
     apply_custom_theme()
+    cookies = get_cookie_manager()
     client = get_supabase()
     restore_login_from_cookie(client, cookies)
 
