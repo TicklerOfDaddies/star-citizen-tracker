@@ -464,6 +464,135 @@ def apply_custom_theme() -> None:
             color: #ffffff !important;
         }
 
+        div[data-baseweb="tab-list"] {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .55rem;
+            padding: .55rem;
+            margin: .45rem 0 1rem;
+            border: 1px solid #c5dce6;
+            border-radius: 14px;
+            background: #eaf4f7;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+        }
+
+        button[data-baseweb="tab"] {
+            flex: 1 1 150px;
+            min-height: 3.15rem;
+            padding: .68rem .9rem !important;
+            border: 1px solid #a9ccd9 !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #18546a !important;
+            font-size: .88rem !important;
+            font-weight: 790 !important;
+            line-height: 1.2 !important;
+            box-shadow: 0 4px 10px rgba(27,88,108,.07);
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                color .15s ease,
+                transform .15s ease,
+                box-shadow .15s ease;
+        }
+
+        button[data-baseweb="tab"] * {
+            color: inherit !important;
+            font-size: inherit !important;
+            font-weight: inherit !important;
+        }
+
+        button[data-baseweb="tab"]:hover {
+            background: #d9edf3 !important;
+            border-color: #6aafc1 !important;
+            color: #0a4357 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 7px 16px rgba(27,88,108,.13);
+        }
+
+        button[data-baseweb="tab"][aria-selected="true"] {
+            background: linear-gradient(
+                135deg,
+                #0d7694 0%,
+                #075f79 100%
+            ) !important;
+            border-color: #075f79 !important;
+            color: #ffffff !important;
+            box-shadow:
+                inset 4px 0 0 #55d7f1,
+                0 8px 18px rgba(7,95,121,.22);
+        }
+
+        button[data-baseweb="tab"][aria-selected="true"] * {
+            color: #ffffff !important;
+        }
+
+        .dashboard-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin: .7rem 0 1rem;
+        }
+
+        .dashboard-metric-card {
+            min-width: 0;
+            min-height: 118px;
+            padding: .95rem 1rem;
+            border: 1px solid #c7dce6;
+            border-radius: 15px;
+            background:
+                linear-gradient(145deg, #ffffff 0%, #f1f8fb 100%);
+            box-shadow: 0 9px 22px rgba(18,74,99,.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .dashboard-metric-label {
+            color: #526c80;
+            font-size: .71rem;
+            font-weight: 790;
+            line-height: 1.25;
+            letter-spacing: .055em;
+            text-transform: uppercase;
+            margin-bottom: .45rem;
+        }
+
+        .dashboard-metric-value {
+            color: #0b526b;
+            font-size: clamp(1.3rem, 2vw, 2rem);
+            font-weight: 850;
+            line-height: 1.08;
+            overflow-wrap: anywhere;
+        }
+
+        .dashboard-metric-value.positive {
+            color: #16825a;
+        }
+
+        .dashboard-metric-value.negative {
+            color: #d43f48;
+        }
+
+        .dashboard-metric-detail {
+            margin-top: .32rem;
+            color: #718295;
+            font-size: .72rem;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .rights-notice {
             margin-top: 1rem;
             padding: .9rem 1rem;
@@ -1521,6 +1650,13 @@ def commodity_trade_tracker(
         "ledger for the signed-in user."
     )
 
+    prefill_notice = st.session_state.pop(
+        "commodity_prefill_notice",
+        None,
+    )
+    if prefill_notice:
+        st.success(prefill_notice)
+
     trades = load_commodity_transactions()
 
     if not st.session_state.get("commodity_tracker_ready", False):
@@ -2482,6 +2618,7 @@ def dashboard_page() -> None:
     dashboard_hero()
 
     contracts, ores = load_data()
+    commodity_trades = load_commodity_transactions()
 
     with st.container(border=True):
         filter_col1, filter_col2 = st.columns([1, 2])
@@ -2494,12 +2631,19 @@ def dashboard_page() -> None:
         with filter_col2:
             search_text = st.text_input(
                 "Search records",
-                placeholder="Contract, ore, type, location, or notes",
+                placeholder=(
+                    "Contract, ore, commodity, type, location, or notes"
+                ),
                 key="dashboard_search",
             )
 
     contracts = filter_data(contracts, date_range, search_text)
     ores = filter_data(ores, date_range, search_text)
+    commodity_trades = filter_data(
+        commodity_trades,
+        date_range,
+        search_text,
+    )
 
     contract_net = (
         float(contracts["net_payout"].sum()) if not contracts.empty else 0.0
@@ -2531,14 +2675,114 @@ def dashboard_page() -> None:
         if not inventory.empty
         else 0.0
     )
-    total_earnings = personal_share + ore_sales
 
-    st.markdown("<div class='section-title'>Overview</div>", unsafe_allow_html=True)
-    metric_columns = st.columns(4)
-    metric_columns[0].metric("Contracts Completed", f"{len(contracts):,}")
-    metric_columns[1].metric("Ore On Hand", f"{on_hand_scu:,.2f} SCU")
-    metric_columns[2].metric("Total Earnings", format_money(total_earnings))
-    metric_columns[3].metric("Ore Trade Net", format_money(ore_sales - ore_purchases))
+    commodity_inventory = build_commodity_inventory(
+        commodity_trades
+    )
+    commodity_on_hand_scu = (
+        float(commodity_inventory["On Hand (SCU)"].sum())
+        if not commodity_inventory.empty
+        else 0.0
+    )
+    commodity_sales_rows = commodity_trades[
+        commodity_trades["action"] == "Sold"
+    ] if not commodity_trades.empty else commodity_trades
+    commodity_purchase_rows = commodity_trades[
+        commodity_trades["action"] == "Bought"
+    ] if not commodity_trades.empty else commodity_trades
+    commodity_loss_rows = commodity_trades[
+        commodity_trades["action"] == "Lost / Destroyed"
+    ] if not commodity_trades.empty else commodity_trades
+
+    commodity_sales = (
+        float(
+            (
+                commodity_sales_rows["total_value"]
+                - commodity_sales_rows["fees"]
+            ).sum()
+        )
+        if not commodity_sales_rows.empty
+        else 0.0
+    )
+    commodity_purchases = (
+        float(
+            (
+                commodity_purchase_rows["total_value"]
+                + commodity_purchase_rows["fees"]
+            ).sum()
+        )
+        if not commodity_purchase_rows.empty
+        else 0.0
+    )
+    commodity_loss_value = (
+        float(commodity_loss_rows["total_value"].sum())
+        if not commodity_loss_rows.empty
+        else 0.0
+    )
+    commodity_trade_net = commodity_sales - commodity_purchases
+    total_earnings = personal_share + ore_sales + commodity_sales
+
+    st.markdown(
+        "<div class='section-title'>Overview</div>",
+        unsafe_allow_html=True,
+    )
+    render_dashboard_metric_cards(
+        [
+            {
+                "label": "Contracts Completed",
+                "value": f"{len(contracts):,}",
+                "detail": "Saved contract records",
+            },
+            {
+                "label": "Commodity Sales Completed",
+                "value": f"{len(commodity_sales_rows):,}",
+                "detail": (
+                    f"Lost shipments: {len(commodity_loss_rows):,}"
+                ),
+            },
+            {
+                "label": "Ore On Hand",
+                "value": f"{on_hand_scu:,.2f} SCU",
+                "tone": "positive" if on_hand_scu > 0 else "",
+                "detail": "Mined + bought − sold",
+            },
+            {
+                "label": "Commodity On Hand",
+                "value": f"{commodity_on_hand_scu:,.2f} SCU",
+                "tone": (
+                    "positive"
+                    if commodity_on_hand_scu > 0
+                    else "negative"
+                    if commodity_on_hand_scu < 0
+                    else ""
+                ),
+                "detail": "Bought − sold − lost",
+            },
+            {
+                "label": "Total Earnings",
+                "value": format_money(total_earnings),
+                "tone": "positive" if total_earnings > 0 else "",
+                "detail": (
+                    "Contract take-home + ore sales + commodity sales"
+                ),
+            },
+            {
+                "label": "Commodity Trade Net",
+                "value": format_money(commodity_trade_net),
+                "tone": (
+                    "positive"
+                    if commodity_trade_net > 0
+                    else "negative"
+                    if commodity_trade_net < 0
+                    else ""
+                ),
+                "detail": (
+                    f"Recorded cargo loss: "
+                    f"{format_money(commodity_loss_value)}"
+                ),
+            },
+        ]
+    )
 
     feature_dashboard_cards()
 
@@ -2585,9 +2829,35 @@ def dashboard_page() -> None:
                 .sum()
             )
 
+    if not commodity_sales_rows.empty:
+        commodity_sale_events = commodity_sales_rows.dropna(
+            subset=["date_saved"]
+        ).copy()
+        if not commodity_sale_events.empty:
+            commodity_sale_events["Day"] = commodity_sale_events[
+                "date_saved"
+            ].dt.floor("D")
+            commodity_sale_events["Commodity Sales"] = (
+                pd.to_numeric(
+                    commodity_sale_events.get("total_value", 0),
+                    errors="coerce",
+                ).fillna(0.0)
+                - pd.to_numeric(
+                    commodity_sale_events.get("fees", 0),
+                    errors="coerce",
+                ).fillna(0.0)
+            )
+            earnings_parts.append(
+                commodity_sale_events[
+                    ["Day", "Commodity Sales"]
+                ]
+                .groupby("Day", as_index=False)
+                .sum()
+            )
+
     if not earnings_parts:
         total_earnings_figure = empty_dashboard_figure(
-            "Save a contract or ore sale to begin tracking earnings over time."
+            "Save a contract, ore sale, or commodity sale to begin tracking earnings over time."
         )
     else:
         earnings_daily = earnings_parts[0]
@@ -2597,14 +2867,21 @@ def dashboard_page() -> None:
                 on="Day",
                 how="outer",
             )
-        for column in ("Contract Take-Home", "Ore Sales"):
+        earnings_columns = (
+            "Contract Take-Home",
+            "Ore Sales",
+            "Commodity Sales",
+        )
+        for column in earnings_columns:
             if column not in earnings_daily.columns:
                 earnings_daily[column] = 0.0
-        earnings_daily[["Contract Take-Home", "Ore Sales"]] = (
-            earnings_daily[["Contract Take-Home", "Ore Sales"]].fillna(0.0)
-        )
+        earnings_daily[list(earnings_columns)] = earnings_daily[
+            list(earnings_columns)
+        ].fillna(0.0)
         earnings_daily["Total Earnings"] = (
-            earnings_daily["Contract Take-Home"] + earnings_daily["Ore Sales"]
+            earnings_daily["Contract Take-Home"]
+            + earnings_daily["Ore Sales"]
+            + earnings_daily["Commodity Sales"]
         )
         earnings_daily = earnings_daily.sort_values("Day").reset_index(drop=True)
         earnings_daily["x_position"] = list(range(len(earnings_daily)))
@@ -2630,12 +2907,19 @@ def dashboard_page() -> None:
                 textposition="outside",
                 cliponaxis=False,
                 customdata=earnings_daily[
-                    ["Contract Take-Home", "Ore Sales", "Total Earnings"]
+                    [
+                        "Contract Take-Home",
+                        "Ore Sales",
+                        "Commodity Sales",
+                        "Total Earnings",
+                    ]
                 ].to_numpy(),
                 hovertemplate=(
-                    "<b>%{customdata[2]:,.0f} aUEC total</b><br>"
+                    "<b>%{customdata[3]:,.0f} aUEC total</b><br>"
                     "Contract take-home: %{customdata[0]:,.0f} aUEC<br>"
-                    "Ore sales: %{customdata[1]:,.0f} aUEC<extra></extra>"
+                    "Ore sales: %{customdata[1]:,.0f} aUEC<br>"
+                    "Commodity sales: %{customdata[2]:,.0f} aUEC"
+                    "<extra></extra>"
                 ),
                 name="Total Earnings",
             )
@@ -3853,6 +4137,86 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 st.error(f"The ore entry could not be deleted: {exc}")
 
 
+def render_dashboard_metric_cards(
+    cards: list[dict[str, str]],
+) -> None:
+    """Render responsive dashboard metrics without truncating values."""
+    card_html: list[str] = []
+
+    for card in cards:
+        tone = card.get("tone", "")
+        tone_class = (
+            tone if tone in {"positive", "negative"} else ""
+        )
+        detail = card.get("detail", "")
+        detail_html = (
+            '<div class="dashboard-metric-detail">'
+            + html.escape(detail)
+            + "</div>"
+            if detail
+            else ""
+        )
+        card_html.append(
+            '<div class="dashboard-metric-card">'
+            '<div class="dashboard-metric-label">'
+            + html.escape(card["label"])
+            + "</div>"
+            '<div class="dashboard-metric-value '
+            + tone_class
+            + '">'
+            + html.escape(card["value"])
+            + "</div>"
+            + detail_html
+            + "</div>"
+        )
+
+    st.markdown(
+        '<div class="dashboard-metric-grid">'
+        + "".join(card_html)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def prefill_commodity_tracker_from_terminal(
+    *,
+    signature: str,
+    commodity_name: str,
+    action: str,
+    quantity_scu: float,
+    unit_price: float,
+    origin: str = "",
+    destination: str = "",
+) -> None:
+    """Copy a selected market terminal into the private trade tracker form."""
+    if st.session_state.get("_commodity_terminal_prefill_signature") == signature:
+        return
+
+    st.session_state["_commodity_terminal_prefill_signature"] = signature
+    st.session_state["tracked_commodity_name"] = commodity_name
+    st.session_state["commodity_transaction_type"] = action
+    st.session_state["commodity_shipment_lost"] = False
+    st.session_state["commodity_transaction_quantity"] = max(
+        float(quantity_scu),
+        0.01,
+    )
+    st.session_state["commodity_transaction_unit_price"] = max(
+        float(unit_price),
+        0.0,
+    )
+
+    if origin:
+        st.session_state["commodity_transaction_origin"] = origin
+    if destination:
+        st.session_state["commodity_transaction_destination"] = destination
+
+    terminal = origin or destination or "the selected terminal"
+    st.session_state["commodity_prefill_notice"] = (
+        f"{commodity_name} {action.lower()} entry prefilled from {terminal}. "
+        "Open My Trade Tracker, review the quantity and costs, then save it."
+    )
+
+
 def render_commodity_metric_cards(
     cards: list[dict[str, str]],
 ) -> None:
@@ -4750,6 +5114,12 @@ def commodities_page() -> None:
     else:
         uex_error = "This commodity name was not matched to a UEX commodity ID."
 
+    st.markdown("### Choose a Commodity Tool")
+    st.caption(
+        "Use the highlighted navigation below for market prices, routes, "
+        "personal trade records, source data, and profit calculations."
+    )
+
     (
         market_tab,
         routes_tab,
@@ -4920,23 +5290,32 @@ def commodities_page() -> None:
             )
 
             st.markdown("#### Best Places to Buy")
+            st.caption(
+                "Select one row to copy that terminal and price into "
+                "My Trade Tracker automatically."
+            )
             if buy_table.empty:
                 st.info("No purchase terminals match the current filters.")
             else:
-                st.dataframe(
-                    buy_table[
-                        [
-                            "System",
-                            "Environment",
-                            "Area",
-                            "Terminal",
-                            "Player Pays",
-                            "Stock (SCU)",
-                            "Last Updated",
-                        ]
-                    ],
+                buy_display = buy_table[
+                    [
+                        "System",
+                        "Environment",
+                        "Area",
+                        "Terminal",
+                        "Player Pays",
+                        "Stock (SCU)",
+                        "Last Updated",
+                    ]
+                ].reset_index(drop=True)
+
+                buy_event = st.dataframe(
+                    buy_display,
                     width="stretch",
                     hide_index=True,
+                    key="commodity_best_buy_selection",
+                    on_select="rerun",
+                    selection_mode="single-row",
                     column_config={
                         "Player Pays": st.column_config.NumberColumn(
                             format="%,.0f aUEC/SCU"
@@ -4947,24 +5326,66 @@ def commodities_page() -> None:
                     },
                 )
 
+                selected_buy_rows = list(
+                    buy_event.selection.rows
+                )
+                if selected_buy_rows:
+                    selected_buy = buy_display.iloc[
+                        selected_buy_rows[0]
+                    ]
+                    selected_buy_location = " > ".join(
+                        value
+                        for value in [
+                            str(selected_buy["System"]).strip(),
+                            str(selected_buy["Area"]).strip(),
+                            str(selected_buy["Terminal"]).strip(),
+                        ]
+                        if value
+                    )
+                    prefill_commodity_tracker_from_terminal(
+                        signature=(
+                            f"buy|{selected_commodity}|"
+                            f"{selected_buy_location}|"
+                            f"{float(selected_buy['Player Pays'])}"
+                        ),
+                        commodity_name=selected_commodity,
+                        action="Bought",
+                        quantity_scu=float(cargo_scu),
+                        unit_price=float(selected_buy["Player Pays"]),
+                        origin=selected_buy_location,
+                    )
+                    st.success(
+                        "Buy terminal copied to My Trade Tracker. "
+                        "Open that tab to review and save the entry."
+                    )
+
             st.markdown("#### Best Places to Sell")
+            st.caption(
+                "Select one row to copy that destination and sale price into "
+                "My Trade Tracker automatically."
+            )
             if sell_table.empty:
                 st.info("No sale terminals match the current filters.")
             else:
-                st.dataframe(
-                    sell_table[
-                        [
-                            "System",
-                            "Environment",
-                            "Area",
-                            "Terminal",
-                            "Player Receives",
-                            "Demand (SCU)",
-                            "Last Updated",
-                        ]
-                    ],
+                sell_display = sell_table[
+                    [
+                        "System",
+                        "Environment",
+                        "Area",
+                        "Terminal",
+                        "Player Receives",
+                        "Demand (SCU)",
+                        "Last Updated",
+                    ]
+                ].reset_index(drop=True)
+
+                sell_event = st.dataframe(
+                    sell_display,
                     width="stretch",
                     hide_index=True,
+                    key="commodity_best_sell_selection",
+                    on_select="rerun",
+                    selection_mode="single-row",
                     column_config={
                         "Player Receives": st.column_config.NumberColumn(
                             format="%,.0f aUEC/SCU"
@@ -4974,6 +5395,41 @@ def commodities_page() -> None:
                         ),
                     },
                 )
+
+                selected_sell_rows = list(
+                    sell_event.selection.rows
+                )
+                if selected_sell_rows:
+                    selected_sell = sell_display.iloc[
+                        selected_sell_rows[0]
+                    ]
+                    selected_sell_location = " > ".join(
+                        value
+                        for value in [
+                            str(selected_sell["System"]).strip(),
+                            str(selected_sell["Area"]).strip(),
+                            str(selected_sell["Terminal"]).strip(),
+                        ]
+                        if value
+                    )
+                    prefill_commodity_tracker_from_terminal(
+                        signature=(
+                            f"sell|{selected_commodity}|"
+                            f"{selected_sell_location}|"
+                            f"{float(selected_sell['Player Receives'])}"
+                        ),
+                        commodity_name=selected_commodity,
+                        action="Sold",
+                        quantity_scu=float(cargo_scu),
+                        unit_price=float(
+                            selected_sell["Player Receives"]
+                        ),
+                        destination=selected_sell_location,
+                    )
+                    st.success(
+                        "Sale terminal copied to My Trade Tracker. "
+                        "Open that tab to review and save the entry."
+                    )
 
             st.markdown("#### All Matching Terminal Listings")
             market_columns = [
