@@ -116,11 +116,12 @@ SC_TRADE_TOOLS_CACHE_SECONDS = 840
 SC_TRADE_TOOLS_URL = "https://sc-trade.tools/"
 
 STAR_CITIZEN_COLORS = [
-    "#00C8FF",
-    "#FF8A2A",
-    "#7CE7FF",
-    "#EB4C5D",
-    "#8DA4B8",
+    "#98FB17",
+    "#78C814",
+    "#B8FF61",
+    "#4C7814",
+    "#DDF8B9",
+    "#E54950",
 ]
 
 
@@ -130,19 +131,19 @@ def apply_custom_theme() -> None:
         """
         <style>
         :root {
-            --app-bg: #f4f7fb;
-            --surface: #ffffff;
-            --surface-2: #f8fafc;
-            --surface-3: #eef4fb;
-            --border: #dbe4ee;
-            --border-strong: #8fc7ff;
-            --accent: #1378e5;
-            --accent-2: #11a7c8;
-            --accent-soft: #eaf4ff;
-            --text: #10233f;
+            --app-bg: #F6FDEB;
+            --surface: #FFFFFF;
+            --surface-2: #F6FDEB;
+            --surface-3: #F6FDEB;
+            --border: #E4F8C8;
+            --border-strong: #BDF56F;
+            --accent: #69A912;
+            --accent-2: #4C7814;
+            --accent-soft: #F6FDEB;
+            --text: #1F2A16;
             --muted: #607087;
-            --subtle: #8492a6;
-            --success: #20a36a;
+            --subtle: #8492A6;
+            --success: #20A36A;
         }
 
         html, body, [class*="css"] {
@@ -152,8 +153,8 @@ def apply_custom_theme() -> None:
 
         .stApp {
             background:
-                radial-gradient(circle at 88% -12%, rgba(19,120,229,.10), transparent 34rem),
-                linear-gradient(180deg, #f8fbff 0%, var(--app-bg) 100%);
+                radial-gradient(circle at 88% -12%, rgba(96,145,24,.10), transparent 34rem),
+                linear-gradient(180deg, #F6FDEB 0%, var(--app-bg) 100%);
             color: var(--text);
         }
 
@@ -193,12 +194,12 @@ def apply_custom_theme() -> None:
             align-items: flex-end;
             overflow: hidden;
             border-radius: 18px;
-            border: 1px solid #cbd8e6;
+            border: 1px solid #E4F8C8;
             margin-bottom: 1.15rem;
             background-position: center;
             background-repeat: no-repeat;
             background-size: contain;
-            background-color: #091827;
+            background-color: #1F2A16;
             box-shadow: 0 18px 44px rgba(24,62,103,.16);
         }
 
@@ -210,9 +211,9 @@ def apply_custom_theme() -> None:
         }
 
         .sc-banner-content { position: relative; z-index: 2; max-width: 830px; padding: 1.55rem 1.75rem; }
-        .sc-kicker { color: #8fdcff; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; margin-bottom: .38rem; }
+        .sc-kicker { color: #BDF56F; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; margin-bottom: .38rem; }
         .sc-banner-title { color: #fff; font-size: clamp(1.75rem,4vw,2.75rem); line-height: 1.04; font-weight: 800; margin: 0 0 .48rem; text-shadow: 0 3px 15px rgba(0,0,0,.42); }
-        .sc-banner-subtitle { color: #e3edf7; font-size: .98rem; max-width: 720px; margin: 0; }
+        .sc-banner-subtitle { color: #E4F8C8; font-size: .98rem; max-width: 720px; margin: 0; }
 
         /* Interior page banners use a split layout so the full supplied image
            remains visible instead of being cropped as a background. */
@@ -222,9 +223,9 @@ def apply_custom_theme() -> None:
             align-items: center;
             overflow: hidden;
             border-radius: 20px;
-            border: 1px solid #d9e3ee;
+            border: 1px solid #E4F8C8;
             margin-bottom: 1.15rem;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            background: linear-gradient(180deg, #FFFFFF 0%, #F6FDEB 100%);
             box-shadow: 0 18px 44px rgba(24,62,103,.10);
         }
 
@@ -238,7 +239,7 @@ def apply_custom_theme() -> None:
             padding: 1.7rem 1.8rem 1.75rem;
             color: var(--text);
             background:
-                radial-gradient(circle at top left, rgba(19,120,229,.12), transparent 14rem),
+                radial-gradient(circle at top left, rgba(96,145,24,.12), transparent 14rem),
                 linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(248,251,255,.98) 100%);
         }
 
@@ -247,8 +248,8 @@ def apply_custom_theme() -> None:
             min-width: 0;
             padding: 1rem 1rem 1rem .35rem;
             background:
-                radial-gradient(circle at 10% 50%, rgba(19,120,229,.10), transparent 15rem),
-                linear-gradient(135deg, #edf5ff 0%, #f8fbff 100%);
+                radial-gradient(circle at 10% 50%, rgba(96,145,24,.10), transparent 15rem),
+                linear-gradient(135deg, #F6FDEB 0%, #F6FDEB 100%);
         }
 
         .sc-page-banner-image-frame {
@@ -256,7 +257,7 @@ def apply_custom_theme() -> None:
             overflow: hidden;
             border-radius: 16px;
             border: 1px solid rgba(143,199,255,.45);
-            background: #081827;
+            background: #1F2A16;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(24,62,103,.10);
         }
 
@@ -285,7 +286,7 @@ def apply_custom_theme() -> None:
         .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(24,62,103,.12); color:var(--text); }
         .time-card .time-now { font-size:2rem; font-weight:800; margin:.15rem 0; }
         .time-card .time-date { font-size:.78rem; color:var(--muted); margin-bottom:.75rem; }
-        .time-zone-row { display:flex; justify-content:space-between; gap:.75rem; padding:.23rem 0; font-size:.77rem; border-bottom:1px solid #edf2f7; }
+        .time-zone-row { display:flex; justify-content:space-between; gap:.75rem; padding:.23rem 0; font-size:.77rem; border-bottom:1px solid #F6FDEB; }
         .time-zone-row:last-child { border-bottom:0; }
         .time-settings { margin-top:.75rem; padding-top:.7rem; border-top:1px solid var(--border); font-size:.77rem; color:var(--accent); font-weight:700; }
 
@@ -299,7 +300,7 @@ def apply_custom_theme() -> None:
             background:var(--surface); border:1px solid var(--border); border-radius:15px;
             padding:1rem; min-height:118px; box-shadow:0 10px 26px rgba(24,62,103,.08);
         }
-        [data-testid="stMetricLabel"] { color:#66768c !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
+        [data-testid="stMetricLabel"] { color:#66768C !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
         [data-testid="stMetricValue"] { color:var(--text) !important; font-weight:820; }
 
         [data-testid="stVerticalBlockBorderWrapper"] {
@@ -317,7 +318,7 @@ def apply_custom_theme() -> None:
             object-fit: cover;
             object-position: center center;
             border-radius: 12px;
-            background: #081624;
+            background: #1F2A16;
         }
 
         .feature-card-title {
@@ -363,16 +364,16 @@ def apply_custom_theme() -> None:
         .stDownloadButton > button,
         [data-testid="stFormSubmitButton"] > button,
         .stLinkButton > a {
-            border: 1px solid #0a6d89;
+            border: 1px solid #36550F;
             border-radius: 10px;
-            background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
-            color: #ffffff !important;
+            background: linear-gradient(135deg, #36550F 0%, #36550F 100%);
+            color: #FFFFFF !important;
             font-size: .92rem !important;
             font-weight: 750 !important;
             line-height: 1.2 !important;
             letter-spacing: .005em;
             min-height: 2.75rem;
-            box-shadow: 0 7px 16px rgba(7,95,121,.18);
+            box-shadow: 0 7px 16px rgba(74,120,20,.18);
             transition:
                 background .16s ease,
                 border-color .16s ease,
@@ -395,9 +396,9 @@ def apply_custom_theme() -> None:
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover,
         .stLinkButton > a:hover {
-            border-color: #043f53;
-            background: linear-gradient(135deg, #075a73 0%, #043f53 100%);
-            color: #ffffff !important;
+            border-color: #2A3B16;
+            background: linear-gradient(135deg, #2A3B16 0%, #2A3B16 100%);
+            color: #FFFFFF !important;
             box-shadow: 0 10px 22px rgba(4,63,83,.28);
             transform: translateY(-1px);
         }
@@ -405,9 +406,9 @@ def apply_custom_theme() -> None:
         .stButton > button:disabled,
         .stDownloadButton > button:disabled,
         [data-testid="stFormSubmitButton"] > button:disabled {
-            background: #cbd7df !important;
-            border-color: #c1ccd4 !important;
-            color: #6e7e8b !important;
+            background: #BDF56F !important;
+            border-color: #BDF56F !important;
+            color: #6E7E8B !important;
             box-shadow: none !important;
             transform: none !important;
         }
@@ -425,47 +426,47 @@ def apply_custom_theme() -> None:
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-            background: #edf6f9;
-            border: 1px solid #b7d5df;
-            color: #1d5366 !important;
+            background: #F6FDEB;
+            border: 1px solid #BDF56F;
+            color: #36550F !important;
             box-shadow: none;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
-            color: #1d5366 !important;
+            color: #36550F !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-            background: #cfe8ef;
-            border-color: #68a9bb;
-            color: #0b4357 !important;
+            background: #E4F8C8;
+            border-color: #69A912;
+            color: #2A3B16 !important;
             box-shadow: 0 7px 16px rgba(30,104,126,.12);
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
-            color: #0b4357 !important;
+            color: #2A3B16 !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
-            border: 1px solid #075f79;
-            color: #ffffff !important;
+            background: linear-gradient(135deg, #36550F 0%, #36550F 100%);
+            border: 1px solid #36550F;
+            color: #FFFFFF !important;
             box-shadow:
-                inset 4px 0 0 #55d7f1,
-                0 8px 18px rgba(7,95,121,.22);
+                inset 4px 0 0 #98FB17,
+                0 8px 18px rgba(74,120,20,.22);
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
-            color: #ffffff !important;
+            color: #FFFFFF !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #095f79 0%, #044c62 100%);
-            border-color: #044c62;
+            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%);
+            border-color: #2A3B16;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover * {
-            color: #ffffff !important;
+            color: #FFFFFF !important;
         }
 
         div[data-baseweb="tab-list"] {
@@ -474,9 +475,9 @@ def apply_custom_theme() -> None:
             gap: .55rem;
             padding: .55rem;
             margin: .45rem 0 1rem;
-            border: 1px solid #c5dce6;
+            border: 1px solid #BDF56F;
             border-radius: 14px;
-            background: #eaf4f7;
+            background: #F6FDEB;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
         }
 
@@ -484,10 +485,10 @@ def apply_custom_theme() -> None:
             flex: 1 1 150px;
             min-height: 3.15rem;
             padding: .68rem .9rem !important;
-            border: 1px solid #a9ccd9 !important;
+            border: 1px solid #BDF56F !important;
             border-radius: 10px !important;
-            background: #ffffff !important;
-            color: #18546a !important;
+            background: #FFFFFF !important;
+            color: #36550F !important;
             font-size: .88rem !important;
             font-weight: 790 !important;
             line-height: 1.2 !important;
@@ -507,9 +508,9 @@ def apply_custom_theme() -> None:
         }
 
         button[data-baseweb="tab"]:hover {
-            background: #d9edf3 !important;
-            border-color: #6aafc1 !important;
-            color: #0a4357 !important;
+            background: #E4F8C8 !important;
+            border-color: #69A912 !important;
+            color: #2A3B16 !important;
             transform: translateY(-1px);
             box-shadow: 0 7px 16px rgba(27,88,108,.13);
         }
@@ -517,18 +518,18 @@ def apply_custom_theme() -> None:
         button[data-baseweb="tab"][aria-selected="true"] {
             background: linear-gradient(
                 135deg,
-                #0d7694 0%,
-                #075f79 100%
+                #36550F 0%,
+                #36550F 100%
             ) !important;
-            border-color: #075f79 !important;
-            color: #ffffff !important;
+            border-color: #36550F !important;
+            color: #FFFFFF !important;
             box-shadow:
-                inset 4px 0 0 #55d7f1,
-                0 8px 18px rgba(7,95,121,.22);
+                inset 4px 0 0 #98FB17,
+                0 8px 18px rgba(74,120,20,.22);
         }
 
         button[data-baseweb="tab"][aria-selected="true"] * {
-            color: #ffffff !important;
+            color: #FFFFFF !important;
         }
 
         .dashboard-metric-grid {
@@ -542,18 +543,18 @@ def apply_custom_theme() -> None:
             min-width: 0;
             min-height: 118px;
             padding: .95rem 1rem;
-            border: 1px solid #c7dce6;
+            border: 1px solid #E4F8C8;
             border-radius: 15px;
             background:
-                linear-gradient(145deg, #ffffff 0%, #f1f8fb 100%);
-            box-shadow: 0 9px 22px rgba(18,74,99,.08);
+                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
+            box-shadow: 0 9px 22px rgba(52,78,22,.08);
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .dashboard-metric-label {
-            color: #526c80;
+            color: #4C7814;
             font-size: .71rem;
             font-weight: 790;
             line-height: 1.25;
@@ -563,7 +564,7 @@ def apply_custom_theme() -> None:
         }
 
         .dashboard-metric-value {
-            color: #0b526b;
+            color: #2A3B16;
             font-size: clamp(1.3rem, 2vw, 2rem);
             font-weight: 850;
             line-height: 1.08;
@@ -571,11 +572,11 @@ def apply_custom_theme() -> None:
         }
 
         .dashboard-metric-value.positive {
-            color: #16825a;
+            color: #36550F;
         }
 
         .dashboard-metric-value.negative {
-            color: #d43f48;
+            color: #D43F48;
         }
 
         .dashboard-metric-detail {
@@ -600,12 +601,12 @@ def apply_custom_theme() -> None:
         .sidebar-profile-card {
             margin: .5rem 0 .7rem;
             padding: .85rem;
-            border: 1px solid #c9dce6;
+            border: 1px solid #E4F8C8;
             border-radius: 15px;
             background:
-                radial-gradient(circle at top left, rgba(13,118,148,.13), transparent 10rem),
-                linear-gradient(145deg, #ffffff 0%, #eef7fa 100%);
-            box-shadow: 0 9px 22px rgba(18,74,99,.08);
+                radial-gradient(circle at top left, rgba(104,159,20,.13), transparent 10rem),
+                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
+            box-shadow: 0 9px 22px rgba(52,78,22,.08);
         }
 
         .sidebar-profile-row {
@@ -621,17 +622,17 @@ def apply_custom_theme() -> None:
             height: 52px;
             flex: 0 0 52px;
             border-radius: 50%;
-            border: 2px solid #8bc6d6;
+            border: 2px solid #98FB17;
             box-shadow: 0 6px 16px rgba(10,85,107,.17);
             object-fit: cover;
-            background: #0d7694;
+            background: #36550F;
         }
 
         .sidebar-profile-initials {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
+            color: #FFFFFF;
             font-size: 1.02rem;
             font-weight: 850;
             letter-spacing: .02em;
@@ -642,7 +643,7 @@ def apply_custom_theme() -> None:
         }
 
         .sidebar-profile-name {
-            color: #102f43;
+            color: #2A3B16;
             font-size: .95rem;
             font-weight: 820;
             line-height: 1.2;
@@ -652,7 +653,7 @@ def apply_custom_theme() -> None:
         }
 
         .sidebar-profile-email {
-            color: #60778a;
+            color: #60778A;
             font-size: .71rem;
             line-height: 1.35;
             margin-top: .18rem;
@@ -668,12 +669,12 @@ def apply_custom_theme() -> None:
             align-items: center;
             margin-bottom: 1rem;
             padding: 1.35rem 1.5rem;
-            border: 1px solid #c8dce6;
+            border: 1px solid #E4F8C8;
             border-radius: 20px;
             background:
-                radial-gradient(circle at 10% 10%, rgba(13,118,148,.17), transparent 17rem),
-                linear-gradient(135deg, #ffffff 0%, #edf7fa 100%);
-            box-shadow: 0 16px 36px rgba(18,74,99,.11);
+                radial-gradient(circle at 10% 10%, rgba(104,159,20,.17), transparent 17rem),
+                linear-gradient(135deg, #FFFFFF 0%, #F6FDEB 100%);
+            box-shadow: 0 16px 36px rgba(52,78,22,.11);
         }
 
         .profile-avatar-large,
@@ -681,26 +682,26 @@ def apply_custom_theme() -> None:
             width: 124px;
             height: 124px;
             border-radius: 50%;
-            border: 4px solid #ffffff;
+            border: 4px solid #FFFFFF;
             box-shadow:
-                0 0 0 2px #79bdd0,
+                0 0 0 2px #98FB17,
                 0 12px 28px rgba(8,70,91,.18);
             object-fit: cover;
-            background: linear-gradient(135deg, #0d7694 0%, #064f66 100%);
+            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%);
         }
 
         .profile-avatar-large-initials {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
+            color: #FFFFFF;
             font-size: 2.2rem;
             font-weight: 880;
             letter-spacing: .03em;
         }
 
         .profile-hero-kicker {
-            color: #0d7694;
+            color: #36550F;
             font-size: .72rem;
             font-weight: 820;
             letter-spacing: .12em;
@@ -709,7 +710,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-hero-name {
-            color: #10233f;
+            color: #1F2A16;
             font-size: clamp(1.65rem, 3vw, 2.45rem);
             font-weight: 850;
             line-height: 1.05;
@@ -723,7 +724,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-hero-bio {
-            color: #536b7e;
+            color: #4C7814;
             font-size: .86rem;
             line-height: 1.55;
             margin-top: .65rem;
@@ -741,14 +742,14 @@ def apply_custom_theme() -> None:
             min-width: 0;
             min-height: 108px;
             padding: .95rem 1rem;
-            border: 1px solid #ccdee6;
+            border: 1px solid #E4F8C8;
             border-radius: 15px;
-            background: #ffffff;
-            box-shadow: 0 8px 20px rgba(18,74,99,.07);
+            background: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(52,78,22,.07);
         }
 
         .profile-summary-label {
-            color: #637b8d;
+            color: #637B8D;
             font-size: .69rem;
             font-weight: 790;
             letter-spacing: .06em;
@@ -756,7 +757,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-summary-value {
-            color: #10374d;
+            color: #2A3B16;
             font-size: 1.1rem;
             font-weight: 830;
             margin-top: .42rem;
@@ -764,7 +765,7 @@ def apply_custom_theme() -> None:
         }
 
         .profile-summary-detail {
-            color: #7b8b9b;
+            color: #7B8B9B;
             font-size: .7rem;
             line-height: 1.35;
             margin-top: .25rem;
@@ -772,19 +773,19 @@ def apply_custom_theme() -> None:
 
         .profile-section-card {
             padding: 1.05rem 1.1rem;
-            border: 1px solid #cfdee7;
+            border: 1px solid #E4F8C8;
             border-radius: 16px;
-            background: #ffffff;
-            box-shadow: 0 9px 22px rgba(18,74,99,.07);
+            background: #FFFFFF;
+            box-shadow: 0 9px 22px rgba(52,78,22,.07);
         }
 
         .profile-security-note {
             margin: .55rem 0 .8rem;
             padding: .75rem .85rem;
-            border-left: 4px solid #0d7694;
+            border-left: 4px solid #36550F;
             border-radius: 9px;
-            background: #edf8fb;
-            color: #436477;
+            background: #F6FDEB;
+            color: #4C7814;
             font-size: .78rem;
             line-height: 1.5;
         }
@@ -810,16 +811,16 @@ def apply_custom_theme() -> None:
         .rights-notice {
             margin-top: 1rem;
             padding: .9rem 1rem;
-            border: 1px solid #cbdde5;
+            border: 1px solid #E4F8C8;
             border-radius: 12px;
-            background: #f5fafc;
-            color: #52677a;
+            background: #F6FDEB;
+            color: #4C7814;
             font-size: .76rem;
             line-height: 1.55;
         }
 
         .rights-notice strong {
-            color: #123850;
+            color: #2A3B16;
         }
 
         .commodity-source-grid {
@@ -831,14 +832,14 @@ def apply_custom_theme() -> None:
 
         .commodity-source-card {
             padding: .9rem 1rem;
-            border: 1px solid #cbdde5;
+            border: 1px solid #E4F8C8;
             border-radius: 13px;
-            background: #ffffff;
+            background: #FFFFFF;
             box-shadow: 0 9px 22px rgba(24,62,103,.06);
         }
 
         .commodity-source-name {
-            color: #10233f;
+            color: #1F2A16;
             font-size: .95rem;
             font-weight: 780;
             margin-bottom: .2rem;
@@ -855,8 +856,8 @@ def apply_custom_theme() -> None:
             margin-top: .55rem;
             padding: .22rem .52rem;
             border-radius: 999px;
-            background: #e7f7f1;
-            color: #16724d;
+            background: #F6FDEB;
+            color: #36550F;
             font-size: .7rem;
             font-weight: 780;
         }
@@ -872,18 +873,18 @@ def apply_custom_theme() -> None:
             min-width: 0;
             min-height: 126px;
             padding: 1rem 1.05rem;
-            border: 1px solid #c7dce6;
+            border: 1px solid #E4F8C8;
             border-radius: 16px;
             background:
-                linear-gradient(145deg, #ffffff 0%, #f1f8fb 100%);
-            box-shadow: 0 10px 24px rgba(18,74,99,.09);
+                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
+            box-shadow: 0 10px 24px rgba(52,78,22,.09);
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
         .commodity-metric-label {
-            color: #49647a;
+            color: #4C7814;
             font-size: .72rem;
             font-weight: 790;
             line-height: 1.25;
@@ -893,7 +894,7 @@ def apply_custom_theme() -> None:
         }
 
         .commodity-metric-value {
-            color: #0b526b;
+            color: #2A3B16;
             font-size: clamp(1.35rem, 2.25vw, 2.2rem);
             font-weight: 850;
             line-height: 1.08;
@@ -903,16 +904,16 @@ def apply_custom_theme() -> None:
         }
 
         .commodity-metric-value.positive {
-            color: #16825a;
+            color: #36550F;
         }
 
         .commodity-metric-value.negative {
-            color: #d43f48;
+            color: #D43F48;
         }
 
         .commodity-metric-detail {
             margin-top: .35rem;
-            color: #6d8092;
+            color: #6D8092;
             font-size: .72rem;
             line-height: 1.3;
         }
@@ -947,11 +948,11 @@ def apply_custom_theme() -> None:
         input[type="text"],
         input[type="email"],
         input[type="password"] {
-            background: #ffffff !important;
-            border-color: #b9c9d8 !important;
-            color: #10233f !important;
-            -webkit-text-fill-color: #10233f !important;
-            caret-color: #0d7694 !important;
+            background: #FFFFFF !important;
+            border-color: #BDF56F !important;
+            color: #1F2A16 !important;
+            -webkit-text-fill-color: #1F2A16 !important;
+            caret-color: #36550F !important;
             border-radius: 9px !important;
             opacity: 1 !important;
         }
@@ -962,8 +963,8 @@ def apply_custom_theme() -> None:
         input[type="text"]::placeholder,
         input[type="email"]::placeholder,
         input[type="password"]::placeholder {
-            color: #7b8ba0 !important;
-            -webkit-text-fill-color: #7b8ba0 !important;
+            color: #7B8BA0 !important;
+            -webkit-text-fill-color: #7B8BA0 !important;
             opacity: 1 !important;
         }
 
@@ -971,7 +972,7 @@ def apply_custom_theme() -> None:
         [data-testid="stNumberInput"] label,
         [data-testid="stTextArea"] label,
         [data-testid="stDateInput"] label {
-            color: #344b65 !important;
+            color: #36550F !important;
             font-weight: 650 !important;
         }
 
@@ -983,19 +984,19 @@ def apply_custom_theme() -> None:
         .stTextInput input:focus,
         .stNumberInput input:focus,
         .stTextArea textarea:focus {
-            border-color: #0d7694 !important;
-            box-shadow: 0 0 0 2px rgba(13,118,148,.16) !important;
+            border-color: #36550F !important;
+            box-shadow: 0 0 0 2px rgba(104,159,20,.16) !important;
             outline: none !important;
         }
 
         [data-baseweb="input"] {
-            background: #ffffff !important;
+            background: #FFFFFF !important;
         }
         [data-testid="stDataFrame"] { border:1px solid var(--border); border-radius:13px; overflow:hidden; }
         div[data-testid="stAlert"] { border:1px solid var(--border); border-radius:12px; background:#fff; }
         [data-testid="stTabs"] button { color:var(--muted); }
         [data-testid="stTabs"] button[aria-selected="true"] { color:var(--accent); border-bottom-color:var(--accent); }
-        hr { border-color:#e5ebf2; }
+        hr { border-color:#E4F8C8; }
 
         @media (max-width:1050px) {
             .dashboard-hero-grid { grid-template-columns:1fr; }
@@ -1031,25 +1032,25 @@ def apply_custom_theme() -> None:
 
         /* Premium application-wide design system */
         :root {
-            --premium-navy: #0d2d49;
-            --premium-teal: #087892;
-            --premium-teal-dark: #055a70;
-            --premium-blue: #176fc1;
-            --premium-green: #22a66f;
-            --premium-red: #e54950;
-            --premium-orange: #f28a2a;
-            --premium-purple: #7b55d9;
-            --premium-surface: #ffffff;
-            --premium-surface-soft: #f4f9fc;
-            --premium-border: #bdd2df;
-            --premium-border-strong: #8fb4c7;
+            --premium-navy: #2A3B16;
+            --premium-teal: #36550F;
+            --premium-teal-dark: #2A3B16;
+            --premium-blue: #4C7814;
+            --premium-green: #4C7814;
+            --premium-red: #E54950;
+            --premium-orange: #F28A2A;
+            --premium-purple: #69A912;
+            --premium-surface: #FFFFFF;
+            --premium-surface-soft: #F6FDEB;
+            --premium-border: #BDF56F;
+            --premium-border-strong: #98FB17;
             --premium-shadow: 0 12px 28px rgba(16, 61, 88, .09);
         }
 
         .stApp {
             background:
-                radial-gradient(circle at 15% 0%, rgba(54,157,190,.08), transparent 26rem),
-                linear-gradient(180deg, #f8fbfd 0%, #f1f6fa 100%);
+                radial-gradient(circle at 15% 0%, rgba(152,251,23,.08), transparent 26rem),
+                linear-gradient(180deg, #F6FDEB 0%, #F6FDEB 100%);
         }
 
         .block-container {
@@ -1066,28 +1067,28 @@ def apply_custom_theme() -> None:
         [data-testid="stVerticalBlockBorderWrapper"] {
             border-color: var(--premium-border) !important;
             border-radius: 17px !important;
-            background: linear-gradient(145deg, #ffffff 0%, #f8fbfd 100%) !important;
+            background: linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%) !important;
             box-shadow: var(--premium-shadow);
         }
 
         [data-testid="stForm"] {
             border: 1.5px solid var(--premium-border) !important;
             border-radius: 16px !important;
-            background: #ffffff !important;
+            background: #FFFFFF !important;
             padding: 1rem !important;
-            box-shadow: 0 9px 22px rgba(16,61,88,.07);
+            box-shadow: 0 9px 22px rgba(43,66,20,.07);
         }
 
         [data-testid="stExpander"] {
             border: 1.5px solid var(--premium-border) !important;
             border-radius: 13px !important;
             overflow: hidden;
-            background: #ffffff !important;
-            box-shadow: 0 6px 16px rgba(16,61,88,.06);
+            background: #FFFFFF !important;
+            box-shadow: 0 6px 16px rgba(43,66,20,.06);
         }
 
         [data-testid="stExpander"] summary {
-            background: #eef7fa;
+            background: #F6FDEB;
             color: var(--premium-navy) !important;
             font-weight: 760 !important;
         }
@@ -1099,10 +1100,10 @@ def apply_custom_theme() -> None:
         [data-testid="stDateInput"] input,
         [data-testid="stFileUploaderDropzone"] {
             min-height: 3rem;
-            background: #ffffff !important;
+            background: #FFFFFF !important;
             border: 1.5px solid var(--premium-border-strong) !important;
             border-radius: 11px !important;
-            color: #112e46 !important;
+            color: #2A3B16 !important;
             box-shadow: inset 0 1px 2px rgba(8,48,72,.04);
         }
 
@@ -1115,7 +1116,7 @@ def apply_custom_theme() -> None:
         [data-testid="stNumberInput"] input:hover,
         [data-testid="stTextArea"] textarea:hover,
         [data-testid="stDateInput"] input:hover {
-            border-color: #4d9eb8 !important;
+            border-color: #69A912 !important;
         }
 
         div[data-baseweb="select"] > div:focus-within,
@@ -1124,7 +1125,7 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea:focus,
         [data-testid="stDateInput"] input:focus {
             border-color: var(--premium-teal) !important;
-            box-shadow: 0 0 0 3px rgba(8,120,146,.16) !important;
+            box-shadow: 0 0 0 3px rgba(104,159,20,.16) !important;
         }
 
         [data-testid="stWidgetLabel"] p,
@@ -1134,7 +1135,7 @@ def apply_custom_theme() -> None:
         [data-testid="stDateInput"] label,
         [data-testid="stSelectbox"] label,
         [data-testid="stMultiSelect"] label {
-            color: #173b53 !important;
+            color: #2A3B16 !important;
             font-weight: 760 !important;
         }
 
@@ -1145,11 +1146,11 @@ def apply_custom_theme() -> None:
             min-height: 3rem;
             border: 1px solid var(--premium-teal-dark) !important;
             border-radius: 11px !important;
-            background: linear-gradient(135deg, #0b89a4 0%, #05647b 100%) !important;
-            color: #ffffff !important;
+            background: linear-gradient(135deg, #36550F 0%, #36550F 100%) !important;
+            color: #FFFFFF !important;
             font-size: .91rem !important;
             font-weight: 800 !important;
-            box-shadow: 0 8px 18px rgba(5,100,123,.20);
+            box-shadow: 0 8px 18px rgba(74,120,20,.20);
         }
 
         .stButton > button *,
@@ -1164,23 +1165,23 @@ def apply_custom_theme() -> None:
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover,
         .stLinkButton > a:hover {
-            background: linear-gradient(135deg, #08758e 0%, #044e61 100%) !important;
-            border-color: #044e61 !important;
+            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%) !important;
+            border-color: #2A3B16 !important;
             transform: translateY(-1px);
             box-shadow: 0 11px 22px rgba(4,78,97,.25);
         }
 
         .stButton > button[kind="secondary"] {
-            background: #f3f9fc !important;
-            color: #154d66 !important;
-            border: 1.5px solid #7eb3c6 !important;
-            box-shadow: 0 5px 13px rgba(16,61,88,.07);
+            background: #F6FDEB !important;
+            color: #2A3B16 !important;
+            border: 1.5px solid #98FB17 !important;
+            box-shadow: 0 5px 13px rgba(43,66,20,.07);
         }
 
         .stButton > button[kind="secondary"]:hover {
-            background: #dceff5 !important;
-            color: #083f55 !important;
-            border-color: #3c92ad !important;
+            background: #E4F8C8 !important;
+            color: #2A3B16 !important;
+            border-color: #4C7814 !important;
         }
 
         div[data-baseweb="tab-list"] {
@@ -1188,67 +1189,67 @@ def apply_custom_theme() -> None:
             padding: .55rem !important;
             border: 1.5px solid var(--premium-border) !important;
             border-radius: 14px !important;
-            background: #eaf4f8 !important;
+            background: #F6FDEB !important;
         }
 
         button[data-baseweb="tab"] {
             min-height: 3.15rem !important;
-            border: 1.5px solid #9fc5d4 !important;
+            border: 1.5px solid #BDF56F !important;
             border-radius: 10px !important;
-            background: #ffffff !important;
-            color: #154d66 !important;
+            background: #FFFFFF !important;
+            color: #2A3B16 !important;
             font-weight: 800 !important;
-            box-shadow: 0 4px 10px rgba(16,61,88,.06);
+            box-shadow: 0 4px 10px rgba(43,66,20,.06);
         }
 
         button[data-baseweb="tab"]:hover {
-            background: #d9edf3 !important;
-            border-color: #5ca4bb !important;
-            color: #073f55 !important;
+            background: #E4F8C8 !important;
+            border-color: #69A912 !important;
+            color: #2A3B16 !important;
         }
 
         button[data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, #0b89a4 0%, #05647b 100%) !important;
-            border-color: #05647b !important;
-            color: #ffffff !important;
-            box-shadow: inset 4px 0 0 #67d9ee, 0 8px 18px rgba(5,100,123,.20);
+            background: linear-gradient(135deg, #36550F 0%, #36550F 100%) !important;
+            border-color: #36550F !important;
+            color: #FFFFFF !important;
+            box-shadow: inset 4px 0 0 #98FB17, 0 8px 18px rgba(74,120,20,.20);
         }
 
         button[data-baseweb="tab"][aria-selected="true"] * {
-            color: #ffffff !important;
+            color: #FFFFFF !important;
         }
 
         [data-testid="stDataFrame"] {
             border: 1.5px solid var(--premium-border) !important;
             border-radius: 14px !important;
             overflow: hidden;
-            background: #ffffff;
-            box-shadow: 0 8px 20px rgba(16,61,88,.07);
+            background: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(43,66,20,.07);
         }
 
         [data-testid="stMetric"] {
             padding: .85rem .9rem;
             border: 1px solid var(--premium-border);
             border-radius: 13px;
-            background: #ffffff;
-            box-shadow: 0 7px 17px rgba(16,61,88,.06);
+            background: #FFFFFF;
+            box-shadow: 0 7px 17px rgba(43,66,20,.06);
         }
 
         [data-testid="stMetricValue"] {
-            color: #0d526b !important;
+            color: #2A3B16 !important;
             font-weight: 840 !important;
         }
 
         div[data-testid="stAlert"] {
             border-width: 1.5px !important;
             border-radius: 13px !important;
-            box-shadow: 0 6px 16px rgba(16,61,88,.06);
+            box-shadow: 0 6px 16px rgba(43,66,20,.06);
         }
 
         .section-heading {
             margin-top: 1.2rem;
             padding: .3rem .1rem .65rem;
-            border-bottom: 1px solid #cfdee7;
+            border-bottom: 1px solid #E4F8C8;
         }
 
         .section-title {
@@ -1258,7 +1259,7 @@ def apply_custom_theme() -> None:
         }
 
         .section-copy {
-            color: #6b8092;
+            color: #6B8092;
             font-size: .8rem;
             margin-top: .18rem;
         }
@@ -1283,7 +1284,7 @@ def apply_custom_theme() -> None:
         }
 
         .analytics-copy {
-            color: #657c8f;
+            color: #657C8F;
             font-size: .76rem;
             line-height: 1.45;
             margin-top: .2rem;
@@ -1301,8 +1302,8 @@ def apply_custom_theme() -> None:
             padding: .9rem .8rem;
             border: 1.5px solid var(--premium-border);
             border-radius: 14px;
-            background: #ffffff;
-            box-shadow: 0 8px 20px rgba(16,61,88,.07);
+            background: #FFFFFF;
+            box-shadow: 0 8px 20px rgba(43,66,20,.07);
             text-align: center;
         }
 
@@ -1314,14 +1315,14 @@ def apply_custom_theme() -> None:
             align-items: center;
             justify-content: center;
             border-radius: 11px;
-            background: #e8f5f8;
+            background: #F6FDEB;
             color: var(--premium-teal);
             font-size: 1.1rem;
             font-weight: 850;
         }
 
         .dashboard-summary-label {
-            color: #526b7e;
+            color: #4C7814;
             font-size: .68rem;
             font-weight: 800;
             line-height: 1.25;
@@ -1345,11 +1346,11 @@ def apply_custom_theme() -> None:
             margin-top: .28rem;
         }
 
-        .dashboard-summary-card.green { border-color: #a8dbc7; }
-        .dashboard-summary-card.blue { border-color: #a9cce9; }
-        .dashboard-summary-card.orange { border-color: #f4c691; }
-        .dashboard-summary-card.purple { border-color: #cbb9ee; }
-        .dashboard-summary-card.red { border-color: #edb0b4; }
+        .dashboard-summary-card.green { border-color: #BDF56F; }
+        .dashboard-summary-card.blue { border-color: #BDF56F; }
+        .dashboard-summary-card.orange { border-color: #F4C691; }
+        .dashboard-summary-card.purple { border-color: #BDF56F; }
+        .dashboard-summary-card.red { border-color: #EDB0B4; }
 
         .st-key-sidebar_manage_profile {
             position: relative;
@@ -1367,22 +1368,22 @@ def apply_custom_theme() -> None:
             height: 2.35rem !important;
             padding: 0 !important;
             border-radius: 50% !important;
-            background: #ffffff !important;
+            background: #FFFFFF !important;
             color: var(--premium-teal) !important;
-            border: 1.5px solid #7fb8c9 !important;
-            box-shadow: 0 6px 14px rgba(16,61,88,.16);
+            border: 1.5px solid #98FB17 !important;
+            box-shadow: 0 6px 14px rgba(43,66,20,.16);
             font-size: 1.1rem !important;
         }
 
         .st-key-sidebar_manage_profile button:hover {
             background: var(--premium-teal) !important;
-            color: #ffffff !important;
+            color: #FFFFFF !important;
             border-color: var(--premium-teal) !important;
         }
 
         section[data-testid="stSidebar"] {
-            border-right: 1px solid #cbdce5;
-            box-shadow: 7px 0 26px rgba(16,61,88,.05);
+            border-right: 1px solid #E4F8C8;
+            box-shadow: 7px 0 26px rgba(43,66,20,.05);
         }
 
         @media (max-width: 1320px) {
@@ -1415,8 +1416,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTimeInput"] div[data-baseweb="input"],
         [data-testid="stSearchbox"] div[data-baseweb="input"] {
             min-height: 3.15rem !important;
-            background: #ffffff !important;
-            border: 2px solid #76aeca !important;
+            background: #FFFFFF !important;
+            border: 2px solid #98FB17 !important;
             border-radius: 11px !important;
             box-shadow:
                 0 3px 9px rgba(24, 83, 108, .08),
@@ -1433,7 +1434,7 @@ def apply_custom_theme() -> None:
         [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
         [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
         [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
-            border-color: #2987a5 !important;
+            border-color: #4C7814 !important;
             box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
         }
 
@@ -1442,8 +1443,8 @@ def apply_custom_theme() -> None:
         [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
         [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
         [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
-            border-color: #057c99 !important;
-            background: #fbfeff !important;
+            border-color: #36550F !important;
+            background: #F6FDEB !important;
             box-shadow:
                 0 0 0 4px rgba(5, 124, 153, .16),
                 0 6px 15px rgba(24, 83, 108, .12) !important;
@@ -1460,8 +1461,8 @@ def apply_custom_theme() -> None:
             outline: 0 !important;
             box-shadow: none !important;
             background: transparent !important;
-            color: #102e47 !important;
-            -webkit-text-fill-color: #102e47 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
             font-size: .9rem !important;
             font-weight: 560 !important;
         }
@@ -1470,11 +1471,11 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea {
             min-height: 9rem !important;
             padding: .82rem .86rem !important;
-            background: #ffffff !important;
-            border: 2px solid #76aeca !important;
+            background: #FFFFFF !important;
+            border: 2px solid #98FB17 !important;
             border-radius: 11px !important;
-            color: #102e47 !important;
-            -webkit-text-fill-color: #102e47 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
             box-shadow:
                 0 3px 9px rgba(24, 83, 108, .08),
                 inset 0 1px 2px rgba(15, 62, 84, .035) !important;
@@ -1486,11 +1487,11 @@ def apply_custom_theme() -> None:
         }
 
         [data-testid="stTextArea"] textarea:hover {
-            border-color: #2987a5 !important;
+            border-color: #4C7814 !important;
         }
 
         [data-testid="stTextArea"] textarea:focus {
-            border-color: #057c99 !important;
+            border-color: #36550F !important;
             box-shadow:
                 0 0 0 4px rgba(5, 124, 153, .16),
                 0 6px 15px rgba(24, 83, 108, .12) !important;
@@ -1503,10 +1504,10 @@ def apply_custom_theme() -> None:
         [data-testid="stSelectbox"] [role="combobox"],
         [data-testid="stMultiSelect"] [role="combobox"] {
             min-height: 3.15rem !important;
-            background: #ffffff !important;
-            border: 2px solid #76aeca !important;
+            background: #FFFFFF !important;
+            border: 2px solid #98FB17 !important;
             border-radius: 11px !important;
-            color: #102e47 !important;
+            color: #2A3B16 !important;
             box-shadow: 0 3px 9px rgba(24, 83, 108, .08) !important;
             transition:
                 border-color .15s ease,
@@ -1515,13 +1516,13 @@ def apply_custom_theme() -> None:
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
-            border-color: #2987a5 !important;
+            border-color: #4C7814 !important;
             box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
         }
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            border-color: #057c99 !important;
+            border-color: #36550F !important;
             box-shadow:
                 0 0 0 4px rgba(5, 124, 153, .16),
                 0 6px 15px rgba(24, 83, 108, .12) !important;
@@ -1529,8 +1530,8 @@ def apply_custom_theme() -> None:
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] *,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
-            color: #102e47 !important;
-            -webkit-text-fill-color: #102e47 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
         }
 
         /* Visible placeholders */
@@ -1539,8 +1540,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea::placeholder,
         [data-testid="stDateInput"] input::placeholder,
         [data-testid="stSearchbox"] input::placeholder {
-            color: #73889a !important;
-            -webkit-text-fill-color: #73889a !important;
+            color: #73889A !important;
+            -webkit-text-fill-color: #73889A !important;
             opacity: 1 !important;
             font-weight: 500 !important;
         }
@@ -1553,7 +1554,7 @@ def apply_custom_theme() -> None:
         [data-testid="stSelectbox"] label p,
         [data-testid="stMultiSelect"] label p,
         [data-testid="stDateInput"] label p {
-            color: #0e3650 !important;
+            color: #2A3B16 !important;
             font-size: .82rem !important;
             font-weight: 800 !important;
         }
@@ -1563,28 +1564,28 @@ def apply_custom_theme() -> None:
             min-width: 2.55rem !important;
             min-height: 3rem !important;
             border: 0 !important;
-            border-left: 1px solid #bdd3de !important;
+            border-left: 1px solid #BDF56F !important;
             border-radius: 0 !important;
-            background: #edf6f9 !important;
-            color: #0b5069 !important;
+            background: #F6FDEB !important;
+            color: #2A3B16 !important;
             box-shadow: none !important;
         }
 
         [data-testid="stNumberInput"] button:hover {
-            background: #d8edf3 !important;
-            color: #063d50 !important;
+            background: #E4F8C8 !important;
+            color: #2A3B16 !important;
         }
 
         /* File upload area */
         [data-testid="stFileUploaderDropzone"] {
-            border: 2px dashed #76aeca !important;
-            background: #f6fbfd !important;
+            border: 2px dashed #98FB17 !important;
+            background: #F6FDEB !important;
             padding: 1.15rem !important;
         }
 
         [data-testid="stFileUploaderDropzone"]:hover {
-            border-color: #057c99 !important;
-            background: #edf8fb !important;
+            border-color: #36550F !important;
+            background: #F6FDEB !important;
         }
 
         /* Current Streamlit tabs: prominent segmented navigation */
@@ -1594,12 +1595,12 @@ def apply_custom_theme() -> None:
             gap: .58rem !important;
             padding: .58rem !important;
             margin: .45rem 0 1rem !important;
-            border: 1.5px solid #abcbd8 !important;
+            border: 1.5px solid #BDF56F !important;
             border-radius: 14px !important;
-            background: #e7f2f6 !important;
+            background: #F6FDEB !important;
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,.9),
-                0 5px 14px rgba(24,83,108,.07) !important;
+                0 5px 14px rgba(54,82,22,.07) !important;
         }
 
         [data-testid="stTabs"] [role="tab"] {
@@ -1607,14 +1608,14 @@ def apply_custom_theme() -> None:
             min-width: 120px !important;
             min-height: 3.05rem !important;
             padding: .65rem .9rem !important;
-            border: 1.5px solid #8fb9c9 !important;
+            border: 1.5px solid #98FB17 !important;
             border-radius: 10px !important;
-            background: #ffffff !important;
-            color: #174e65 !important;
+            background: #FFFFFF !important;
+            color: #2A3B16 !important;
             font-size: .84rem !important;
             font-weight: 800 !important;
             line-height: 1.2 !important;
-            box-shadow: 0 4px 10px rgba(24,83,108,.07) !important;
+            box-shadow: 0 4px 10px rgba(54,82,22,.07) !important;
             transition:
                 background .15s ease,
                 border-color .15s ease,
@@ -1630,25 +1631,25 @@ def apply_custom_theme() -> None:
         }
 
         [data-testid="stTabs"] [role="tab"]:hover {
-            background: #cfe9f0 !important;
-            border-color: #4093ad !important;
-            color: #073f54 !important;
+            background: #E4F8C8 !important;
+            border-color: #4C7814 !important;
+            color: #2A3B16 !important;
             transform: translateY(-1px);
-            box-shadow: 0 7px 15px rgba(24,83,108,.14) !important;
+            box-shadow: 0 7px 15px rgba(54,82,22,.14) !important;
         }
 
         [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
             background:
-                linear-gradient(135deg, #0b8da8 0%, #05627a 100%) !important;
-            border-color: #055b70 !important;
-            color: #ffffff !important;
+                linear-gradient(135deg, #36550F 0%, #2A3B16 100%) !important;
+            border-color: #2A3B16 !important;
+            color: #FFFFFF !important;
             box-shadow:
-                inset 4px 0 0 #63d9ee,
-                0 8px 18px rgba(5,98,122,.23) !important;
+                inset 4px 0 0 #98FB17,
+                0 8px 18px rgba(74,120,20,.23) !important;
         }
 
         [data-testid="stTabs"] [role="tab"][aria-selected="true"] * {
-            color: #ffffff !important;
+            color: #FFFFFF !important;
         }
 
         /* Hide the old thin underline indicator; the filled tab is the indicator */
@@ -1661,33 +1662,33 @@ def apply_custom_theme() -> None:
         [data-testid="stRadio"] [role="radiogroup"] {
             gap: .55rem !important;
             padding: .48rem !important;
-            border: 1.5px solid #abcbd8 !important;
+            border: 1.5px solid #BDF56F !important;
             border-radius: 12px !important;
-            background: #edf6f9 !important;
+            background: #F6FDEB !important;
         }
 
         [data-testid="stRadio"] label {
             padding: .45rem .7rem !important;
-            border: 1px solid #b8d2dc !important;
+            border: 1px solid #BDF56F !important;
             border-radius: 9px !important;
-            background: #ffffff !important;
+            background: #FFFFFF !important;
         }
 
         /* Checkbox outline */
         [data-testid="stCheckbox"] label {
             padding: .52rem .65rem !important;
-            border: 1px solid #bdd3de !important;
+            border: 1px solid #BDF56F !important;
             border-radius: 9px !important;
-            background: #f8fbfd !important;
+            background: #F6FDEB !important;
         }
 
         /* Form/card padding and separation */
         [data-testid="stForm"] {
             padding: 1.15rem !important;
-            border: 1.5px solid #aac8d6 !important;
+            border: 1.5px solid #BDF56F !important;
             border-radius: 16px !important;
-            background: #ffffff !important;
-            box-shadow: 0 10px 24px rgba(24,83,108,.09) !important;
+            background: #FFFFFF !important;
+            box-shadow: 0 10px 24px rgba(54,82,22,.09) !important;
         }
 
         @media (max-width: 760px) {
@@ -1726,8 +1727,8 @@ def apply_custom_theme() -> None:
             height: 3.15rem !important;
             padding: 0 !important;
             overflow: hidden !important;
-            background: #f8fcfe !important;
-            border: 2px solid #6aa7c4 !important;
+            background: #F6FDEB !important;
+            border: 2px solid #69A912 !important;
             border-radius: 11px !important;
             box-sizing: border-box !important;
             box-shadow:
@@ -1739,19 +1740,19 @@ def apply_custom_theme() -> None:
         [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
         [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
         [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
-            background: #ffffff !important;
-            border-color: #237f9f !important;
+            background: #FFFFFF !important;
+            border-color: #4C7814 !important;
         }
 
         [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
         [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
         [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
         [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
-            background: #ffffff !important;
-            border-color: #047894 !important;
+            background: #FFFFFF !important;
+            border-color: #36550F !important;
             box-shadow:
-                0 0 0 3px rgba(4,120,148,.17),
-                0 5px 13px rgba(21,76,101,.11) !important;
+                0 0 0 3px rgba(104,159,20,.17),
+                0 5px 13px rgba(52,78,22,.11) !important;
         }
 
         [data-testid="stTextInput"] input,
@@ -1769,8 +1770,8 @@ def apply_custom_theme() -> None:
             outline: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
-            color: #102f49 !important;
-            -webkit-text-fill-color: #102f49 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
             box-sizing: border-box !important;
         }
 
@@ -1784,26 +1785,26 @@ def apply_custom_theme() -> None:
             height: 3.15rem !important;
             padding: 0 !important;
             overflow: hidden !important;
-            background: #f8fcfe !important;
-            border: 2px solid #6aa7c4 !important;
+            background: #F6FDEB !important;
+            border: 2px solid #69A912 !important;
             border-radius: 11px !important;
             box-sizing: border-box !important;
             box-shadow:
-                0 2px 7px rgba(21,76,101,.08),
+                0 2px 7px rgba(52,78,22,.08),
                 inset 0 1px 0 rgba(255,255,255,.9) !important;
         }
 
         [data-testid="stNumberInput"] div[data-baseweb="input"]:hover {
-            background: #ffffff !important;
-            border-color: #237f9f !important;
+            background: #FFFFFF !important;
+            border-color: #4C7814 !important;
         }
 
         [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
-            background: #ffffff !important;
-            border-color: #047894 !important;
+            background: #FFFFFF !important;
+            border-color: #36550F !important;
             box-shadow:
-                0 0 0 3px rgba(4,120,148,.17),
-                0 5px 13px rgba(21,76,101,.11) !important;
+                0 0 0 3px rgba(104,159,20,.17),
+                0 5px 13px rgba(52,78,22,.11) !important;
         }
 
         [data-testid="stNumberInput"] input {
@@ -1818,8 +1819,8 @@ def apply_custom_theme() -> None:
             outline: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
-            color: #102f49 !important;
-            -webkit-text-fill-color: #102f49 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
             box-sizing: border-box !important;
         }
 
@@ -1833,17 +1834,17 @@ def apply_custom_theme() -> None:
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
-            border-left: 1px solid #bfd6e1 !important;
+            border-left: 1px solid #BDF56F !important;
             border-radius: 0 !important;
-            background: #e9f4f8 !important;
-            color: #07536c !important;
+            background: #F6FDEB !important;
+            color: #2A3B16 !important;
             box-shadow: none !important;
             transform: none !important;
         }
 
         [data-testid="stNumberInput"] button:hover {
-            background: #d2e9f0 !important;
-            color: #043d50 !important;
+            background: #E4F8C8 !important;
+            color: #2A3B16 !important;
             transform: none !important;
         }
 
@@ -1857,28 +1858,28 @@ def apply_custom_theme() -> None:
             min-height: 3.15rem !important;
             height: auto !important;
             padding: .18rem .38rem !important;
-            background: #f8fcfe !important;
-            border: 2px solid #6aa7c4 !important;
+            background: #F6FDEB !important;
+            border: 2px solid #69A912 !important;
             border-radius: 11px !important;
             box-sizing: border-box !important;
             box-shadow:
-                0 2px 7px rgba(21,76,101,.08),
+                0 2px 7px rgba(52,78,22,.08),
                 inset 0 1px 0 rgba(255,255,255,.9) !important;
         }
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
-            background: #ffffff !important;
-            border-color: #237f9f !important;
+            background: #FFFFFF !important;
+            border-color: #4C7814 !important;
         }
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            background: #ffffff !important;
-            border-color: #047894 !important;
+            background: #FFFFFF !important;
+            border-color: #36550F !important;
             box-shadow:
-                0 0 0 3px rgba(4,120,148,.17),
-                0 5px 13px rgba(21,76,101,.11) !important;
+                0 0 0 3px rgba(104,159,20,.17),
+                0 5px 13px rgba(52,78,22,.11) !important;
         }
 
         [data-testid="stSelectbox"] [role="combobox"],
@@ -1894,8 +1895,8 @@ def apply_custom_theme() -> None:
 
         [data-testid="stSelectbox"] div[data-baseweb="select"] *,
         [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
-            color: #102f49 !important;
-            -webkit-text-fill-color: #102f49 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
         }
 
         /* Text areas remain larger, but no longer overflow their cards. */
@@ -1907,30 +1908,30 @@ def apply_custom_theme() -> None:
             max-width: 100% !important;
             padding: .78rem .82rem !important;
             margin: 0 !important;
-            background: #f8fcfe !important;
-            border: 2px solid #6aa7c4 !important;
+            background: #F6FDEB !important;
+            border: 2px solid #69A912 !important;
             border-radius: 11px !important;
             box-sizing: border-box !important;
-            color: #102f49 !important;
-            -webkit-text-fill-color: #102f49 !important;
+            color: #2A3B16 !important;
+            -webkit-text-fill-color: #2A3B16 !important;
             box-shadow:
-                0 2px 7px rgba(21,76,101,.08),
+                0 2px 7px rgba(52,78,22,.08),
                 inset 0 1px 0 rgba(255,255,255,.9) !important;
             resize: vertical !important;
         }
 
         [data-testid="stTextArea"] textarea:hover {
-            background: #ffffff !important;
-            border-color: #237f9f !important;
+            background: #FFFFFF !important;
+            border-color: #4C7814 !important;
         }
 
         [data-testid="stTextArea"] textarea:focus {
-            background: #ffffff !important;
-            border-color: #047894 !important;
+            background: #FFFFFF !important;
+            border-color: #36550F !important;
             outline: 0 !important;
             box-shadow:
-                0 0 0 3px rgba(4,120,148,.17),
-                0 5px 13px rgba(21,76,101,.11) !important;
+                0 0 0 3px rgba(104,159,20,.17),
+                0 5px 13px rgba(52,78,22,.11) !important;
         }
 
         /* Keep placeholders visible against the lightly tinted field fill. */
@@ -1939,8 +1940,8 @@ def apply_custom_theme() -> None:
         [data-testid="stTextArea"] textarea::placeholder,
         [data-testid="stDateInput"] input::placeholder,
         [data-testid="stSearchbox"] input::placeholder {
-            color: #687f92 !important;
-            -webkit-text-fill-color: #687f92 !important;
+            color: #687F92 !important;
+            -webkit-text-fill-color: #687F92 !important;
             opacity: 1 !important;
         }
 
@@ -1976,7 +1977,7 @@ def apply_custom_theme() -> None:
             border-width: 1px !important;
             font-size: .72rem !important;
             line-height: 1 !important;
-            box-shadow: 0 4px 10px rgba(16,61,88,.14) !important;
+            box-shadow: 0 4px 10px rgba(43,66,20,.14) !important;
         }
 
         .st-key-sidebar_manage_profile button * {
@@ -2005,6 +2006,332 @@ def apply_custom_theme() -> None:
             [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
                 min-height: 3.3rem !important;
                 height: auto !important;
+            }
+        }
+
+        /* ================================================================
+           Chartreuse theme and final widget visibility repair
+           Accent sampled from the supplied image: #98FB17.
+           ================================================================ */
+        :root {
+            --sc-accent: #98FB17;
+            --sc-accent-soft: #E4F8C8;
+            --sc-accent-pale: #F6FDEB;
+            --sc-green: #4C7814;
+            --sc-green-dark: #36550F;
+            --sc-green-deep: #243713;
+            --sc-border: #8EB84F;
+            --sc-border-soft: #C7DEA3;
+            --sc-text: #243119;
+            --sc-muted: #65705B;
+            --sc-surface: #FFFFFF;
+            --sc-page: #F7FBEF;
+        }
+
+        .stApp {
+            background:
+                radial-gradient(
+                    circle at 12% 0%,
+                    rgba(152,251,23,.10),
+                    transparent 28rem
+                ),
+                linear-gradient(
+                    180deg,
+                    #FBFFF5 0%,
+                    #F3F8EB 100%
+                ) !important;
+        }
+
+        a,
+        .stMarkdown a {
+            color: #4C7814 !important;
+        }
+
+        h1, h2, h3, h4,
+        [data-testid="stWidgetLabel"] p {
+            color: var(--sc-text) !important;
+        }
+
+        /* Reset old text-input shells, then visibly border the actual input. */
+        [data-testid="stTextInput"] div[data-baseweb="input"],
+        [data-testid="stDateInput"] div[data-baseweb="input"],
+        [data-testid="stTimeInput"] div[data-baseweb="input"],
+        [data-testid="stSearchbox"] div[data-baseweb="input"] {
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            overflow: visible !important;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTimeInput"] input,
+        [data-testid="stSearchbox"] input {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 3rem !important;
+            height: 3rem !important;
+            padding: .65rem .78rem !important;
+            background: #FFFFFF !important;
+            color: var(--sc-text) !important;
+            -webkit-text-fill-color: var(--sc-text) !important;
+            border: 2px solid var(--sc-border) !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            box-shadow:
+                0 2px 7px rgba(54,82,22,.08),
+                inset 0 1px 0 rgba(255,255,255,.95) !important;
+        }
+
+        [data-testid="stTextInput"] input:hover,
+        [data-testid="stDateInput"] input:hover,
+        [data-testid="stTimeInput"] input:hover,
+        [data-testid="stSearchbox"] input:hover {
+            border-color: var(--sc-green) !important;
+        }
+
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stDateInput"] input:focus,
+        [data-testid="stTimeInput"] input:focus,
+        [data-testid="stSearchbox"] input:focus {
+            outline: none !important;
+            border-color: var(--sc-accent) !important;
+            box-shadow:
+                0 0 0 3px rgba(152,251,23,.22),
+                0 5px 13px rgba(54,82,22,.10) !important;
+        }
+
+        /* Number inputs remain a single compact control. */
+        [data-testid="stNumberInput"] div[data-baseweb="input"] {
+            width: 100% !important;
+            min-height: 3rem !important;
+            height: 3rem !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #FFFFFF !important;
+            border: 2px solid var(--sc-border) !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
+        }
+
+        [data-testid="stNumberInput"] input {
+            min-width: 0 !important;
+            height: 100% !important;
+            padding: .62rem .72rem !important;
+            border: 0 !important;
+            background: transparent !important;
+            color: var(--sc-text) !important;
+            -webkit-text-fill-color: var(--sc-text) !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stNumberInput"] button {
+            width: 2.35rem !important;
+            min-width: 2.35rem !important;
+            height: 100% !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-left: 1px solid var(--sc-border-soft) !important;
+            border-radius: 0 !important;
+            background: var(--sc-accent-pale) !important;
+            color: var(--sc-green-dark) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        [data-testid="stNumberInput"] button:hover {
+            background: var(--sc-accent-soft) !important;
+            color: var(--sc-green-deep) !important;
+        }
+
+        /* Dropdowns and multiselects. */
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+            width: 100% !important;
+            min-height: 3rem !important;
+            height: auto !important;
+            padding: .16rem .38rem !important;
+            background: #FFFFFF !important;
+            border: 2px solid var(--sc-border) !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
+            border-color: var(--sc-green) !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
+            border-color: var(--sc-accent) !important;
+            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
+        }
+
+        [data-baseweb="tag"] {
+            background: var(--sc-accent) !important;
+            color: var(--sc-green-deep) !important;
+            border: 1px solid #78C814 !important;
+        }
+
+        [data-baseweb="tag"] * {
+            color: var(--sc-green-deep) !important;
+        }
+
+        [data-testid="stTextArea"] textarea {
+            width: 100% !important;
+            min-height: 8rem !important;
+            padding: .78rem .82rem !important;
+            background: #FFFFFF !important;
+            color: var(--sc-text) !important;
+            -webkit-text-fill-color: var(--sc-text) !important;
+            border: 2px solid var(--sc-border) !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
+        }
+
+        [data-testid="stTextArea"] textarea:focus {
+            outline: none !important;
+            border-color: var(--sc-accent) !important;
+            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #758067 !important;
+            -webkit-text-fill-color: #758067 !important;
+            opacity: 1 !important;
+        }
+
+        /* Buttons and tabs use dark green with the bright accent as highlight. */
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            background:
+                linear-gradient(
+                    135deg,
+                    #5D9414 0%,
+                    #36550F 100%
+                ) !important;
+            border-color: #36550F !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 18px rgba(54,82,22,.18) !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            background:
+                linear-gradient(
+                    135deg,
+                    #4C7814 0%,
+                    #243713 100%
+                ) !important;
+            border-color: #243713 !important;
+        }
+
+        .stButton > button[kind="secondary"] {
+            background: #FBFFF5 !important;
+            color: var(--sc-green-dark) !important;
+            border: 1.5px solid var(--sc-border) !important;
+        }
+
+        [data-testid="stTabs"] [role="tablist"] {
+            background: #EDF7DF !important;
+            border-color: var(--sc-border-soft) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] {
+            background: #FFFFFF !important;
+            color: var(--sc-green-dark) !important;
+            border-color: var(--sc-border) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"]:hover {
+            background: var(--sc-accent-soft) !important;
+            border-color: var(--sc-green) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            background:
+                linear-gradient(
+                    135deg,
+                    #5D9414 0%,
+                    #36550F 100%
+                ) !important;
+            border-color: #36550F !important;
+            color: #FFFFFF !important;
+            box-shadow:
+                inset 4px 0 0 var(--sc-accent),
+                0 8px 18px rgba(54,82,22,.18) !important;
+        }
+
+        [data-testid="stDataFrame"],
+        [data-testid="stForm"],
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stExpander"] {
+            border-color: var(--sc-border-soft) !important;
+            box-shadow: 0 9px 22px rgba(54,82,22,.07) !important;
+        }
+
+        section[data-testid="stSidebar"] {
+            border-right-color: var(--sc-border-soft) !important;
+            box-shadow: 7px 0 26px rgba(54,82,22,.05) !important;
+        }
+
+        /* Smaller edit pen. */
+        .st-key-sidebar_manage_profile {
+            width: 1.45rem !important;
+            margin-top: -3.92rem !important;
+            margin-right: .78rem !important;
+            margin-bottom: 2.45rem !important;
+        }
+
+        .st-key-sidebar_manage_profile button {
+            width: 1.45rem !important;
+            min-width: 1.45rem !important;
+            max-width: 1.45rem !important;
+            height: 1.45rem !important;
+            min-height: 1.45rem !important;
+            max-height: 1.45rem !important;
+            padding: 0 !important;
+            border: 1px solid var(--sc-border) !important;
+            border-radius: 50% !important;
+            background: #FFFFFF !important;
+            color: var(--sc-green-dark) !important;
+            font-size: .62rem !important;
+            line-height: 1 !important;
+            box-shadow: 0 3px 8px rgba(54,82,22,.13) !important;
+        }
+
+        .st-key-sidebar_manage_profile button:hover {
+            background: var(--sc-accent) !important;
+            color: var(--sc-green-deep) !important;
+        }
+
+        @media (max-width: 760px) {
+            [data-testid="stForm"] {
+                padding: .9rem !important;
+            }
+
+            [data-testid="stTextInput"] input,
+            [data-testid="stDateInput"] input,
+            [data-testid="stTimeInput"] input,
+            [data-testid="stSearchbox"] input,
+            [data-testid="stNumberInput"] div[data-baseweb="input"],
+            [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+            [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
+                min-height: 3.15rem !important;
             }
         }
         </style>
@@ -2047,10 +2374,10 @@ def page_banner(
                     gap:.42rem;
                     width:max-content;
                     padding:.34rem .62rem;
-                    border:1px solid #b9d8e4;
+                    border:1px solid #BDF56F;
                     border-radius:999px;
-                    background:#edf8fb;
-                    color:#0d6b84;
+                    background:#F6FDEB;
+                    color:#36550F;
                     font-size:.68rem;
                     font-weight:800;
                     letter-spacing:.045em;
@@ -2100,16 +2427,16 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
         template="plotly_white",
         height=height,
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#ffffff",
-        font={"color": "#243a55", "family": "Inter, sans-serif"},
+        plot_bgcolor="#FFFFFF",
+        font={"color": "#2A3B16", "family": "Inter, sans-serif"},
         colorway=STAR_CITIZEN_COLORS,
         margin={"l": 30, "r": 26, "t": 42, "b": 30},
         legend_title_text="",
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
-        hoverlabel={"bgcolor": "#ffffff", "bordercolor": "#87beff", "font_color": "#10233f"},
+        hoverlabel={"bgcolor": "#FFFFFF", "bordercolor": "#BDF56F", "font_color": "#1F2A16"},
     )
-    figure.update_xaxes(gridcolor="#e9eff6", zerolinecolor="#dfe7f0", linecolor="#d7e1ec", tickfont={"color": "#6f8095"}, title_font={"color": "#607087"})
-    figure.update_yaxes(gridcolor="#e9eff6", zerolinecolor="#dfe7f0", linecolor="#d7e1ec", tickfont={"color": "#6f8095"}, title_font={"color": "#607087"})
+    figure.update_xaxes(gridcolor="#F6FDEB", zerolinecolor="#E4F8C8", linecolor="#E4F8C8", tickfont={"color": "#6F8095"}, title_font={"color": "#607087"})
+    figure.update_yaxes(gridcolor="#F6FDEB", zerolinecolor="#E4F8C8", linecolor="#E4F8C8", tickfont={"color": "#6F8095"}, title_font={"color": "#607087"})
 
 
 def empty_dashboard_figure(message: str, *, donut: bool = False):
@@ -2150,10 +2477,10 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
         y=0.5,
         xref="paper",
         yref="paper",
-        text=f"<b>No data yet</b><br><span style='color:#6f8095'>{message}</span>",
+        text=f"<b>No data yet</b><br><span style='color:#6F8095'>{message}</span>",
         showarrow=False,
         align="center",
-        font={"size": 14, "color": "#243a55"},
+        font={"size": 14, "color": "#2A3B16"},
     )
     style_plotly_figure(figure)
     return figure
@@ -3354,6 +3681,7 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def empty_commodity_transaction_frame() -> pd.DataFrame:
+    """Return the complete normalized commodity-ledger structure."""
     return pd.DataFrame(
         columns=[
             "id",
@@ -3364,101 +3692,236 @@ def empty_commodity_transaction_frame() -> pd.DataFrame:
             "quantity_scu",
             "unit_price",
             "fees",
+            "recorded_total_value",
+            "calculated_total_value",
             "total_value",
+            "cash_effect",
+            "inventory_effect_scu",
+            "calculation_status",
             "origin",
             "destination",
             "shipment_reference",
             "notes",
-            "cash_effect",
         ]
     )
 
 
 def normalize_commodity_action(value: Any) -> str:
-    """Map records created by older app versions to current action names."""
+    """Map current and legacy transaction names to one supported action."""
     normalized = re.sub(
         r"[^a-z]+",
         " ",
         str(value or "").strip().casefold(),
     ).strip()
 
-    buy_aliases = {
-        "buy",
-        "bought",
-        "purchase",
-        "purchased",
-        "player buy",
-    }
-    sell_aliases = {
-        "sell",
-        "sold",
-        "sale",
-        "player sell",
-    }
-    loss_aliases = {
-        "lost",
-        "destroyed",
-        "lost destroyed",
-        "destroyed lost",
-        "shipment lost",
-        "shipment destroyed",
-        "loss",
-    }
-
-    if normalized in buy_aliases:
+    if (
+        normalized
+        in {
+            "buy",
+            "bought",
+            "purchase",
+            "purchased",
+            "player buy",
+            "acquired",
+        }
+        or "purchas" in normalized
+        or "bought" in normalized
+        or normalized.startswith("buy")
+    ):
         return "Bought"
-    if normalized in sell_aliases:
-        return "Sold"
-    if normalized in loss_aliases:
-        return "Lost / Destroyed"
 
-    if "destroy" in normalized or "lost" in normalized:
-        return "Lost / Destroyed"
-    if "sell" in normalized or "sold" in normalized or "sale" in normalized:
+    if (
+        normalized
+        in {
+            "sell",
+            "sold",
+            "sale",
+            "player sell",
+            "delivered",
+        }
+        or "sold" in normalized
+        or "sale" in normalized
+        or normalized.startswith("sell")
+    ):
         return "Sold"
-    if "buy" in normalized or "bought" in normalized or "purchas" in normalized:
-        return "Bought"
+
+    if (
+        normalized
+        in {
+            "lost",
+            "destroyed",
+            "lost destroyed",
+            "destroyed lost",
+            "shipment lost",
+            "shipment destroyed",
+            "loss",
+        }
+        or "destroy" in normalized
+        or "lost" in normalized
+        or "loss" in normalized
+    ):
+        return "Lost / Destroyed"
 
     return str(value or "Unknown").strip() or "Unknown"
+
+
+def _commodity_alias_series(
+    frame: pd.DataFrame,
+    canonical: str,
+    aliases: tuple[str, ...],
+    default: Any,
+) -> pd.Series:
+    """
+    Coalesce current and legacy commodity columns row by row.
+
+    Supabase exports and mixed-version DataFrames can contain several alias
+    columns at once, with values present in different columns on different
+    rows. Selecting only the first existing column would silently lose those
+    values, so this helper fills each missing row from the next alias.
+    """
+    candidates = [
+        column
+        for column in (canonical, *aliases)
+        if column in frame.columns
+    ]
+    if not candidates:
+        return pd.Series(
+            [default] * len(frame),
+            index=frame.index,
+        )
+
+    result = frame[candidates[0]].copy()
+    for column in candidates[1:]:
+        current = result
+        missing = current.isna()
+
+        if pd.api.types.is_object_dtype(current) or pd.api.types.is_string_dtype(
+            current
+        ):
+            missing = missing | (
+                current.fillna("")
+                .astype(str)
+                .str.strip()
+                .eq("")
+            )
+
+        result = result.where(~missing, frame[column])
+
+    return result.fillna(default)
 
 
 def normalize_commodity_transactions(
     trades: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Normalize legacy rows and derive reliable totals for every app section."""
-    expected_columns = [
-        "id",
-        "user_id",
-        "date_saved",
-        "commodity_name",
-        "action",
-        "quantity_scu",
-        "unit_price",
-        "fees",
-        "total_value",
-        "origin",
-        "destination",
-        "shipment_reference",
-        "notes",
-    ]
+    """
+    Normalize every known commodity schema and calculate all monetary fields.
 
+    Quantity × unit price is the authoritative cargo value whenever both
+    values exist. A recorded total is used only when per-SCU math is
+    unavailable. This makes the tracker, dashboard, records, graphs, and
+    exports agree even when older rows were saved by earlier app versions.
+    """
     if trades is None or trades.empty:
         return empty_commodity_transaction_frame()
 
-    normalized = trades.copy()
-    for column in expected_columns:
-        if column not in normalized.columns:
-            normalized[column] = (
-                0.0
-                if column
-                in {
-                    "quantity_scu",
-                    "unit_price",
-                    "fees",
-                    "total_value",
-                }
-                else ""
-            )
+    source = trades.copy()
+
+    normalized = pd.DataFrame(index=source.index)
+    normalized["id"] = _commodity_alias_series(
+        source,
+        "id",
+        ("transaction_id",),
+        0,
+    )
+    normalized["user_id"] = _commodity_alias_series(
+        source,
+        "user_id",
+        ("owner_id",),
+        "",
+    )
+    normalized["date_saved"] = _commodity_alias_series(
+        source,
+        "date_saved",
+        ("created_at", "transaction_date", "date"),
+        pd.NaT,
+    )
+    normalized["commodity_name"] = _commodity_alias_series(
+        source,
+        "commodity_name",
+        ("commodity", "item_name", "name"),
+        "Unknown Commodity",
+    )
+    normalized["action"] = _commodity_alias_series(
+        source,
+        "action",
+        ("activity", "transaction_type", "entry_type", "type"),
+        "Unknown",
+    )
+    normalized["quantity_scu"] = _commodity_alias_series(
+        source,
+        "quantity_scu",
+        ("quantity", "scu", "cargo_scu", "amount_scu"),
+        0.0,
+    )
+    normalized["unit_price"] = _commodity_alias_series(
+        source,
+        "unit_price",
+        (
+            "price_per_scu",
+            "price",
+            "buy_price",
+            "sell_price",
+            "unit_value",
+        ),
+        0.0,
+    )
+    normalized["fees"] = _commodity_alias_series(
+        source,
+        "fees",
+        (
+            "costs",
+            "operating_costs",
+            "additional_costs",
+            "loading_fees",
+        ),
+        0.0,
+    )
+    normalized["recorded_total_value"] = _commodity_alias_series(
+        source,
+        "total_value",
+        (
+            "cargo_value",
+            "gross_value",
+            "transaction_value",
+            "value",
+            "amount",
+        ),
+        0.0,
+    )
+    normalized["origin"] = _commodity_alias_series(
+        source,
+        "origin",
+        ("purchase_location", "departure_location", "buy_location"),
+        "",
+    )
+    normalized["destination"] = _commodity_alias_series(
+        source,
+        "destination",
+        ("sale_location", "delivery_location", "sell_location"),
+        "",
+    )
+    normalized["shipment_reference"] = _commodity_alias_series(
+        source,
+        "shipment_reference",
+        ("shipment_name", "reference", "run_name"),
+        "",
+    )
+    normalized["notes"] = _commodity_alias_series(
+        source,
+        "notes",
+        ("details", "description"),
+        "",
+    )
 
     normalized["commodity_name"] = (
         normalized["commodity_name"]
@@ -3475,7 +3938,7 @@ def normalize_commodity_transactions(
         "quantity_scu",
         "unit_price",
         "fees",
-        "total_value",
+        "recorded_total_value",
     ):
         normalized[column] = pd.to_numeric(
             normalized[column],
@@ -3483,45 +3946,56 @@ def normalize_commodity_transactions(
         ).fillna(0.0)
         normalized[column] = normalized[column].clip(lower=0.0)
 
-    calculated_value = (
+    normalized["calculated_total_value"] = (
         normalized["quantity_scu"]
         * normalized["unit_price"]
     )
-    needs_calculated_value = (
-        normalized["total_value"] <= 0
-    ) & (calculated_value > 0)
+
+    has_calculated_value = (
+        normalized["quantity_scu"] > 0
+    ) & (
+        normalized["unit_price"] > 0
+    )
+    has_recorded_value = normalized["recorded_total_value"] > 0
+
+    normalized["total_value"] = normalized[
+        "recorded_total_value"
+    ]
     normalized.loc[
-        needs_calculated_value,
+        has_calculated_value,
         "total_value",
-    ] = calculated_value.loc[needs_calculated_value]
+    ] = normalized.loc[
+        has_calculated_value,
+        "calculated_total_value",
+    ]
 
-    if "date_saved" in normalized.columns:
-        normalized["date_saved"] = pd.to_datetime(
-            normalized["date_saved"],
-            errors="coerce",
-            utc=True,
-        )
-        try:
-            normalized["date_saved"] = normalized[
-                "date_saved"
-            ].dt.tz_convert(APP_TIMEZONE)
-        except (TypeError, AttributeError):
-            pass
+    variance = (
+        normalized["recorded_total_value"]
+        - normalized["calculated_total_value"]
+    ).abs()
+    mismatch = (
+        has_calculated_value
+        & has_recorded_value
+        & (variance > 0.01)
+    )
 
-    for column in (
-        "origin",
-        "destination",
-        "shipment_reference",
-        "notes",
-    ):
-        normalized[column] = (
-            normalized[column]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-        )
+    normalized["calculation_status"] = "Missing value"
+    normalized.loc[
+        has_recorded_value & ~has_calculated_value,
+        "calculation_status",
+    ] = "Using recorded cargo value"
+    normalized.loc[
+        has_calculated_value,
+        "calculation_status",
+    ] = "Calculated: quantity × unit price"
+    normalized.loc[
+        mismatch,
+        "calculation_status",
+    ] = "Corrected mismatch using quantity × unit price"
 
     normalized["cash_effect"] = 0.0
+    normalized["inventory_effect_scu"] = 0.0
+
     bought_mask = normalized["action"] == "Bought"
     sold_mask = normalized["action"] == "Sold"
     loss_mask = normalized["action"] == "Lost / Destroyed"
@@ -3539,40 +4013,110 @@ def normalize_commodity_transactions(
         + normalized.loc[loss_mask, "fees"]
     )
 
-    ordered_columns = [
-        *expected_columns,
-        "cash_effect",
+    normalized.loc[
+        bought_mask,
+        "inventory_effect_scu",
+    ] = normalized.loc[bought_mask, "quantity_scu"]
+    normalized.loc[
+        sold_mask | loss_mask,
+        "inventory_effect_scu",
+    ] = -normalized.loc[
+        sold_mask | loss_mask,
+        "quantity_scu",
     ]
-    return normalized[ordered_columns]
+
+    normalized["date_saved"] = pd.to_datetime(
+        normalized["date_saved"],
+        errors="coerce",
+        utc=True,
+    )
+    try:
+        normalized["date_saved"] = normalized[
+            "date_saved"
+        ].dt.tz_convert(APP_TIMEZONE)
+    except (TypeError, AttributeError):
+        pass
+
+    for column in (
+        "origin",
+        "destination",
+        "shipment_reference",
+        "notes",
+    ):
+        normalized[column] = (
+            normalized[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+    return normalized[
+        [
+            "id",
+            "user_id",
+            "date_saved",
+            "commodity_name",
+            "action",
+            "quantity_scu",
+            "unit_price",
+            "fees",
+            "recorded_total_value",
+            "calculated_total_value",
+            "total_value",
+            "cash_effect",
+            "inventory_effect_scu",
+            "calculation_status",
+            "origin",
+            "destination",
+            "shipment_reference",
+            "notes",
+        ]
+    ]
 
 
 def load_commodity_transactions() -> pd.DataFrame:
-    """Load and normalize the signed-in user's commodity records."""
+    """Load and normalize the signed-in user's commodity ledger."""
     try:
         raw_trades = fetch_table("commodity_transactions")
         trades = normalize_commodity_transactions(raw_trades)
         st.session_state.commodity_tracker_ready = True
         st.session_state.pop("commodity_tracker_error", None)
         st.session_state.commodity_tracker_row_count = len(trades)
+        st.session_state.commodity_math_issue_count = int(
+            trades["calculation_status"].isin(
+                [
+                    "Missing value",
+                    "Corrected mismatch using quantity × unit price",
+                ]
+            ).sum()
+        )
+        return trades
     except Exception as exc:
         st.session_state.commodity_tracker_ready = False
         st.session_state.commodity_tracker_error = str(exc)
         st.session_state.commodity_tracker_row_count = 0
+        st.session_state.commodity_math_issue_count = 0
         return empty_commodity_transaction_frame()
 
-    return trades
 
-
-def insert_commodity_transaction(payload: dict[str, Any]) -> None:
-    """Insert one validated commodity activity record."""
+def insert_commodity_transaction(
+    payload: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Insert a commodity row and return the database-confirmed record."""
     action = normalize_commodity_action(payload.get("action"))
     quantity = max(safe_float(payload.get("quantity_scu")), 0.0)
     unit_price = max(safe_float(payload.get("unit_price")), 0.0)
     fees = max(safe_float(payload.get("fees")), 0.0)
-    total_value = max(
-        safe_float(payload.get("total_value")),
-        quantity * unit_price,
-    )
+    total_value = quantity * unit_price
+
+    if not str(payload.get("commodity_name", "")).strip():
+        raise ValueError("Commodity name is required.")
+    if action not in {"Bought", "Sold", "Lost / Destroyed"}:
+        raise ValueError("Choose Bought, Sold, or Lost / Destroyed.")
+    if quantity <= 0:
+        raise ValueError("Quantity must be greater than zero.")
+    if unit_price <= 0:
+        raise ValueError("Unit price must be greater than zero.")
 
     cleaned_payload = {
         **payload,
@@ -3585,32 +4129,40 @@ def insert_commodity_transaction(payload: dict[str, Any]) -> None:
         "fees": fees,
         "total_value": total_value,
     }
-    get_supabase().table("commodity_transactions").insert(
-        cleaned_payload
-    ).execute()
+
+    response = (
+        get_supabase()
+        .table("commodity_transactions")
+        .insert(cleaned_payload)
+        .execute()
+    )
+    data = response.data or []
+    return data[0] if data else None
 
 
 def commodity_summary_values(
     trades: pd.DataFrame,
 ) -> dict[str, float]:
-    """Calculate consistent commodity totals used by every page and export."""
+    """Return the authoritative totals shared by every app section."""
     normalized = normalize_commodity_transactions(trades)
 
+    empty = {
+        "records": 0.0,
+        "bought_records": 0.0,
+        "sold_records": 0.0,
+        "loss_records": 0.0,
+        "math_issue_records": 0.0,
+        "bought_scu": 0.0,
+        "sold_scu": 0.0,
+        "lost_scu": 0.0,
+        "on_hand_scu": 0.0,
+        "purchase_cost": 0.0,
+        "sales_revenue": 0.0,
+        "loss_value": 0.0,
+        "net_cash_flow": 0.0,
+    }
     if normalized.empty:
-        return {
-            "records": 0.0,
-            "bought_records": 0.0,
-            "sold_records": 0.0,
-            "loss_records": 0.0,
-            "bought_scu": 0.0,
-            "sold_scu": 0.0,
-            "lost_scu": 0.0,
-            "on_hand_scu": 0.0,
-            "purchase_cost": 0.0,
-            "sales_revenue": 0.0,
-            "loss_value": 0.0,
-            "net_cash_flow": 0.0,
-        }
+        return empty
 
     bought = normalized[normalized["action"] == "Bought"]
     sold = normalized[normalized["action"] == "Sold"]
@@ -3618,34 +4170,37 @@ def commodity_summary_values(
         normalized["action"] == "Lost / Destroyed"
     ]
 
-    purchase_cost = -float(bought["cash_effect"].sum())
-    sales_revenue = float(sold["cash_effect"].sum())
-    loss_value = -float(lost["cash_effect"].sum())
-
-    bought_scu = float(bought["quantity_scu"].sum())
-    sold_scu = float(sold["quantity_scu"].sum())
-    lost_scu = float(lost["quantity_scu"].sum())
-
-    return {
+    result = {
         "records": float(len(normalized)),
         "bought_records": float(len(bought)),
         "sold_records": float(len(sold)),
         "loss_records": float(len(lost)),
-        "bought_scu": bought_scu,
-        "sold_scu": sold_scu,
-        "lost_scu": lost_scu,
-        "on_hand_scu": bought_scu - sold_scu - lost_scu,
-        "purchase_cost": purchase_cost,
-        "sales_revenue": sales_revenue,
-        "loss_value": loss_value,
+        "math_issue_records": float(
+            normalized["calculation_status"].isin(
+                [
+                    "Missing value",
+                    "Corrected mismatch using quantity × unit price",
+                ]
+            ).sum()
+        ),
+        "bought_scu": float(bought["quantity_scu"].sum()),
+        "sold_scu": float(sold["quantity_scu"].sum()),
+        "lost_scu": float(lost["quantity_scu"].sum()),
+        "on_hand_scu": float(
+            normalized["inventory_effect_scu"].sum()
+        ),
+        "purchase_cost": -float(bought["cash_effect"].sum()),
+        "sales_revenue": float(sold["cash_effect"].sum()),
+        "loss_value": -float(lost["cash_effect"].sum()),
         "net_cash_flow": float(normalized["cash_effect"].sum()),
     }
+    return result
 
 
 def build_commodity_inventory(
     trades: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Calculate commodity inventory and money movement by commodity."""
+    """Calculate quantities and cash movement for each commodity."""
     columns = [
         "Commodity",
         "Bought (SCU)",
@@ -3656,7 +4211,9 @@ def build_commodity_inventory(
         "Sales Revenue (aUEC)",
         "Recorded Loss Value (aUEC)",
         "Net Cash Flow (aUEC)",
+        "Records",
     ]
+
     normalized = normalize_commodity_transactions(trades)
     if normalized.empty:
         return pd.DataFrame(columns=columns)
@@ -3678,6 +4235,7 @@ def build_commodity_inventory(
                 "Sales Revenue (aUEC)": totals["sales_revenue"],
                 "Recorded Loss Value (aUEC)": totals["loss_value"],
                 "Net Cash Flow (aUEC)": totals["net_cash_flow"],
+                "Records": int(totals["records"]),
             }
         )
 
@@ -3688,18 +4246,57 @@ def build_commodity_inventory(
     )
 
 
+def build_commodity_performance(
+    trades: pd.DataFrame,
+) -> pd.DataFrame:
+    """Return per-commodity values used by dashboard graphs and exports."""
+    inventory = build_commodity_inventory(trades)
+    if inventory.empty:
+        return pd.DataFrame(
+            columns=[
+                "Commodity",
+                "Purchase Cost",
+                "Sales Revenue",
+                "Loss Value",
+                "Net Profit",
+                "On Hand (SCU)",
+                "Records",
+            ]
+        )
+
+    performance = inventory.rename(
+        columns={
+            "Purchase Cost (aUEC)": "Purchase Cost",
+            "Sales Revenue (aUEC)": "Sales Revenue",
+            "Recorded Loss Value (aUEC)": "Loss Value",
+            "Net Cash Flow (aUEC)": "Net Profit",
+        }
+    )
+    return performance[
+        [
+            "Commodity",
+            "Purchase Cost",
+            "Sales Revenue",
+            "Loss Value",
+            "Net Profit",
+            "On Hand (SCU)",
+            "Records",
+        ]
+    ].copy()
+
+
 def commodity_trade_tracker(
     commodity_names: list[str],
     selected_commodity: str,
     uex_prices: pd.DataFrame,
     default_quantity_scu: float,
 ) -> None:
-    """Render the user's commodity buy, sell, inventory, and loss tracker."""
+    """Render purchases, sales, losses, inventory, and audited math."""
     st.markdown("### Commodity Buy, Sell, and Loss Tracker")
     st.caption(
-        "Record purchases, sales, and destroyed or lost shipments. "
-        "Every commodity page, dashboard graph, saved-record table, and "
-        "export uses this same normalized ledger."
+        "Record cargo activity once. The same verified ledger powers "
+        "Saved Records, Dashboard graphs, inventory, Excel, CSV, and "
+        "Google Sheets."
     )
 
     prefill_notice = st.session_state.pop(
@@ -3714,17 +4311,14 @@ def commodity_trade_tracker(
 
     if not st.session_state.get("commodity_tracker_ready", False):
         st.warning(
-            "The Commodity Tracker database connection is not ready. "
-            "Run `schema_migration_v4_commodity_tracker.sql` in Supabase, "
-            "then reload the app."
+            "The commodity database connection is not ready. Run "
+            "`schema_migration_v6_commodity_math_repair.sql` in Supabase, "
+            "wait about 10 seconds, then reload."
         )
-        tracker_error = st.session_state.get(
-            "commodity_tracker_error",
-            "",
-        )
-        if tracker_error:
+        error = st.session_state.get("commodity_tracker_error", "")
+        if error:
             with st.expander("Show database error details"):
-                st.code(tracker_error)
+                st.code(error)
 
     record_tab, inventory_tab, history_tab = st.tabs(
         ["Record Activity", "On-Hand Inventory", "Trade History"]
@@ -3733,15 +4327,15 @@ def commodity_trade_tracker(
     with record_tab:
         available_names = list(
             dict.fromkeys(
-                [
-                    name
-                    for name in commodity_names
-                    if str(name).strip()
-                ]
+                str(name).strip()
+                for name in commodity_names
+                if str(name).strip()
             )
         )
         if not available_names:
-            available_names = [selected_commodity or "Unknown Commodity"]
+            available_names = [
+                selected_commodity or "Unknown Commodity"
+            ]
 
         if (
             "tracked_commodity_name" not in st.session_state
@@ -3753,72 +4347,70 @@ def commodity_trade_tracker(
                 if selected_commodity in available_names
                 else available_names[0]
             )
-        if "commodity_transaction_type" not in st.session_state:
-            st.session_state["commodity_transaction_type"] = "Bought"
-        if "commodity_shipment_lost" not in st.session_state:
-            st.session_state["commodity_shipment_lost"] = False
-        if "commodity_transaction_quantity" not in st.session_state:
-            st.session_state["commodity_transaction_quantity"] = max(
+
+        defaults = {
+            "commodity_transaction_type": "Bought",
+            "commodity_shipment_lost": False,
+            "commodity_transaction_quantity": max(
                 float(default_quantity_scu),
                 0.01,
-            )
-        if "commodity_transaction_fees" not in st.session_state:
-            st.session_state["commodity_transaction_fees"] = 0.0
+            ),
+            "commodity_transaction_fees": 0.0,
+            "commodity_price_entry_method": "Price per SCU",
+            "commodity_total_entry_value": 0.0,
+        }
+        for key, value in defaults.items():
+            st.session_state.setdefault(key, value)
 
         default_buy_price = 0.0
         default_sell_price = 0.0
         if not uex_prices.empty:
-            buy_rows = uex_prices[
-                pd.to_numeric(
-                    uex_prices["Terminal Sells at"],
-                    errors="coerce",
-                ).fillna(0.0)
-                > 0
-            ]
-            sell_rows = uex_prices[
-                pd.to_numeric(
-                    uex_prices["Terminal Buys at"],
-                    errors="coerce",
-                ).fillna(0.0)
-                > 0
-            ]
-            if not buy_rows.empty:
-                default_buy_price = float(
-                    buy_rows["Terminal Sells at"].min()
-                )
-            if not sell_rows.empty:
-                default_sell_price = float(
-                    sell_rows["Terminal Buys at"].max()
-                )
+            buy_prices = pd.to_numeric(
+                uex_prices.get("Terminal Sells at", pd.Series(dtype=float)),
+                errors="coerce",
+            ).fillna(0.0)
+            sell_prices = pd.to_numeric(
+                uex_prices.get("Terminal Buys at", pd.Series(dtype=float)),
+                errors="coerce",
+            ).fillna(0.0)
+            positive_buys = buy_prices[buy_prices > 0]
+            positive_sells = sell_prices[sell_prices > 0]
+            if not positive_buys.empty:
+                default_buy_price = float(positive_buys.min())
+            if not positive_sells.empty:
+                default_sell_price = float(positive_sells.max())
 
-        if "commodity_transaction_unit_price" not in st.session_state:
-            st.session_state["commodity_transaction_unit_price"] = (
-                default_buy_price
-            )
+        st.session_state.setdefault(
+            "commodity_transaction_unit_price",
+            default_buy_price,
+        )
 
         with st.form("commodity_transaction_form"):
-            form_col1, form_col2, form_col3 = st.columns(3)
-            with form_col1:
+            top_col1, top_col2, top_col3 = st.columns(3)
+            with top_col1:
                 tracked_commodity = st.selectbox(
                     "Commodity",
                     available_names,
                     key="tracked_commodity_name",
                 )
-            with form_col2:
+            with top_col2:
                 transaction_type = st.selectbox(
                     "Activity",
                     ["Bought", "Sold"],
                     key="commodity_transaction_type",
                 )
-            with form_col3:
+            with top_col3:
                 shipment_lost = st.checkbox(
                     "Shipment destroyed or lost",
                     key="commodity_shipment_lost",
-                    help=(
-                        "Records cargo as Lost / Destroyed and removes it "
-                        "from on-hand inventory."
-                    ),
                 )
+
+            price_method = st.radio(
+                "How are you entering the value?",
+                ["Price per SCU", "Total cargo value"],
+                horizontal=True,
+                key="commodity_price_entry_method",
+            )
 
             value_col1, value_col2, value_col3 = st.columns(3)
             with value_col1:
@@ -3829,17 +4421,34 @@ def commodity_trade_tracker(
                     format="%.2f",
                     key="commodity_transaction_quantity",
                 )
-            with value_col2:
-                unit_price = st.number_input(
-                    (
-                        "Estimated cargo value per SCU"
-                        if shipment_lost
-                        else "Unit price (aUEC/SCU)"
-                    ),
-                    min_value=0.0,
-                    step=100.0,
-                    key="commodity_transaction_unit_price",
+
+            if price_method == "Price per SCU":
+                with value_col2:
+                    unit_price_input = st.number_input(
+                        "Unit price (aUEC/SCU)",
+                        min_value=0.0,
+                        step=100.0,
+                        key="commodity_transaction_unit_price",
+                    )
+                total_entry = (
+                    float(quantity_scu)
+                    * float(unit_price_input)
                 )
+                calculated_unit_price = float(unit_price_input)
+            else:
+                with value_col2:
+                    total_entry = st.number_input(
+                        "Total cargo value (aUEC)",
+                        min_value=0.0,
+                        step=1000.0,
+                        key="commodity_total_entry_value",
+                    )
+                calculated_unit_price = (
+                    float(total_entry) / float(quantity_scu)
+                    if quantity_scu > 0
+                    else 0.0
+                )
+
             with value_col3:
                 fees = st.number_input(
                     "Fees and operating costs (aUEC)",
@@ -3881,16 +4490,21 @@ def commodity_trade_tracker(
                 if shipment_lost
                 else transaction_type
             )
-            total_value = float(quantity_scu) * float(unit_price)
-            if final_action == "Sold":
-                cash_effect = total_value - float(fees)
-            else:
-                cash_effect = -(total_value + float(fees))
+            verified_total = (
+                float(quantity_scu)
+                * float(calculated_unit_price)
+            )
+            verified_cash_effect = (
+                verified_total - float(fees)
+                if final_action == "Sold"
+                else -(verified_total + float(fees))
+            )
 
             st.info(
-                f"Record type: {final_action}. Cargo value: "
-                f"{total_value:,.0f} aUEC. Net cash effect: "
-                f"{cash_effect:+,.0f} aUEC."
+                f"Verified math: {quantity_scu:,.2f} SCU × "
+                f"{calculated_unit_price:,.2f} aUEC/SCU = "
+                f"{verified_total:,.0f} aUEC. Net cash effect: "
+                f"{verified_cash_effect:+,.0f} aUEC."
             )
 
             submitted = st.form_submit_button(
@@ -3907,91 +4521,92 @@ def commodity_trade_tracker(
             )
 
         if submitted:
-            if not tracked_commodity.strip():
-                st.error("Choose a commodity.")
-            elif quantity_scu <= 0:
-                st.error("Enter a quantity greater than zero.")
-            elif unit_price <= 0:
-                st.error("Enter the price or estimated cargo value per SCU.")
+            if calculated_unit_price <= 0:
+                st.error(
+                    "Enter a positive price per SCU or total cargo value."
+                )
             else:
                 payload = {
                     "user_id": st.session_state.user_id,
                     "commodity_name": tracked_commodity,
                     "action": final_action,
                     "quantity_scu": float(quantity_scu),
-                    "unit_price": float(unit_price),
+                    "unit_price": float(calculated_unit_price),
                     "fees": float(fees),
-                    "total_value": float(total_value),
+                    "total_value": float(verified_total),
                     "origin": origin.strip(),
                     "destination": destination.strip(),
                     "shipment_reference": shipment_reference.strip(),
                     "notes": transaction_notes.strip(),
                 }
                 try:
-                    insert_commodity_transaction(payload)
-                    st.success(f"{final_action} activity recorded.")
+                    saved = insert_commodity_transaction(payload)
+                    saved_id = (
+                        f" ID {saved.get('id')}"
+                        if saved and saved.get("id") is not None
+                        else ""
+                    )
+                    st.success(
+                        f"{final_action} activity saved.{saved_id} "
+                        f"Verified value: {verified_total:,.0f} aUEC."
+                    )
                     st.rerun()
                 except Exception as exc:
                     st.error(
-                        "The activity could not be saved. Confirm the "
-                        "commodity migration and Supabase permissions. "
-                        f"Details: {exc}"
+                        "The commodity activity could not be saved. Run "
+                        "`schema_migration_v6_commodity_math_repair.sql` "
+                        f"and try again. Details: {exc}"
                     )
 
     with inventory_tab:
         inventory = build_commodity_inventory(trades)
+        render_commodity_metric_cards(
+            [
+                {
+                    "label": "Commodities Tracked",
+                    "value": f"{len(inventory):,}",
+                },
+                {
+                    "label": "Total On Hand",
+                    "value": f"{totals['on_hand_scu']:,.2f} SCU",
+                    "tone": (
+                        "positive"
+                        if totals["on_hand_scu"] > 0
+                        else "negative"
+                        if totals["on_hand_scu"] < 0
+                        else ""
+                    ),
+                },
+                {
+                    "label": "Purchase Cost",
+                    "value": f"{totals['purchase_cost']:,.0f} aUEC",
+                },
+                {
+                    "label": "Sales Revenue",
+                    "value": f"{totals['sales_revenue']:,.0f} aUEC",
+                    "tone": (
+                        "positive"
+                        if totals["sales_revenue"] > 0
+                        else ""
+                    ),
+                },
+                {
+                    "label": "Net Cash Flow",
+                    "value": f"{totals['net_cash_flow']:+,.0f} aUEC",
+                    "tone": (
+                        "positive"
+                        if totals["net_cash_flow"] > 0
+                        else "negative"
+                        if totals["net_cash_flow"] < 0
+                        else ""
+                    ),
+                },
+            ]
+        )
+
         if inventory.empty:
             st.info("No commodity activity has been recorded yet.")
         else:
-            render_commodity_metric_cards(
-                [
-                    {
-                        "label": "Commodities Tracked",
-                        "value": f"{len(inventory):,}",
-                    },
-                    {
-                        "label": "Total On Hand",
-                        "value": f"{totals['on_hand_scu']:,.2f} SCU",
-                        "tone": (
-                            "positive"
-                            if totals["on_hand_scu"] > 0
-                            else "negative"
-                            if totals["on_hand_scu"] < 0
-                            else ""
-                        ),
-                    },
-                    {
-                        "label": "Sales Revenue",
-                        "value": f"{totals['sales_revenue']:,.0f} aUEC",
-                        "tone": (
-                            "positive"
-                            if totals["sales_revenue"] > 0
-                            else ""
-                        ),
-                    },
-                    {
-                        "label": "Recorded Cargo Loss",
-                        "value": f"{totals['loss_value']:,.0f} aUEC",
-                        "tone": (
-                            "negative"
-                            if totals["loss_value"] > 0
-                            else ""
-                        ),
-                    },
-                    {
-                        "label": "Net Cash Flow",
-                        "value": f"{totals['net_cash_flow']:+,.0f} aUEC",
-                        "tone": (
-                            "positive"
-                            if totals["net_cash_flow"] > 0
-                            else "negative"
-                            if totals["net_cash_flow"] < 0
-                            else ""
-                        ),
-                    },
-                ]
-            )
-
             st.dataframe(
                 inventory,
                 width="stretch",
@@ -4025,149 +4640,44 @@ def commodity_trade_tracker(
                     ),
                 },
             )
-            st.download_button(
-                "Download Commodity Inventory CSV",
-                data=dataframe_csv_bytes(inventory),
-                file_name="star_citizen_commodity_inventory.csv",
-                mime="text/csv",
-                width="stretch",
-            )
 
     with history_tab:
-        if trades.empty:
-            st.info("No commodity activity has been recorded yet.")
-        else:
-            history = trades.rename(
-                columns={
-                    "date_saved": "Date",
-                    "commodity_name": "Commodity",
-                    "action": "Activity",
-                    "quantity_scu": "Quantity (SCU)",
-                    "unit_price": "Unit Price (aUEC/SCU)",
-                    "fees": "Fees (aUEC)",
-                    "total_value": "Cargo Value (aUEC)",
-                    "cash_effect": "Net Cash Effect (aUEC)",
-                    "origin": "Origin",
-                    "destination": "Destination",
-                    "shipment_reference": "Shipment Reference",
-                    "notes": "Notes",
-                }
-            ).copy()
-            display_columns = [
-                "Date",
-                "Commodity",
-                "Activity",
-                "Quantity (SCU)",
-                "Unit Price (aUEC/SCU)",
-                "Cargo Value (aUEC)",
-                "Fees (aUEC)",
-                "Net Cash Effect (aUEC)",
-                "Origin",
-                "Destination",
-                "Shipment Reference",
-                "Notes",
-            ]
-            st.dataframe(
-                history[display_columns],
-                width="stretch",
-                hide_index=True,
-                column_config={
-                    "Quantity (SCU)": st.column_config.NumberColumn(
-                        format="%,.2f SCU"
-                    ),
-                    "Unit Price (aUEC/SCU)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC/SCU"
-                        )
-                    ),
-                    "Cargo Value (aUEC)": st.column_config.NumberColumn(
-                        format="%,.0f aUEC"
-                    ),
-                    "Fees (aUEC)": st.column_config.NumberColumn(
-                        format="%,.0f aUEC"
-                    ),
-                    "Net Cash Effect (aUEC)": (
-                        st.column_config.NumberColumn(
-                            format="%,.0f aUEC"
-                        )
-                    ),
-                },
-            )
-
-            download_col, delete_col = st.columns([2, 1])
-            with download_col:
-                st.download_button(
-                    "Download Commodity Trade History CSV",
-                    data=dataframe_csv_bytes(history[display_columns]),
-                    file_name="star_citizen_commodity_trade_history.csv",
-                    mime="text/csv",
-                    width="stretch",
-                )
-            with delete_col:
-                trade_options = {
-                    int(row["id"]): (
-                        f'ID {int(row["id"])} | '
-                        f'{row["commodity_name"]} | {row["action"]} | '
-                        f'{float(row["quantity_scu"]):,.2f} SCU'
-                    )
-                    for _, row in trades.iterrows()
-                }
-                selected_trade_id = st.selectbox(
-                    "Select record",
-                    options=list(trade_options),
-                    format_func=lambda value: trade_options[value],
-                    key="delete_commodity_trade_select",
-                    label_visibility="collapsed",
-                )
-                confirm_delete = st.checkbox(
-                    "Confirm deletion",
-                    key="delete_commodity_trade_confirm",
-                )
-                if st.button(
-                    "Delete Selected Record",
-                    disabled=not confirm_delete,
-                    type="primary",
-                    key="delete_commodity_trade_button",
-                    width="stretch",
-                ):
-                    try:
-                        delete_record(
-                            "commodity_transactions",
-                            selected_trade_id,
-                        )
-                        st.success("Commodity record deleted.")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error(
-                            "The commodity record could not be deleted: "
-                            f"{exc}"
-                        )
-
-    with st.expander("Commodity data health", expanded=False):
-        action_counts = (
-            trades["action"].value_counts().to_dict()
-            if not trades.empty
-            else {}
+        display_commodity_table(
+            trades,
+            show_download=True,
         )
-        health_rows = pd.DataFrame(
+
+    with st.expander("Commodity math and database health", expanded=False):
+        health = pd.DataFrame(
             [
-                ["Database connection", "Ready" if st.session_state.get(
-                    "commodity_tracker_ready", False
-                ) else "Not ready"],
+                [
+                    "Database connection",
+                    (
+                        "Ready"
+                        if st.session_state.get(
+                            "commodity_tracker_ready",
+                            False,
+                        )
+                        else "Not ready"
+                    ),
+                ],
                 ["Loaded records", int(totals["records"])],
                 ["Bought records", int(totals["bought_records"])],
                 ["Sold records", int(totals["sold_records"])],
-                ["Lost / destroyed records", int(totals["loss_records"])],
-                ["Normalized actions", ", ".join(
-                    f"{key}: {value}"
-                    for key, value in action_counts.items()
-                ) or "None"],
-                ["Net cash flow", f"{totals['net_cash_flow']:+,.0f} aUEC"],
+                ["Lost records", int(totals["loss_records"])],
+                [
+                    "Math issues corrected or missing",
+                    int(totals["math_issue_records"]),
+                ],
+                [
+                    "Net cash flow",
+                    f"{totals['net_cash_flow']:+,.0f} aUEC",
+                ],
             ],
             columns=["Check", "Result"],
         )
         st.dataframe(
-            health_rows,
+            health,
             width="stretch",
             hide_index=True,
         )
@@ -5032,7 +5542,7 @@ def dashboard_page() -> None:
                 x=earnings_daily["Position"],
                 y=earnings_daily["Plot Value"],
                 marker_color=[
-                    "#22A66F" if value >= 0 else "#E54950"
+                    "#4C7814" if value >= 0 else "#E54950"
                     for value in earnings_daily["Total Earnings"]
                 ],
                 text=earnings_daily["Label"],
@@ -5113,12 +5623,12 @@ def dashboard_page() -> None:
     )
     source_figure.update_traces(
         marker_color=[
-            "#22A66F" if value >= 0 else "#E54950"
+            "#4C7814" if value >= 0 else "#E54950"
             for value in source_data["Net Contribution"]
         ],
         textposition="inside",
         insidetextanchor="middle",
-        textfont={"color": "#ffffff"},
+        textfont={"color": "#FFFFFF"},
         hovertemplate=(
             "<b>%{y}</b><br>"
             "Net contribution: %{customdata[0]:+,.0f} aUEC"
@@ -5162,8 +5672,8 @@ def dashboard_page() -> None:
             text="Label",
             custom_data=["total_value", "entry_count"],
             color_discrete_map={
-                "Bought": "#176FC1",
-                "Mined": "#70B7EC",
+                "Bought": "#4C7814",
+                "Mined": "#98FB17",
                 "Sold": "#E54950",
             },
             labels={
@@ -5200,73 +5710,96 @@ def dashboard_page() -> None:
             "Mined, bought, and sold mineral values will appear here."
         )
 
-    # Commodity profit by commodity
-    if not commodity_trades.empty:
-        commodity_rows: list[dict[str, object]] = []
-        for commodity_name, group in commodity_trades.groupby(
-            "commodity_name"
-        ):
-            bought = group[group["action"] == "Bought"]
-            sold = group[group["action"] == "Sold"]
-            lost = group[group["action"] == "Lost / Destroyed"]
-
-            bought_cost = float((bought["total_value"] + bought["fees"]).sum())
-            sold_revenue = float((sold["total_value"] - sold["fees"]).sum())
-            lost_value = float((lost["total_value"] + lost["fees"]).sum())
-            net_profit = sold_revenue - bought_cost - lost_value
-
-            commodity_rows.append(
-                {
-                    "Commodity": commodity_name,
-                    "Net Profit": net_profit,
-                    "Sales": sold_revenue,
-                    "Spend": bought_cost,
-                    "Losses": lost_value,
-                }
+    # Commodity trade performance by commodity
+    commodity_performance = build_commodity_performance(
+        commodity_trades
+    )
+    if not commodity_performance.empty:
+        top_commodities = (
+            commodity_performance.assign(
+                ActivityMagnitude=(
+                    commodity_performance[
+                        [
+                            "Purchase Cost",
+                            "Sales Revenue",
+                            "Loss Value",
+                        ]
+                    ].sum(axis=1)
+                )
             )
-
-        commodity_profit_data = (
-            pd.DataFrame(commodity_rows)
-            .sort_values("Net Profit", ascending=False)
-            .head(8)
+            .nlargest(7, "ActivityMagnitude")
+            ["Commodity"]
         )
-        commodity_profit_data["Plot Value"] = commodity_profit_data[
-            "Net Profit"
+        commodity_plot = commodity_performance[
+            commodity_performance["Commodity"].isin(top_commodities)
+        ].copy()
+
+        long_values = commodity_plot.melt(
+            id_vars=["Commodity"],
+            value_vars=[
+                "Purchase Cost",
+                "Sales Revenue",
+                "Loss Value",
+                "Net Profit",
+            ],
+            var_name="Measure",
+            value_name="Signed Value",
+        )
+        long_values["Plot Value"] = long_values[
+            "Signed Value"
         ].abs()
-        commodity_profit_data["Label"] = commodity_profit_data[
-            "Net Profit"
-        ].map(lambda value: f"{value:,.0f} aUEC")
+        long_values["Label"] = long_values[
+            "Signed Value"
+        ].map(lambda value: f"{value:+,.0f} aUEC")
 
         commodity_profit_figure = px.bar(
-            commodity_profit_data,
+            long_values,
             x="Commodity",
             y="Plot Value",
+            color="Measure",
+            barmode="group",
             text="Label",
-            custom_data=["Net Profit", "Sales", "Spend", "Losses"],
+            custom_data=["Signed Value"],
+            color_discrete_map={
+                "Purchase Cost": "#4C7814",
+                "Sales Revenue": "#98FB17",
+                "Loss Value": "#E54950",
+                "Net Profit": "#78C814",
+            },
+            labels={
+                "Plot Value": "Value magnitude in aUEC",
+                "Measure": "Commodity math",
+            },
         )
         commodity_profit_figure.update_traces(
-            marker_color=[
-                "#22A66F" if value >= 0 else "#E54950"
-                for value in commodity_profit_data["Net Profit"]
-            ],
             textposition="outside",
             cliponaxis=False,
             hovertemplate=(
                 "<b>%{x}</b><br>"
-                "Net profit: %{customdata[0]:,.0f} aUEC<br>"
-                "Sales: %{customdata[1]:,.0f} aUEC<br>"
-                "Spend: %{customdata[2]:,.0f} aUEC<br>"
-                "Losses: %{customdata[3]:,.0f} aUEC<extra></extra>"
+                "%{fullData.name}: %{customdata[0]:+,.0f} aUEC"
+                "<extra></extra>"
             ),
         )
-        style_plotly_figure(commodity_profit_figure, height=390)
+        style_plotly_figure(
+            commodity_profit_figure,
+            height=410,
+        )
         commodity_profit_figure.update_layout(
-            showlegend=False,
-            margin={"l": 48, "r": 20, "t": 38, "b": 58},
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": 1.02,
+                "xanchor": "center",
+                "x": .5,
+                "title_text": "",
+            },
+            margin={"l": 48, "r": 20, "t": 62, "b": 58},
+            uniformtext_minsize=8,
+            uniformtext_mode="hide",
         )
     else:
         commodity_profit_figure = empty_dashboard_figure(
-            "Commodity profit will appear after purchases, sales, or losses are recorded."
+            "Commodity purchases, sales, losses, and net profit will appear here after records are saved."
         )
 
     # Contract earnings by type
@@ -5300,12 +5833,12 @@ def dashboard_page() -> None:
         )
         contract_type_figure.update_traces(
             marker_color=[
-                "#22A66F" if value >= 0 else "#E54950"
+                "#4C7814" if value >= 0 else "#E54950"
                 for value in contract_type_data["net_payout"]
             ],
             textposition="inside",
             insidetextanchor="middle",
-            textfont={"color": "#ffffff"},
+            textfont={"color": "#FFFFFF"},
             hovertemplate=(
                 "<b>%{y}</b><br>"
                 "Net payout: %{customdata[0]:,.0f} aUEC<br>"
@@ -5337,15 +5870,15 @@ def dashboard_page() -> None:
             hole=.55,
             color="Activity",
             color_discrete_map={
-                "Contracts": "#22A66F",
-                "Ore / Mining": "#347FD1",
+                "Contracts": "#4C7814",
+                "Ore / Mining": "#69A912",
                 "Commodities": "#F28A2A",
             },
         )
         activity_mix_figure.update_traces(
             texttemplate="%{percent:.1%}",
             textposition="inside",
-            marker={"line": {"color": "#ffffff", "width": 3}},
+            marker={"line": {"color": "#FFFFFF", "width": 3}},
             sort=False,
             hovertemplate=(
                 "<b>%{label}</b><br>"
@@ -5360,7 +5893,7 @@ def dashboard_page() -> None:
             x=.5,
             y=.5,
             showarrow=False,
-            font={"size": 14, "color": "#0D2D49"},
+            font={"size": 14, "color": "#2A3B16"},
         )
         style_plotly_figure(activity_mix_figure, height=390)
         activity_mix_figure.update_layout(
@@ -5424,8 +5957,8 @@ def dashboard_page() -> None:
     with bottom_col1:
         with st.container(border=True):
             analytics_heading(
-                "Commodity trade profit",
-                "Net commodity profit after purchases, fees, and shipment losses.",
+                "Commodity trade performance",
+                "Purchase cost, sales revenue, cargo losses, and net profit by commodity.",
                 "Trade Performance",
             )
             st.plotly_chart(
@@ -5829,34 +6362,42 @@ def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
 def prepare_commodity_export(
     commodity_trades: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Prepare normalized commodity records for Excel, CSV, and Sheets."""
+    """Prepare the verified commodity ledger for every export format."""
     trades = normalize_commodity_transactions(
         commodity_trades
     )
-    columns = {
-        "date_saved": "Date",
-        "commodity_name": "Commodity",
-        "action": "Activity",
-        "quantity_scu": "Quantity (SCU)",
-        "unit_price": "Unit Price (aUEC/SCU)",
-        "total_value": "Cargo Value (aUEC)",
-        "fees": "Fees (aUEC)",
-        "cash_effect": "Net Cash Effect (aUEC)",
-        "origin": "Origin",
-        "destination": "Destination",
-        "shipment_reference": "Shipment Reference",
-        "notes": "Notes",
-    }
-    export = trades.rename(columns=columns).copy()
+    export = trades.rename(
+        columns={
+            "date_saved": "Date",
+            "commodity_name": "Commodity",
+            "action": "Activity",
+            "quantity_scu": "Quantity (SCU)",
+            "unit_price": "Unit Price (aUEC/SCU)",
+            "recorded_total_value": "Recorded Cargo Value (aUEC)",
+            "calculated_total_value": "Calculated Cargo Value (aUEC)",
+            "total_value": "Verified Cargo Value (aUEC)",
+            "fees": "Fees (aUEC)",
+            "cash_effect": "Net Cash Effect (aUEC)",
+            "calculation_status": "Calculation",
+            "origin": "Origin",
+            "destination": "Destination",
+            "shipment_reference": "Shipment Reference",
+            "notes": "Notes",
+        }
+    ).copy()
+
     ordered = [
         "Date",
         "Commodity",
         "Activity",
         "Quantity (SCU)",
         "Unit Price (aUEC/SCU)",
-        "Cargo Value (aUEC)",
+        "Recorded Cargo Value (aUEC)",
+        "Calculated Cargo Value (aUEC)",
+        "Verified Cargo Value (aUEC)",
         "Fees (aUEC)",
         "Net Cash Effect (aUEC)",
+        "Calculation",
         "Origin",
         "Destination",
         "Shipment Reference",
@@ -5865,6 +6406,7 @@ def prepare_commodity_export(
     export = export[
         [column for column in ordered if column in export.columns]
     ]
+
     if "Date" in export.columns:
         export["Date"] = pd.to_datetime(
             export["Date"],
@@ -5872,8 +6414,8 @@ def prepare_commodity_export(
         )
         if getattr(export["Date"].dt, "tz", None) is not None:
             export["Date"] = export["Date"].dt.tz_localize(None)
-    return export
 
+    return export
 
 def set_export_column_widths(worksheet: Any, frame: pd.DataFrame) -> None:
     for column_index, column_name in enumerate(frame.columns):
@@ -5978,7 +6520,7 @@ def build_excel_export(
                 "bold": True,
                 "font_size": 20,
                 "font_color": "#FFFFFF",
-                "bg_color": "#10233F",
+                "bg_color": "#1F2A16",
                 "align": "left",
                 "valign": "vcenter",
             }
@@ -5987,9 +6529,9 @@ def build_excel_export(
             {
                 "bold": True,
                 "font_color": "#FFFFFF",
-                "bg_color": "#1378E5",
+                "bg_color": "#69A912",
                 "border": 1,
-                "border_color": "#8FC7FF",
+                "border_color": "#BDF56F",
                 "align": "center",
                 "valign": "vcenter",
             }
@@ -5997,18 +6539,18 @@ def build_excel_export(
         label_format = workbook.add_format(
             {
                 "bold": True,
-                "font_color": "#243A55",
-                "bg_color": "#EAF4FF",
+                "font_color": "#2A3B16",
+                "bg_color": "#F6FDEB",
                 "border": 1,
-                "border_color": "#D1E3F5",
+                "border_color": "#E4F8C8",
             }
         )
         value_format = workbook.add_format(
             {
-                "font_color": "#10233F",
+                "font_color": "#1F2A16",
                 "bg_color": "#FFFFFF",
                 "border": 1,
-                "border_color": "#D1E3F5",
+                "border_color": "#E4F8C8",
             }
         )
         money_format = workbook.add_format({"num_format": '#,##0 "aUEC"'})
@@ -6017,7 +6559,7 @@ def build_excel_export(
 
         summary = workbook.add_worksheet("Summary")
         writer.sheets["Summary"] = summary
-        summary.set_tab_color("#1378E5")
+        summary.set_tab_color("#69A912")
         summary.set_column("A:A", 28)
         summary.set_column("B:B", 26)
         summary.set_row(0, 34)
@@ -6074,7 +6616,9 @@ def build_excel_export(
                 "Date": date_format,
                 "Quantity (SCU)": quantity_format,
                 "Unit Price (aUEC/SCU)": money_format,
-                "Cargo Value (aUEC)": money_format,
+                "Recorded Cargo Value (aUEC)": money_format,
+                "Calculated Cargo Value (aUEC)": money_format,
+                "Verified Cargo Value (aUEC)": money_format,
                 "Fees (aUEC)": money_format,
                 "Net Cash Effect (aUEC)": money_format,
             }),
@@ -6363,19 +6907,64 @@ def records_page() -> None:
 
 def display_commodity_table(
     commodity_trades: pd.DataFrame,
+    *,
+    show_download: bool = True,
 ) -> None:
-    """Display normalized commodity records and their signed cash effect."""
-    commodity_trades = normalize_commodity_transactions(
+    """Display every commodity input and the calculation used by the app."""
+    trades = normalize_commodity_transactions(
         commodity_trades
     )
-    if commodity_trades.empty:
-        st.info(
-            "No commodity records have been saved yet. Add one under "
-            "Commodities → My Trade Tracker."
-        )
+
+    if trades.empty:
+        if not st.session_state.get("commodity_tracker_ready", True):
+            st.warning(
+                "Commodity records could not be loaded. Open "
+                "Commodities → My Trade Tracker → Commodity math and "
+                "database health for the database error."
+            )
+        else:
+            st.info(
+                "No commodity records have been saved yet. Add one under "
+                "Commodities → My Trade Tracker."
+            )
         return
 
-    display = commodity_trades.rename(
+    totals = commodity_summary_values(trades)
+    render_commodity_metric_cards(
+        [
+            {
+                "label": "Commodity Records",
+                "value": f"{int(totals['records']):,}",
+            },
+            {
+                "label": "Purchase Cost",
+                "value": f"{totals['purchase_cost']:,.0f} aUEC",
+            },
+            {
+                "label": "Sales Revenue",
+                "value": f"{totals['sales_revenue']:,.0f} aUEC",
+                "tone": "positive" if totals["sales_revenue"] > 0 else "",
+            },
+            {
+                "label": "Cargo Losses",
+                "value": f"{totals['loss_value']:,.0f} aUEC",
+                "tone": "negative" if totals["loss_value"] > 0 else "",
+            },
+            {
+                "label": "Net Cash Flow",
+                "value": f"{totals['net_cash_flow']:+,.0f} aUEC",
+                "tone": (
+                    "positive"
+                    if totals["net_cash_flow"] > 0
+                    else "negative"
+                    if totals["net_cash_flow"] < 0
+                    else ""
+                ),
+            },
+        ]
+    )
+
+    display = trades.rename(
         columns={
             "id": "ID",
             "date_saved": "Date",
@@ -6383,9 +6972,12 @@ def display_commodity_table(
             "action": "Activity",
             "quantity_scu": "Quantity (SCU)",
             "unit_price": "Unit Price",
+            "recorded_total_value": "Recorded Cargo Value",
+            "calculated_total_value": "Calculated Cargo Value",
+            "total_value": "Verified Cargo Value",
             "fees": "Fees",
-            "total_value": "Cargo Value",
             "cash_effect": "Net Cash Effect",
+            "calculation_status": "Calculation",
             "origin": "Origin",
             "destination": "Destination",
             "shipment_reference": "Shipment Reference",
@@ -6393,16 +6985,18 @@ def display_commodity_table(
         }
     ).copy()
 
-    display_columns = [
+    columns = [
         "ID",
         "Date",
         "Commodity",
         "Activity",
         "Quantity (SCU)",
         "Unit Price",
-        "Cargo Value",
+        "Calculated Cargo Value",
+        "Verified Cargo Value",
         "Fees",
         "Net Cash Effect",
+        "Calculation",
         "Origin",
         "Destination",
         "Shipment Reference",
@@ -6410,7 +7004,7 @@ def display_commodity_table(
     ]
 
     st.dataframe(
-        display[display_columns],
+        display[columns],
         width="stretch",
         hide_index=True,
         column_config={
@@ -6422,48 +7016,35 @@ def display_commodity_table(
                 format="YYYY-MM-DD hh:mm A",
                 width="medium",
             ),
-            "Commodity": st.column_config.TextColumn(
-                width="medium",
-            ),
-            "Activity": st.column_config.TextColumn(
-                width="medium",
-            ),
             "Quantity (SCU)": st.column_config.NumberColumn(
                 format="%,.2f SCU",
-                width="small",
             ),
             "Unit Price": st.column_config.NumberColumn(
-                format="%,.0f aUEC/SCU",
-                width="small",
+                format="%,.2f aUEC/SCU",
             ),
-            "Cargo Value": st.column_config.NumberColumn(
+            "Calculated Cargo Value": st.column_config.NumberColumn(
                 format="%,.0f aUEC",
-                width="small",
+            ),
+            "Verified Cargo Value": st.column_config.NumberColumn(
+                format="%,.0f aUEC",
             ),
             "Fees": st.column_config.NumberColumn(
                 format="%,.0f aUEC",
-                width="small",
             ),
             "Net Cash Effect": st.column_config.NumberColumn(
                 format="%,.0f aUEC",
-                width="small",
             ),
-            "Origin": st.column_config.TextColumn(width="large"),
-            "Destination": st.column_config.TextColumn(width="large"),
-            "Shipment Reference": st.column_config.TextColumn(
-                width="medium",
-            ),
-            "Notes": st.column_config.TextColumn(width="large"),
         },
     )
 
-    st.download_button(
-        "Download Commodity Records CSV",
-        data=dataframe_csv_bytes(display[display_columns]),
-        file_name="star_citizen_commodity_records.csv",
-        mime="text/csv",
-        width="stretch",
-    )
+    if show_download:
+        st.download_button(
+            "Download Commodity Records CSV",
+            data=dataframe_csv_bytes(display[columns]),
+            file_name="star_citizen_commodity_records.csv",
+            mime="text/csv",
+            width="stretch",
+        )
 
 def saved_records_page() -> None:
     page_banner(
@@ -8421,7 +9002,7 @@ def commodities_page() -> None:
                 )
                 route_figure.update_traces(
                     textposition="inside",
-                    textfont={"color": "#ffffff"},
+                    textfont={"color": "#FFFFFF"},
                 )
                 route_figure.update_yaxes(categoryorder="total ascending")
                 style_plotly_figure(route_figure, height=590)
