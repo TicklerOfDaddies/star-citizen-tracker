@@ -193,6 +193,58 @@ def apply_custom_theme() -> None:
         .sc-banner-title { color: #fff; font-size: clamp(1.75rem,4vw,2.75rem); line-height: 1.04; font-weight: 800; margin: 0 0 .48rem; text-shadow: 0 3px 15px rgba(0,0,0,.42); }
         .sc-banner-subtitle { color: #e3edf7; font-size: .98rem; max-width: 720px; margin: 0; }
 
+        /* Interior page banners use a split layout so the full supplied image
+           remains visible instead of being cropped as a background. */
+        .sc-page-banner {
+            display: grid;
+            grid-template-columns: minmax(320px, .82fr) minmax(520px, 1.55fr);
+            min-height: 285px;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid #cbd8e6;
+            margin-bottom: 1.15rem;
+            background:
+                radial-gradient(circle at 14% 20%, rgba(32,151,255,.16), transparent 28rem),
+                linear-gradient(135deg, #07182a 0%, #0b2239 100%);
+            box-shadow: 0 18px 44px rgba(24,62,103,.16);
+        }
+
+        .sc-page-banner-copy {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.8rem 1.8rem 1.9rem;
+            color: #fff;
+        }
+
+        .sc-page-banner-image-wrap {
+            position: relative;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 18px 14px 8px;
+            background:
+                linear-gradient(90deg, rgba(7,24,42,.90) 0%, rgba(7,24,42,.34) 13%, rgba(7,24,42,0) 32%),
+                rgba(5,16,29,.28);
+        }
+
+        .sc-page-banner-image {
+            width: 100%;
+            height: 100%;
+            max-height: 255px;
+            object-fit: contain;
+            object-position: center center;
+            display: block;
+            border-radius: 12px;
+        }
+
+        .sc-page-banner .sc-kicker { margin-bottom: .5rem; }
+        .sc-page-banner .sc-banner-title { font-size: clamp(1.8rem, 3vw, 2.55rem); }
+        .sc-page-banner .sc-banner-subtitle { max-width: 540px; line-height: 1.55; }
+
         .dashboard-hero-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:14px; margin-bottom:1rem; }
         .dashboard-hero-grid .sc-banner { margin-bottom:0; min-height:315px; }
         .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(24,62,103,.12); color:var(--text); }
@@ -259,6 +311,26 @@ def apply_custom_theme() -> None:
         @media (max-width:1050px) {
             .dashboard-hero-grid { grid-template-columns:1fr; }
             .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+            .sc-page-banner {
+                grid-template-columns: minmax(280px, .9fr) minmax(420px, 1.25fr);
+            }
+        }
+        @media (max-width:820px) {
+            .sc-page-banner {
+                grid-template-columns: 1fr;
+                min-height: 0;
+            }
+            .sc-page-banner-copy {
+                padding: 1.45rem 1.4rem 1.15rem;
+            }
+            .sc-page-banner-image-wrap {
+                min-height: 210px;
+                padding: 0 14px 14px;
+                background: rgba(5,16,29,.22);
+            }
+            .sc-page-banner-image {
+                max-height: 235px;
+            }
         }
         @media (max-width:720px) {
             .sc-banner { min-height:220px; }
@@ -289,18 +361,22 @@ def page_banner(
     subtitle: str,
     kicker: str,
 ) -> None:
-    background = image_data_uri(image_filename)
+    """Render a split page banner without cropping the supplied image."""
+    image_uri = image_data_uri(image_filename)
     st.markdown(
         f"""
-        <section
-            class="sc-banner"
-            style="background-image: url('{background}');"
-            aria-label="{title}"
-        >
-            <div class="sc-banner-content">
+        <section class="sc-page-banner" aria-label="{title}">
+            <div class="sc-page-banner-copy">
                 <div class="sc-kicker">{kicker}</div>
                 <div class="sc-banner-title">{title}</div>
                 <p class="sc-banner-subtitle">{subtitle}</p>
+            </div>
+            <div class="sc-page-banner-image-wrap">
+                <img
+                    class="sc-page-banner-image"
+                    src="{image_uri}"
+                    alt="{title}"
+                />
             </div>
         </section>
         """,
