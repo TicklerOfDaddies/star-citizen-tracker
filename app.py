@@ -197,9 +197,8 @@ def apply_custom_theme() -> None:
            remains visible instead of being cropped as a background. */
         .sc-page-banner {
             display: grid;
-            grid-template-columns: minmax(300px, .72fr) minmax(560px, 1.28fr);
-            align-items: stretch;
-            min-height: 272px;
+            grid-template-columns: minmax(300px, .74fr) minmax(520px, 1.26fr);
+            align-items: center;
             overflow: hidden;
             border-radius: 20px;
             border: 1px solid #d9e3ee;
@@ -214,6 +213,7 @@ def apply_custom_theme() -> None:
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-self: stretch;
             padding: 1.7rem 1.8rem 1.75rem;
             color: var(--text);
             background:
@@ -224,10 +224,7 @@ def apply_custom_theme() -> None:
         .sc-page-banner-image-wrap {
             position: relative;
             min-width: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem 1rem 1rem .2rem;
+            padding: 1rem 1rem 1rem .35rem;
             background:
                 radial-gradient(circle at 10% 50%, rgba(19,120,229,.10), transparent 15rem),
                 linear-gradient(135deg, #edf5ff 0%, #f8fbff 100%);
@@ -235,25 +232,18 @@ def apply_custom_theme() -> None:
 
         .sc-page-banner-image-frame {
             width: 100%;
-            height: 100%;
-            min-height: 238px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
             border-radius: 16px;
             border: 1px solid rgba(143,199,255,.45);
-            background:
-                linear-gradient(135deg, rgba(9,24,39,.96) 0%, rgba(18,42,66,.90) 100%);
+            background: #081827;
             box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(24,62,103,.10);
         }
 
         .sc-page-banner-image {
             width: 100%;
-            height: 100%;
-            max-height: 248px;
-            object-fit: contain;
-            object-position: center center;
+            height: auto;
+            object-fit: unset;
+            object-position: initial;
             display: block;
         }
 
@@ -298,10 +288,15 @@ def apply_custom_theme() -> None:
 
         .feature-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:.4rem 0 1rem; }
         .feature-card { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 10px 26px rgba(24,62,103,.08); }
-        .feature-card img { width:100%; height:175px; display:block; object-fit:contain; background:#081624; }
+        .feature-card img {
+            width:100%;
+            height:auto;
+            display:block;
+            background:#081624;
+        }
         .feature-card-body { padding:.85rem .9rem 1rem; }
         .feature-card-title { color:var(--text); font-weight:780; font-size:.95rem; }
-        .feature-card-copy { color:var(--muted); font-size:.78rem; min-height:42px; margin:.3rem 0 .7rem; }
+        .feature-card-copy { color:var(--muted); font-size:.78rem; min-height:56px; margin:.3rem 0 .7rem; }
         .feature-card-action { display:block; text-align:center; border:1px solid #8fc7ff; color:#1268c5; background:#f2f8ff; border-radius:9px; padding:.52rem; font-size:.78rem; font-weight:760; }
 
         .stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button, .stLinkButton > a {
@@ -352,16 +347,17 @@ def apply_custom_theme() -> None:
                 padding: 0 1rem 1rem;
             }
             .sc-page-banner-image-frame {
-                min-height: 210px;
+                min-height: 0;
             }
             .sc-page-banner-image {
-                max-height: 220px;
+                width: 100%;
+                height: auto;
             }
         }
         @media (max-width:720px) {
             .sc-banner { min-height:220px; }
             .feature-grid { grid-template-columns:1fr; }
-            .feature-card img { height:auto; max-height:260px; }
+            .feature-card img { height:auto; }
         }
         </style>
         """,
@@ -1007,18 +1003,62 @@ def dashboard_hero() -> None:
 
 
 def feature_dashboard_cards() -> None:
+    """Render dashboard shortcuts with real, working Streamlit buttons."""
     cards = [
-        ("contracts_feature.jpg", "Contracts Snapshot", "Track active contracts, completions, reputation, and earnings.", "View Contracts"),
-        ("ore_feature.jpg", "Ore Trends", "Monitor mining output, refinery yields, and resource trends.", "View Ore Ledger"),
-        ("records_feature.jpg", "Saved Records", "Access saved routes, cargo logs, and complete operation history.", "View Records"),
-        ("fleet_feature.jpg", "Fleet Overview", "Review vehicle readiness and keep your operational picture organized.", "View Fleet"),
+        {
+            "image": "contracts_feature.jpg",
+            "title": "Contracts Snapshot",
+            "copy": "Track active contracts, completions, reputation, and earnings.",
+            "button": "View Contracts",
+            "target": "Contract Calculator",
+        },
+        {
+            "image": "ore_feature.jpg",
+            "title": "Ore Trends",
+            "copy": "Monitor mining output, refinery yields, and resource trends.",
+            "button": "View Ore Ledger",
+            "target": "Ore Ledger",
+        },
+        {
+            "image": "records_feature.jpg",
+            "title": "Saved Records",
+            "copy": "Access saved routes, cargo logs, and complete operation history.",
+            "button": "View Records",
+            "target": "Saved Records",
+        },
+        {
+            "image": "fleet_feature.jpg",
+            "title": "Fleet Overview",
+            "copy": "Review vehicle readiness and keep your operational picture organized.",
+            "button": "View Fleet",
+            "target": "Fleet Overview",
+        },
     ]
-    html = '<div class="feature-grid">'
-    for image, title, copy, action in cards:
-        html += f"<div class='feature-card'><img src='{image_data_uri(image)}' alt='{title}'><div class='feature-card-body'><div class='feature-card-title'>{title}</div><div class='feature-card-copy'>{copy}</div><div class='feature-card-action'>{action} &nbsp;&gt;</div></div></div>"
-    html += '</div>'
-    st.markdown(html, unsafe_allow_html=True)
 
+    columns = st.columns(4, gap="small")
+
+    for column, card in zip(columns, cards):
+        with column:
+            with st.container(border=True):
+                image_path = ASSETS_DIR / card["image"]
+                if image_path.exists():
+                    st.image(str(image_path), width="stretch")
+
+                st.markdown(
+                    f"""
+                    <div class="feature-card-title">{card["title"]}</div>
+                    <div class="feature-card-copy">{card["copy"]}</div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                if st.button(
+                    card["button"],
+                    key=f'dashboard_shortcut_{card["target"].lower().replace(" ", "_")}',
+                    width="stretch",
+                ):
+                    st.session_state.nav_page = card["target"]
+                    st.rerun()
 
 def dashboard_page() -> None:
     dashboard_hero()
@@ -1999,6 +2039,47 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             except Exception as exc:
                 st.error(f"The ore entry could not be deleted: {exc}")
 
+
+def fleet_overview_page() -> None:
+    page_banner(
+        "fleet_feature.jpg",
+        "Fleet Overview",
+        "Organize your ships, track operational readiness, and keep important fleet notes together.",
+        "Vehicle Readiness",
+    )
+
+    st.markdown(
+        """
+        <div class="section-heading">
+            <div>
+                <div class="section-title">Fleet command center</div>
+                <div class="section-copy">This area is ready for a future fleet table, ship loadouts, component notes, and readiness tracking.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    metric_1, metric_2, metric_3, metric_4 = st.columns(4)
+    metric_1.metric("Ships Logged", "0")
+    metric_2.metric("Mission Ready", "0")
+    metric_3.metric("Needs Service", "0")
+    metric_4.metric("Loadouts Saved", "0")
+
+    with st.container(border=True):
+        st.markdown("### No fleet records yet")
+        st.caption(
+            "Fleet tracking has been added as a working destination. "
+            "Ship-entry fields and loadout storage can be added without changing the existing contract and ore data."
+        )
+        if st.button(
+            "Return to Dashboard",
+            key="fleet_return_dashboard",
+            width="stretch",
+        ):
+            st.session_state.nav_page = "Dashboard"
+            st.rerun()
+
 def export_page() -> None:
     page_banner(
         "export_banner.jpg",
@@ -2064,6 +2145,7 @@ def main() -> None:
             "Contract Calculator",
             "Ore Ledger",
             "Saved Records",
+            "Fleet Overview",
             "Export Data",
         ]
         if "nav_page" not in st.session_state:
@@ -2102,6 +2184,8 @@ def main() -> None:
         ore_page()
     elif page == "Saved Records":
         saved_records_page()
+    elif page == "Fleet Overview":
+        fleet_overview_page()
     elif page == "Export Data":
         export_page()
 
