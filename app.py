@@ -7,6 +7,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 import base64
+import html
+import re
 
 import pandas as pd
 import plotly.express as px
@@ -605,6 +607,75 @@ def remove_cookie_value(
     cookies.save()
 
 
+def resolve_user_display_name(user: Any, email: str = "") -> str:
+    """Return a friendly display name from Supabase metadata or the email."""
+    metadata = (
+        getattr(user, "user_metadata", None)
+        or getattr(user, "raw_user_meta_data", None)
+        or {}
+    )
+
+    if isinstance(metadata, dict):
+        for key in ("display_name", "full_name", "name", "first_name"):
+            value = str(metadata.get(key, "") or "").strip()
+            if value:
+                return value
+
+    local_part = (email or "").split("@", 1)[0]
+    first_piece = re.split(r"[._\-+]+", local_part)[0].strip()
+    return first_piece.title() if first_piece else "Citizen"
+
+
+def set_authenticated_user(user: Any, fallback_email: str = "") -> None:
+    """Store the signed-in user's ID, email, and display name."""
+    user_email = getattr(user, "email", None) or fallback_email or ""
+    st.session_state.user_id = str(user.id)
+    st.session_state.user_email = user_email or "Signed in"
+    st.session_state.user_display_name = resolve_user_display_name(
+        user,
+        user_email,
+    )
+
+
+def profile_settings(client: Client) -> None:
+    """Let the current user update the name shown in the app."""
+    current_name = st.session_state.get("user_display_name", "Citizen")
+
+    with st.form("profile_settings_form"):
+        new_name = st.text_input(
+            "Display name",
+            value=current_name,
+            help="This name appears in your dashboard greeting.",
+        )
+        submitted = st.form_submit_button(
+            "Save display name",
+            width="stretch",
+        )
+
+    if submitted:
+        cleaned_name = new_name.strip()
+        if not cleaned_name:
+            st.error("Enter a display name.")
+            return
+
+        try:
+            response = client.auth.update_user(
+                {"data": {"display_name": cleaned_name}}
+            )
+            updated_user = getattr(response, "user", None)
+            if updated_user is not None:
+                set_authenticated_user(
+                    updated_user,
+                    st.session_state.get("user_email", ""),
+                )
+            else:
+                st.session_state.user_display_name = cleaned_name
+            st.success("Display name updated.")
+            st.rerun()
+        except Exception as exc:
+            st.error(f"The display name could not be updated: {exc}")
+
+
 def remember_authenticated_session(
     response: Any,
     email: str,
@@ -652,8 +723,7 @@ def restore_login_from_cookie(
             COOKIE_REMEMBERED_EMAIL,
             "",
         )
-        st.session_state.user_id = str(user.id)
-        st.session_state.user_email = user_email or "Signed in"
+        set_authenticated_user(user, user_email)
 
         new_refresh_token = (
             getattr(session, "refresh_token", None) if session else None
@@ -668,7 +738,12 @@ def restore_login_from_cookie(
 
 
 def clear_login_state() -> None:
-    for key in ("user_id", "user_email", "supabase_client"):
+    for key in (
+        "user_id",
+        "user_email",
+        "user_display_name",
+        "supabase_client",
+    ):
         st.session_state.pop(key, None)
 
 
@@ -725,8 +800,7 @@ def login_screen(
                     st.error("The sign-in response did not include a user.")
                 else:
                     user_email = response.user.email or email.strip()
-                    st.session_state.user_id = str(response.user.id)
-                    st.session_state.user_email = user_email
+                    set_authenticated_user(response.user, user_email)
                     remember_authenticated_session(
                         response,
                         user_email,
@@ -743,6 +817,11 @@ def login_screen(
             "computer, phone, and tablet."
         )
         with st.form("signup_form"):
+            new_display_name = st.text_input(
+                "Display name",
+                key="signup_display_name",
+                placeholder="How your name should appear",
+            )
             new_email = st.text_input("Email", key="signup_email")
             new_password = st.text_input(
                 "Password",
@@ -757,8 +836,20 @@ def login_screen(
 
         if submitted:
             try:
+                cleaned_display_name = (
+                    new_display_name.strip()
+                    or resolve_user_display_name(None, new_email.strip())
+                )
                 response = client.auth.sign_up(
-                    {"email": new_email.strip(), "password": new_password}
+                    {
+                        "email": new_email.strip(),
+                        "password": new_password,
+                        "options": {
+                            "data": {
+                                "display_name": cleaned_display_name,
+                            }
+                        },
+                    }
                 )
                 if response.user is None:
                     st.error("The account could not be created.")
@@ -769,8 +860,7 @@ def login_screen(
                     )
                 else:
                     user_email = response.user.email or new_email.strip()
-                    st.session_state.user_id = str(response.user.id)
-                    st.session_state.user_email = user_email
+                    set_authenticated_user(response.user, user_email)
                     remember_authenticated_session(
                         response,
                         user_email,
@@ -1019,13 +1109,16 @@ def dashboard_hero() -> None:
         f'<div class="time-zone-row"><span>{label}</span><strong>{now_utc.astimezone(ZoneInfo(zone)).strftime("%I:%M %p")}</strong></div>'
         for label, zone in US_TIMEZONES.items()
     )
+    display_name = html.escape(
+        st.session_state.get("user_display_name", "Citizen")
+    )
     st.markdown(
         f"""
         <div class="dashboard-hero-grid">
             <section class="sc-banner" style="background-image:url('{background}');" aria-label="Operations Dashboard">
                 <div class="sc-banner-content">
                     <div class="sc-kicker">Live Command Overview</div>
-                    <div class="sc-banner-title">Welcome back, Adrian</div>
+                    <div class="sc-banner-title">Welcome back, {display_name}</div>
                     <p class="sc-banner-subtitle">Track, analyze, and optimize contracts, mining, trade, and saved operations across the Verse.</p>
                 </div>
             </section>
@@ -1250,8 +1343,12 @@ def dashboard_page() -> None:
                 "contract_count": "Contracts",
             },
         )
+        contract_type_colors = [
+            "#20A36A" if value >= 0 else "#E5484D"
+            for value in contract_type_data["net_payout"]
+        ]
         contract_type_figure.update_traces(
-            marker_color="#22c5e5",
+            marker_color=contract_type_colors,
             textposition="inside",
             insidetextanchor="middle",
             textfont={"color": "#ffffff", "size": 13},
@@ -1262,8 +1359,26 @@ def dashboard_page() -> None:
                 "Contracts: %{customdata[1]}<extra></extra>"
             ),
         )
-        contract_type_figure.update_xaxes(rangemode="tozero")
+        contract_type_figure.update_xaxes(
+            rangemode="tozero",
+            title_text="Payout magnitude in aUEC",
+        )
         style_plotly_figure(contract_type_figure, height=430)
+        contract_type_figure.update_layout(
+            margin={"l": 38, "r": 28, "t": 54, "b": 42},
+            showlegend=False,
+        )
+        contract_type_figure.add_annotation(
+            x=0,
+            y=1.08,
+            xref="paper",
+            yref="paper",
+            text="<span style='color:#20A36A'>■ Positive</span>&nbsp;&nbsp;&nbsp;"
+                 "<span style='color:#E5484D'>■ Negative</span>",
+            showarrow=False,
+            xanchor="left",
+            font={"size": 12},
+        )
 
     if ores.empty:
         ore_value_figure = empty_dashboard_figure(
@@ -1323,8 +1438,25 @@ def dashboard_page() -> None:
                 "Entries: %{customdata[1]}<extra></extra>"
             ),
         )
-        ore_value_figure.update_yaxes(rangemode="tozero")
+        ore_value_figure.update_yaxes(
+            rangemode="tozero",
+            title_text="Value in aUEC",
+        )
+        ore_value_figure.update_xaxes(title_text="Ore or mineral")
         style_plotly_figure(ore_value_figure, height=430)
+        ore_value_figure.update_layout(
+            margin={"l": 38, "r": 24, "t": 32, "b": 88},
+            legend={
+                "orientation": "h",
+                "yanchor": "top",
+                "y": -0.20,
+                "xanchor": "center",
+                "x": 0.5,
+                "title_text": "",
+            },
+            bargap=0.18,
+            bargroupgap=0.06,
+        )
 
         ore_mix_data = (
             ores.groupby("action", as_index=False)
@@ -2363,6 +2495,9 @@ def main() -> None:
             st.image(str(logo_path), width="stretch")
         st.markdown("### Star Citizen Tracker")
         st.caption("Private operations console")
+        st.markdown(
+            f"**{html.escape(st.session_state.get('user_display_name', 'Citizen'))}**"
+        )
         st.caption(st.session_state.get("user_email", "Signed in"))
 
         navigation_pages = [
@@ -2388,6 +2523,10 @@ def main() -> None:
                 st.rerun()
 
         with st.expander("⚙ Settings", expanded=False):
+            st.markdown("#### Profile")
+            profile_settings(client)
+            st.divider()
+            st.markdown("#### Timezone")
             timezone_settings()
 
         st.divider()
