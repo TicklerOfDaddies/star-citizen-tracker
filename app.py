@@ -457,7 +457,7 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
         plot_bgcolor="#ffffff",
         font={"color": "#243a55", "family": "Inter, sans-serif"},
         colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 24, "r": 18, "t": 20, "b": 26},
+        margin={"l": 30, "r": 26, "t": 42, "b": 30},
         legend_title_text="",
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
         hoverlabel={"bgcolor": "#ffffff", "bordercolor": "#87beff", "font_color": "#10233f"},
@@ -1191,20 +1191,34 @@ def dashboard_page() -> None:
             )
             .sort_values("Day")
         )
+        contract_time_data["plot_value"] = contract_time_data["net_payout"].abs()
+        contract_time_data["value_label"] = contract_time_data["net_payout"].map(
+            lambda value: f"{value:,.0f} aUEC"
+        )
+
         contract_time_figure = px.area(
             contract_time_data,
             x="Day",
-            y="net_payout",
+            y="plot_value",
             markers=True,
-            hover_data=["contract_count"],
+            custom_data=["net_payout", "contract_count", "value_label"],
             labels={
-                "net_payout": "Net payout in aUEC",
+                "plot_value": "Payout magnitude in aUEC",
                 "contract_count": "Contracts",
             },
         )
         contract_time_figure.update_traces(
             line={"width": 2.5},
             fillcolor="rgba(42,224,199,0.12)",
+            mode="lines+markers+text",
+            text=contract_time_data["value_label"],
+            textposition="top center",
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{x|%b %d, %Y}</b><br>"
+                "Net payout: %{customdata[0]:,.0f} aUEC<br>"
+                "Contracts: %{customdata[1]}<extra></extra>"
+            ),
         )
         contract_time_figure.update_yaxes(rangemode="tozero")
         style_plotly_figure(contract_time_figure, height=430)
@@ -1218,19 +1232,37 @@ def dashboard_page() -> None:
             .sort_values("net_payout", ascending=True)
             .tail(8)
         )
+        contract_type_data["plot_value"] = contract_type_data["net_payout"].abs()
+        contract_type_data["value_label"] = contract_type_data["net_payout"].map(
+            lambda value: f"{value:,.0f} aUEC"
+        )
+
         contract_type_figure = px.bar(
             contract_type_data,
-            x="net_payout",
+            x="plot_value",
             y="contract_type",
             orientation="h",
-            hover_data=["contract_count"],
+            custom_data=["net_payout", "contract_count", "value_label"],
+            text="value_label",
             labels={
-                "net_payout": "Net payout in aUEC",
+                "plot_value": "Payout magnitude in aUEC",
                 "contract_type": "Contract type",
                 "contract_count": "Contracts",
             },
         )
-        contract_type_figure.update_traces(marker_color="#22c5e5")
+        contract_type_figure.update_traces(
+            marker_color="#22c5e5",
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont={"color": "#ffffff", "size": 13},
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{y}</b><br>"
+                "Net payout: %{customdata[0]:,.0f} aUEC<br>"
+                "Contracts: %{customdata[1]}<extra></extra>"
+            ),
+        )
+        contract_type_figure.update_xaxes(rangemode="tozero")
         style_plotly_figure(contract_type_figure, height=430)
 
     if ores.empty:
@@ -1259,19 +1291,37 @@ def dashboard_page() -> None:
         ore_value_data = ore_value_data[
             ore_value_data["ore_name"].isin(leading_ores)
         ]
+        ore_value_data["plot_value"] = ore_value_data["total_value"].abs()
+        ore_value_data["value_label"] = ore_value_data["total_value"].map(
+            lambda value: f"{value:,.0f}"
+        )
+
         ore_value_figure = px.bar(
             ore_value_data,
             x="ore_name",
-            y="total_value",
+            y="plot_value",
             color="action",
             barmode="group",
-            hover_data=["entry_count"],
+            custom_data=["total_value", "entry_count", "value_label"],
+            text="value_label",
             labels={
                 "ore_name": "Ore or mineral",
-                "total_value": "Value in aUEC",
+                "plot_value": "Value magnitude in aUEC",
                 "action": "Entry type",
                 "entry_count": "Entries",
             },
+        )
+        ore_value_figure.update_traces(
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont={"color": "#ffffff", "size": 12},
+            cliponaxis=False,
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Type: %{fullData.name}<br>"
+                "Recorded value: %{customdata[0]:,.0f} aUEC<br>"
+                "Entries: %{customdata[1]}<extra></extra>"
+            ),
         )
         ore_value_figure.update_yaxes(rangemode="tozero")
         style_plotly_figure(ore_value_figure, height=430)
@@ -1291,8 +1341,15 @@ def dashboard_page() -> None:
             hover_data=["entry_count"],
         )
         ore_mix_figure.update_traces(
-            textinfo="percent+label",
-            marker={"line": {"color": "#0b0e13", "width": 3}},
+            textinfo="label+percent+value",
+            texttemplate="%{label}<br>%{value:,.0f} aUEC<br>%{percent}",
+            textposition="inside",
+            hovertemplate=(
+                "<b>%{label}</b><br>"
+                "Value: %{value:,.0f} aUEC<br>"
+                "Share: %{percent}<extra></extra>"
+            ),
+            marker={"line": {"color": "#ffffff", "width": 3}},
         )
         style_plotly_figure(ore_mix_figure, height=430)
 
