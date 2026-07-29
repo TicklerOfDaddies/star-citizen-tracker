@@ -19,7 +19,6 @@ import requests
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 from supabase import Client, create_client
 from streamlit_cookies_manager_ext import EncryptedCookieManager
 from PIL import Image, ImageOps
@@ -49,6 +48,30 @@ SC_CRAFT_TOOLS_URL = "https://sc-craft.tools/"
 AVATAR_BUCKET = "avatars"
 AVATAR_SIZE = (512, 512)
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
+
+
+def selected_timezone() -> str:
+    """
+    Return a valid display timezone and repair missing or invalid session state.
+
+    Profile metadata may set this value later. Until then, the app safely uses
+    the configured Central Time default instead of raising a NameError.
+    """
+    candidate = str(
+        st.session_state.get(
+            "selected_timezone",
+            DEFAULT_TIMEZONE,
+        )
+        or DEFAULT_TIMEZONE
+    ).strip()
+
+    try:
+        ZoneInfo(candidate)
+    except Exception:
+        candidate = DEFAULT_TIMEZONE
+
+    st.session_state["selected_timezone"] = candidate
+    return candidate
 
 CONTRACT_TYPES = [
     "Appointment / Mission Giver",
@@ -3054,6 +3077,22 @@ def apply_custom_theme() -> None:
                 height: 3.2rem !important;
             }
         }
+
+        /* ================================================================
+           Authentication and session-restoration toolbar clearance
+           ================================================================ */
+        .auth-screen-top-spacer {
+            display: block;
+            width: 100%;
+            height: 3.35rem;
+            pointer-events: none;
+        }
+
+        @media (max-width: 760px) {
+            .auth-screen-top-spacer {
+                height: 4.1rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -3256,6 +3295,14 @@ def get_supabase() -> Client:
     return st.session_state.supabase_client
 
 
+def auth_screen_top_spacer() -> None:
+    """Keep authentication content below Streamlit's fixed toolbar."""
+    st.markdown(
+        '<div class="auth-screen-top-spacer" aria-hidden="true"></div>',
+        unsafe_allow_html=True,
+    )
+
+
 def get_cookie_manager() -> EncryptedCookieManager | None:
     """Load encrypted browser cookies before authentication is evaluated."""
     try:
@@ -3279,15 +3326,20 @@ def get_cookie_manager() -> EncryptedCookieManager | None:
 
         # The cookie component is asynchronous. Stop before rendering the
         # login page so a refresh is not mistaken for a signed-out session.
-        st.markdown("### Restoring your secure session")
-        st.caption(
-            "The app is loading the encrypted browser cookie used to keep "
-            "you signed in after a refresh."
-        )
-        st.info("This normally completes automatically in a moment.")
-        if st.button("Continue to sign in instead", width="stretch"):
-            st.session_state.skip_cookie_restore = True
-            st.rerun()
+        auth_screen_top_spacer()
+        with st.container(border=True):
+            st.markdown("### Restoring your secure session")
+            st.caption(
+                "The app is loading the encrypted browser cookie used to keep "
+                "you signed in after a refresh."
+            )
+            st.info("This normally completes automatically in a moment.")
+            if st.button(
+                "Continue to sign in instead",
+                width="stretch",
+            ):
+                st.session_state.skip_cookie_restore = True
+                st.rerun()
         st.stop()
     except Exception as exc:
         st.session_state.pop("cookie_manager", None)
@@ -4159,6 +4211,7 @@ def password_update_screen(
     cookies: EncryptedCookieManager | None,
 ) -> None:
     """Let an authenticated recovery-session user choose a new password."""
+    auth_screen_top_spacer()
     page_banner(
         "hero_banner.jpg",
         "Choose a New Password",
@@ -4212,6 +4265,7 @@ def login_screen(
     client: Client,
     cookies: EncryptedCookieManager | None,
 ) -> None:
+    auth_screen_top_spacer()
     page_banner(
         "hero_banner.jpg",
         "Star Citizen Tracker",
@@ -5872,6 +5926,8 @@ def commodity_trade_tracker(
             ],
             columns=["Check", "Result"],
         )
+        health["Check"] = health["Check"].astype(str)
+        health["Result"] = health["Result"].astype(str)
         st.dataframe(
             health,
             width="stretch",
@@ -11520,10 +11576,9 @@ def blueprints_page() -> None:
         "contractors, and systems. If embedded viewing is blocked by the provider, "
         "use the external database button above."
     )
-    components.iframe(
+    st.iframe(
         SC_CRAFT_TOOLS_URL,
         height=920,
-        scrolling=True,
     )
 
     render_rights_notice()
