@@ -5379,34 +5379,169 @@ def records_page() -> None:
             )
 
 
+def display_commodity_table(
+    commodity_trades: pd.DataFrame,
+) -> None:
+    """Display the user's commodity purchases, sales, and cargo losses."""
+    if commodity_trades.empty:
+        st.info("No commodity records have been saved yet.")
+        return
+
+    display = commodity_trades.rename(
+        columns={
+            "id": "ID",
+            "date_saved": "Date",
+            "commodity_name": "Commodity",
+            "action": "Activity",
+            "quantity_scu": "Quantity (SCU)",
+            "unit_price": "Unit Price",
+            "fees": "Fees",
+            "total_value": "Cargo Value",
+            "origin": "Origin",
+            "destination": "Destination",
+            "shipment_reference": "Shipment Reference",
+            "notes": "Notes",
+        }
+    ).copy()
+
+    display_columns = [
+        "ID",
+        "Date",
+        "Commodity",
+        "Activity",
+        "Quantity (SCU)",
+        "Unit Price",
+        "Cargo Value",
+        "Fees",
+        "Origin",
+        "Destination",
+        "Shipment Reference",
+        "Notes",
+    ]
+
+    st.dataframe(
+        display[
+            [
+                column
+                for column in display_columns
+                if column in display.columns
+            ]
+        ],
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "ID": st.column_config.NumberColumn(
+                "ID",
+                format="%d",
+                width="small",
+            ),
+            "Date": st.column_config.DatetimeColumn(
+                "Date",
+                format="YYYY-MM-DD hh:mm A",
+                width="medium",
+            ),
+            "Commodity": st.column_config.TextColumn(
+                "Commodity",
+                width="medium",
+            ),
+            "Activity": st.column_config.TextColumn(
+                "Activity",
+                width="medium",
+            ),
+            "Quantity (SCU)": st.column_config.NumberColumn(
+                "Quantity (SCU)",
+                format="%,.2f SCU",
+                width="small",
+            ),
+            "Unit Price": st.column_config.NumberColumn(
+                "Unit Price",
+                format="%,.0f aUEC/SCU",
+                width="small",
+            ),
+            "Cargo Value": st.column_config.NumberColumn(
+                "Cargo Value",
+                format="%,.0f aUEC",
+                width="small",
+            ),
+            "Fees": st.column_config.NumberColumn(
+                "Fees",
+                format="%,.0f aUEC",
+                width="small",
+            ),
+            "Origin": st.column_config.TextColumn(
+                "Origin",
+                width="large",
+            ),
+            "Destination": st.column_config.TextColumn(
+                "Destination",
+                width="large",
+            ),
+            "Shipment Reference": st.column_config.TextColumn(
+                "Shipment Reference",
+                width="medium",
+            ),
+            "Notes": st.column_config.TextColumn(
+                "Notes",
+                width="large",
+            ),
+        },
+    )
+
+
 def saved_records_page() -> None:
     page_banner(
         "records_banner.jpg",
         "Saved Records",
-        "Search, review, edit, and delete your complete contract and ore transaction history from one command page.",
+        (
+            "Search, review, edit, and delete your complete contract, ore, "
+            "and commodity transaction history from one command page."
+        ),
         "Records Archive",
     )
-    contracts, ores = load_data()
 
-    view_tab, manage_tab = st.tabs(["View Records", "Manage Records"])
+    contracts, ores = load_data()
+    commodity_trades = load_commodity_transactions()
+
+    view_tab, manage_tab = st.tabs(
+        ["View Records", "Manage Records"]
+    )
 
     with view_tab:
-        contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
+        contract_tab, ore_tab, commodity_tab = st.tabs(
+            ["Contracts", "Ore Ledger", "Commodities"]
+        )
+
         with contract_tab:
             display_contract_table(contracts)
+
         with ore_tab:
             display_ore_table(ores)
 
+        with commodity_tab:
+            display_commodity_table(commodity_trades)
+
     with manage_tab:
         st.markdown("### Edit or Delete Records")
-        st.caption("Select a saved contract or ore entry, update the values you need, or permanently remove duplicate and outdated entries.")
-        manage_records_section(contracts, ores)
+        st.caption(
+            "Select a saved contract, ore entry, or commodity transaction. "
+            "Update the values you need or permanently remove duplicate and "
+            "outdated entries."
+        )
+        manage_records_section(
+            contracts,
+            ores,
+            commodity_trades,
+        )
 
 
-def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
+def manage_records_section(
+    contracts: pd.DataFrame,
+    ores: pd.DataFrame,
+    commodity_trades: pd.DataFrame,
+) -> None:
     record_type = st.radio(
         "Record type",
-        ["Contract", "Ore Entry"],
+        ["Contract", "Ore Entry", "Commodity Entry"],
         horizontal=True,
         key="manage_record_type",
     )
@@ -5429,10 +5564,15 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             format_func=lambda value: contract_options[value],
             key="manage_contract_select",
         )
-        record = contracts.loc[contracts["id"] == selected_id].iloc[0]
+        record = contracts.loc[
+            contracts["id"] == selected_id
+        ].iloc[0]
 
         with st.form("edit_contract_form"):
-            name = st.text_input("Contract name", value=record["contract_name"])
+            name = st.text_input(
+                "Contract name",
+                value=record["contract_name"],
+            )
             type_value = st.text_input(
                 "Contract type",
                 value=record["contract_type"],
@@ -5477,9 +5617,14 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             )
 
         if update_submitted:
-            if not name.strip() or not type_value.strip() or payout <= 0:
+            if (
+                not name.strip()
+                or not type_value.strip()
+                or payout <= 0
+            ):
                 st.error(
-                    "Contract name, contract type, and a positive payout are required."
+                    "Contract name, contract type, and a positive payout "
+                    "are required."
                 )
             else:
                 net = payout - expenses
@@ -5496,11 +5641,17 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                     "notes": notes.strip(),
                 }
                 try:
-                    update_record("contracts", selected_id, payload)
+                    update_record(
+                        "contracts",
+                        selected_id,
+                        payload,
+                    )
                     st.success("Contract updated.")
                     st.rerun()
                 except Exception as exc:
-                    st.error(f"The contract could not be updated: {exc}")
+                    st.error(
+                        f"The contract could not be updated: {exc}"
+                    )
 
         confirm = st.checkbox(
             "I understand this permanently deletes the selected contract.",
@@ -5518,9 +5669,11 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 st.success("Contract deleted.")
                 st.rerun()
             except Exception as exc:
-                st.error(f"The contract could not be deleted: {exc}")
+                st.error(
+                    f"The contract could not be deleted: {exc}"
+                )
 
-    else:
+    elif record_type == "Ore Entry":
         if ores.empty:
             st.info("No ore entries are available to edit.")
             return
@@ -5540,21 +5693,33 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             format_func=lambda value: ore_options[value],
             key="manage_ore_select",
         )
-        record = ores.loc[ores["id"] == selected_id].iloc[0]
+        record = ores.loc[
+            ores["id"] == selected_id
+        ].iloc[0]
 
         with st.form("edit_ore_form"):
+            actions = ["Mined", "Bought", "Sold"]
+            current_action = str(record["action"])
+            if current_action not in actions:
+                actions.append(current_action)
+
             action = st.selectbox(
                 "Entry type",
-                ["Mined", "Bought", "Sold"],
-                index=["Mined", "Bought", "Sold"].index(record["action"]),
+                actions,
+                index=actions.index(current_action),
             )
-            ore_name = st.text_input("Ore or mineral", value=record["ore_name"])
+            ore_name = st.text_input(
+                "Ore or mineral",
+                value=record["ore_name"],
+            )
             edit_amount_col1, edit_amount_col2 = st.columns(2)
             with edit_amount_col1:
                 quantity_scu = st.number_input(
                     "Quantity (SCU)",
                     min_value=0.0,
-                    value=float(record.get("quantity_scu", 0) or 0),
+                    value=float(
+                        record.get("quantity_scu", 0) or 0
+                    ),
                     step=0.1,
                     format="%.2f",
                 )
@@ -5592,11 +5757,17 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                     "notes": notes.strip(),
                 }
                 try:
-                    update_record("ore_transactions", selected_id, payload)
+                    update_record(
+                        "ore_transactions",
+                        selected_id,
+                        payload,
+                    )
                     st.success("Ore entry updated.")
                     st.rerun()
                 except Exception as exc:
-                    st.error(f"The ore entry could not be updated: {exc}")
+                    st.error(
+                        f"The ore entry could not be updated: {exc}"
+                    )
 
         confirm = st.checkbox(
             "I understand this permanently deletes the selected ore entry.",
@@ -5610,12 +5781,206 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             key="delete_ore_button",
         ):
             try:
-                delete_record("ore_transactions", selected_id)
+                delete_record(
+                    "ore_transactions",
+                    selected_id,
+                )
                 st.success("Ore entry deleted.")
                 st.rerun()
             except Exception as exc:
-                st.error(f"The ore entry could not be deleted: {exc}")
+                st.error(
+                    f"The ore entry could not be deleted: {exc}"
+                )
 
+    else:
+        if commodity_trades.empty:
+            st.info(
+                "No commodity entries are available to edit."
+            )
+            return
+
+        commodity_options = {
+            int(row["id"]): (
+                f'ID {int(row["id"])} | '
+                f'{row["action"]} | '
+                f'{row["commodity_name"]} | '
+                f'{float(row.get("quantity_scu", 0) or 0):,.2f} SCU | '
+                f'{format_money(row.get("total_value", 0))}'
+            )
+            for _, row in commodity_trades.iterrows()
+        }
+
+        selected_id = st.selectbox(
+            "Select commodity entry",
+            options=list(commodity_options),
+            format_func=lambda value: commodity_options[value],
+            key="manage_commodity_select",
+        )
+        record = commodity_trades.loc[
+            commodity_trades["id"] == selected_id
+        ].iloc[0]
+
+        with st.form("edit_commodity_form"):
+            actions = [
+                "Bought",
+                "Sold",
+                "Lost / Destroyed",
+            ]
+            current_action = str(
+                record.get("action", "Bought")
+            )
+            if current_action not in actions:
+                actions.append(current_action)
+
+            activity = st.selectbox(
+                "Activity",
+                actions,
+                index=actions.index(current_action),
+            )
+            commodity_name = st.text_input(
+                "Commodity",
+                value=str(
+                    record.get("commodity_name", "") or ""
+                ),
+            )
+
+            amount_col1, amount_col2, amount_col3 = (
+                st.columns(3)
+            )
+            with amount_col1:
+                quantity_scu = st.number_input(
+                    "Quantity (SCU)",
+                    min_value=0.01,
+                    value=max(
+                        float(
+                            record.get("quantity_scu", 0)
+                            or 0
+                        ),
+                        0.01,
+                    ),
+                    step=1.0,
+                    format="%.2f",
+                )
+            with amount_col2:
+                unit_price = st.number_input(
+                    "Unit price (aUEC/SCU)",
+                    min_value=0.0,
+                    value=float(
+                        record.get("unit_price", 0) or 0
+                    ),
+                    step=100.0,
+                )
+            with amount_col3:
+                fees = st.number_input(
+                    "Fees and operating costs",
+                    min_value=0.0,
+                    value=float(
+                        record.get("fees", 0) or 0
+                    ),
+                    step=100.0,
+                )
+
+            location_col1, location_col2 = st.columns(2)
+            with location_col1:
+                origin = st.text_input(
+                    "Origin",
+                    value=str(
+                        record.get("origin", "") or ""
+                    ),
+                )
+            with location_col2:
+                destination = st.text_input(
+                    "Destination",
+                    value=str(
+                        record.get("destination", "") or ""
+                    ),
+                )
+
+            shipment_reference = st.text_input(
+                "Shipment reference",
+                value=str(
+                    record.get(
+                        "shipment_reference",
+                        "",
+                    )
+                    or ""
+                ),
+            )
+            notes = st.text_area(
+                "Notes",
+                value=str(record.get("notes", "") or ""),
+            )
+            update_submitted = st.form_submit_button(
+                "Update Commodity Entry",
+                width="stretch",
+            )
+
+        if update_submitted:
+            if not commodity_name.strip():
+                st.error("Commodity name is required.")
+            else:
+                total_value = (
+                    float(quantity_scu)
+                    * float(unit_price)
+                )
+                payload = {
+                    "commodity_name": commodity_name.strip(),
+                    "action": activity,
+                    "quantity_scu": float(quantity_scu),
+                    "unit_price": float(unit_price),
+                    "fees": float(fees),
+                    "total_value": float(total_value),
+                    "origin": origin.strip(),
+                    "destination": destination.strip(),
+                    "shipment_reference": (
+                        shipment_reference.strip()
+                    ),
+                    "notes": notes.strip(),
+                }
+                try:
+                    update_record(
+                        "commodity_transactions",
+                        selected_id,
+                        payload,
+                    )
+                    st.success(
+                        "Commodity entry updated."
+                    )
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        "The commodity entry could not be "
+                        f"updated: {exc}"
+                    )
+
+        confirm = st.checkbox(
+            (
+                "I understand this permanently deletes "
+                "the selected commodity entry."
+            ),
+            key="delete_commodity_record_confirm",
+        )
+        if st.button(
+            "Delete Commodity Entry",
+            type="primary",
+            disabled=not confirm,
+            width="stretch",
+            key="delete_commodity_record_button",
+        ):
+            try:
+                delete_record(
+                    "commodity_transactions",
+                    selected_id,
+                )
+                st.success(
+                    "Commodity entry deleted."
+                )
+                st.rerun()
+            except Exception as exc:
+                st.error(
+                    "The commodity entry could not be "
+                    f"deleted: {exc}"
+                )
 
 def render_dashboard_metric_cards(
     cards: list[dict[str, str]],
