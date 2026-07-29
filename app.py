@@ -351,21 +351,77 @@ def apply_custom_theme() -> None:
             margin-top: auto;
         }
 
-        .stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button, .stLinkButton > a {
-            border:1px solid #85bfff; border-radius:10px; background:#f2f8ff; color:#1268c5 !important;
-            font-weight:760; min-height:2.75rem; box-shadow:none;
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            border: 1px solid #0a6d89;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
+            color: #ffffff !important;
+            font-weight: 760;
+            min-height: 2.75rem;
+            box-shadow: 0 7px 16px rgba(7,95,121,.18);
         }
-        .stButton > button:hover, .stDownloadButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover, .stLinkButton > a:hover {
-            border-color:#1378e5; background:#e4f1ff; color:#0c57aa !important;
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            border-color: #064f66;
+            background: linear-gradient(135deg, #096783 0%, #054e64 100%);
+            color: #ffffff !important;
+            box-shadow: 0 9px 20px rgba(7,95,121,.24);
+        }
+
+        .stButton > button:disabled,
+        .stDownloadButton > button:disabled,
+        [data-testid="stFormSubmitButton"] > button:disabled {
+            background: #cbd7df !important;
+            border-color: #c1ccd4 !important;
+            color: #6e7e8b !important;
+            box-shadow: none !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button {
             width:100%; height:3.35rem; min-height:3.35rem; justify-content:flex-start;
             padding:.72rem .9rem; margin:.14rem 0; border-radius:11px; font-size:.9rem; text-align:left;
         }
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] { background:#fff; border:1px solid var(--border); color:#21354f !important; }
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover { background:#f2f8ff; border-color:#9ccaff; }
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"] { background:#e9f4ff; border:1px solid #87beff; color:#0f65c1 !important; box-shadow:inset 3px 0 0 var(--accent); }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
+            background: #eef8fb;
+            border: 1px solid #b5d8e4;
+            color: #14556c !important;
+            box-shadow: none;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
+            background: #dff1f6;
+            border-color: #7cbacc;
+            color: #0b4a60 !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+            background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
+            border: 1px solid #075f79;
+            color: #ffffff !important;
+            box-shadow: inset 4px 0 0 #55d7f1, 0 7px 16px rgba(7,95,121,.18);
+        }
+
+        .rights-notice {
+            margin-top: 1rem;
+            padding: .9rem 1rem;
+            border: 1px solid #cbdde5;
+            border-radius: 12px;
+            background: #f5fafc;
+            color: #52677a;
+            font-size: .76rem;
+            line-height: 1.55;
+        }
+
+        .rights-notice strong {
+            color: #123850;
+        }
 
         div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input, .stTextArea textarea, .stDateInput input {
             background:#fff !important; border-color:#cfdbe8 !important; color:#142941 !important; border-radius:9px !important;
@@ -454,6 +510,27 @@ def page_banner(
                 </div>
             </div>
         </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_rights_notice() -> None:
+    """Display a prominent fan-project and third-party rights notice."""
+    st.markdown(
+        """
+        <div class="rights-notice">
+            <strong>Unofficial fan-made project.</strong>
+            This application is not affiliated with, sponsored by, or endorsed by
+            Cloud Imperium Games, Roberts Space Industries, or any third-party data
+            provider. Star Citizen, Squadron 42, related names, logos, game content,
+            and assets remain the property of their respective rights holders.
+            Third-party websites and data remain subject to their owners' terms,
+            privacy policies, copyrights, and availability. Embedded content and
+            external links are provided for convenience and informational use only.
+            No ownership of third-party content is claimed, and accuracy or continued
+            availability is not guaranteed.
+        </div>
         """,
         unsafe_allow_html=True,
     )
@@ -1097,6 +1174,186 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
     ).fillna(0.0)
 
     return contracts, ores
+
+
+def empty_blueprint_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=[
+            "id",
+            "user_id",
+            "date_saved",
+            "blueprint_name",
+            "blueprint_category",
+            "blueprint_status",
+            "source_location",
+            "copies_owned",
+            "target_builds",
+            "materials",
+            "notes",
+        ]
+    )
+
+
+def load_blueprints() -> pd.DataFrame:
+    """Load the signed-in user's blueprint tracker records."""
+    try:
+        blueprints = fetch_table("blueprint_tracker")
+        st.session_state.blueprint_tracker_ready = True
+        st.session_state.pop("blueprint_tracker_error", None)
+    except Exception as exc:
+        st.session_state.blueprint_tracker_ready = False
+        st.session_state.blueprint_tracker_error = str(exc)
+        return empty_blueprint_frame()
+
+    if not blueprints.empty and "date_saved" in blueprints.columns:
+        blueprints["date_saved"] = pd.to_datetime(
+            blueprints["date_saved"],
+            errors="coerce",
+            utc=True,
+        ).dt.tz_convert(APP_TIMEZONE)
+
+    return blueprints
+
+
+def normalize_blueprint_materials(value: Any) -> dict[str, float]:
+    """Return a clean resource-to-required-SCU mapping."""
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            return {}
+
+    if not isinstance(value, dict):
+        return {}
+
+    cleaned: dict[str, float] = {}
+    for resource, quantity in value.items():
+        resource_name = str(resource).strip()
+        if not resource_name:
+            continue
+        try:
+            numeric_quantity = float(quantity)
+        except (TypeError, ValueError):
+            continue
+        if numeric_quantity > 0:
+            cleaned[resource_name] = numeric_quantity
+    return cleaned
+
+
+def insert_blueprint(payload: dict[str, Any]) -> None:
+    get_supabase().table("blueprint_tracker").insert(payload).execute()
+
+
+def build_blueprint_readiness(
+    blueprints: pd.DataFrame,
+    ore_inventory: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compare tracked blueprint requirements with current on-hand ore."""
+    blueprint_columns = [
+        "Blueprint",
+        "Category",
+        "Status",
+        "Copies Owned",
+        "Planned Builds",
+        "Required Materials",
+        "Readiness",
+        "Missing Materials",
+    ]
+    material_columns = [
+        "Material",
+        "Required (SCU)",
+        "On Hand (SCU)",
+        "Shortage (SCU)",
+        "Surplus (SCU)",
+        "Coverage",
+    ]
+
+    if blueprints.empty:
+        return (
+            pd.DataFrame(columns=blueprint_columns),
+            pd.DataFrame(columns=material_columns),
+        )
+
+    inventory_map: dict[str, float] = {}
+    if not ore_inventory.empty:
+        inventory_map = {
+            str(row["Ore / Mineral"]): float(row["On Hand (SCU)"])
+            for _, row in ore_inventory.iterrows()
+        }
+
+    combined_required: dict[str, float] = {}
+    readiness_rows: list[dict[str, Any]] = []
+
+    for _, row in blueprints.iterrows():
+        materials = normalize_blueprint_materials(row.get("materials", {}))
+        try:
+            target_builds = max(1, int(row.get("target_builds", 1) or 1))
+        except (TypeError, ValueError):
+            target_builds = 1
+
+        total_requirements = {
+            material: quantity * target_builds
+            for material, quantity in materials.items()
+        }
+
+        for material, quantity in total_requirements.items():
+            combined_required[material] = (
+                combined_required.get(material, 0.0) + quantity
+            )
+
+        missing: list[str] = []
+        coverage_values: list[float] = []
+        for material, required in total_requirements.items():
+            on_hand = inventory_map.get(material, 0.0)
+            shortage = max(required - on_hand, 0.0)
+            if shortage > 0:
+                missing.append(f"{material}: {shortage:,.2f} SCU")
+            coverage_values.append(
+                min(on_hand / required, 1.0) if required > 0 else 1.0
+            )
+
+        readiness_percent = (
+            min(coverage_values) * 100 if coverage_values else 100.0
+        )
+        requirements_text = ", ".join(
+            f"{material}: {quantity:,.2f} SCU"
+            for material, quantity in total_requirements.items()
+        ) or "No materials entered"
+
+        readiness_rows.append(
+            {
+                "Blueprint": row.get("blueprint_name", ""),
+                "Category": row.get("blueprint_category", ""),
+                "Status": row.get("blueprint_status", "Owned"),
+                "Copies Owned": int(row.get("copies_owned", 1) or 1),
+                "Planned Builds": target_builds,
+                "Required Materials": requirements_text,
+                "Readiness": readiness_percent,
+                "Missing Materials": "; ".join(missing) or "Ready",
+            }
+        )
+
+    material_rows: list[dict[str, Any]] = []
+    for material, required in sorted(combined_required.items()):
+        on_hand = inventory_map.get(material, 0.0)
+        shortage = max(required - on_hand, 0.0)
+        surplus = max(on_hand - required, 0.0)
+        coverage = min(on_hand / required, 1.0) * 100 if required > 0 else 100.0
+        material_rows.append(
+            {
+                "Material": material,
+                "Required (SCU)": required,
+                "On Hand (SCU)": on_hand,
+                "Shortage (SCU)": shortage,
+                "Surplus (SCU)": surplus,
+                "Coverage": coverage,
+            }
+        )
+
+    return (
+        pd.DataFrame(readiness_rows, columns=blueprint_columns),
+        pd.DataFrame(material_rows, columns=material_columns),
+    )
 
 
 def format_money(value: float | int) -> str:
@@ -3205,6 +3462,62 @@ def load_mining_locations() -> pd.DataFrame:
         return load_mining_locations_local()
 
 
+def mining_environment_tags(row: pd.Series) -> str:
+    """Classify a mining row into broad searchable environment groups."""
+    site_type = str(row.get("Site Type", "") or "").casefold()
+    location = str(row.get("Location", "") or "").casefold()
+    combined = f"{site_type} {location}"
+
+    tags: list[str] = []
+
+    if any(
+        token in combined
+        for token in (
+            "asteroid",
+            "orbit",
+            "lagrange",
+            "halo",
+            "belt",
+            "ring",
+            "cluster",
+            "space",
+        )
+    ):
+        tags.append("Space / Asteroid")
+
+    if "planet" in combined:
+        tags.append("Planet")
+
+    if "moon" in combined:
+        tags.append("Moon")
+
+    if "cave" in combined:
+        tags.append("Cave")
+
+    if "surface" in combined:
+        tags.append("Surface")
+
+    if any(
+        token in combined
+        for token in (
+            "point of interest",
+            "mining poi",
+            "outpost",
+            "facility",
+        )
+    ):
+        tags.append("Point of Interest")
+
+    if "system" in combined:
+        tags.append("System-wide")
+
+    if not tags:
+        tags.append("Other")
+
+    # Preserve order while removing duplicates.
+    return ", ".join(dict.fromkeys(tags))
+
+
 def mining_locations_page() -> None:
     page_banner(
         "ore_banner.jpg",
@@ -3225,6 +3538,15 @@ def mining_locations_page() -> None:
             st.rerun()
 
     locations = load_mining_locations()
+    if not locations.empty:
+        locations = locations.copy()
+        locations["Environment"] = locations.apply(
+            mining_environment_tags,
+            axis=1,
+        )
+    else:
+        locations["Environment"] = pd.Series(dtype="object")
+
     uex_status = st.session_state.get("uex_mining_status", {})
 
     with control_col2:
@@ -3250,7 +3572,7 @@ def mining_locations_page() -> None:
         key="mining_location_search",
     )
 
-    filter_col1, filter_col2, filter_col3 = st.columns(3)
+    filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
 
     with filter_col1:
         category_choices = sorted(locations["Category"].dropna().unique().tolist())
@@ -3271,6 +3593,25 @@ def mining_locations_page() -> None:
         )
 
     with filter_col3:
+        environment_choices = [
+            "Space / Asteroid",
+            "Planet",
+            "Moon",
+            "Cave",
+            "Surface",
+            "Point of Interest",
+            "System-wide",
+            "Other",
+        ]
+        selected_environments = st.multiselect(
+            "Environment",
+            environment_choices,
+            default=environment_choices,
+            key="mining_environment_filter",
+            help="Filter locations such as space, asteroid fields, planets, moons, caves, and surfaces.",
+        )
+
+    with filter_col4:
         resource_choices = sorted(locations["Resource"].dropna().unique().tolist())
         selected_resources = st.multiselect(
             "Specific resources",
@@ -3288,6 +3629,24 @@ def mining_locations_page() -> None:
 
     if selected_systems:
         filtered = filtered[filtered["System"].isin(selected_systems)]
+    else:
+        filtered = filtered.iloc[0:0]
+
+    if selected_environments:
+        selected_environment_set = set(selected_environments)
+        filtered = filtered[
+            filtered["Environment"].apply(
+                lambda value: bool(
+                    selected_environment_set.intersection(
+                        {
+                            item.strip()
+                            for item in str(value).split(",")
+                            if item.strip()
+                        }
+                    )
+                )
+            )
+        ]
     else:
         filtered = filtered.iloc[0:0]
 
@@ -3327,6 +3686,7 @@ def mining_locations_page() -> None:
         "Resource",
         "Category",
         "System",
+        "Environment",
         "Location",
         "Site Type",
         "Spawn Rate",
@@ -3347,6 +3707,7 @@ def mining_locations_page() -> None:
                 "Resource": st.column_config.TextColumn("Resource", width="medium"),
                 "Category": st.column_config.TextColumn("Type", width="small"),
                 "System": st.column_config.TextColumn("System", width="small"),
+                "Environment": st.column_config.TextColumn("Environment", width="medium"),
                 "Location": st.column_config.TextColumn("Location", width="large"),
                 "Site Type": st.column_config.TextColumn("Spawn Area", width="medium"),
                 "Spawn Rate": st.column_config.TextColumn("Spawn Rate", width="medium"),
@@ -3381,15 +3742,16 @@ def blueprints_page() -> None:
     page_banner(
         "contracts_banner.jpg",
         "Crafting Blueprints",
-        "Browse the live community blueprint database, review required ingredients, and look up where the required ores and gems can be found.",
+        "Browse the live community blueprint database and track the blueprints and required materials in your own collection.",
         "Crafting Intelligence",
     )
 
     st.info(
-        "The complete blueprint catalog is provided live by SC Craft Tools, "
-        "which maintains more than 1,000 game-file-extracted recipes and updates "
-        "its database as patches change."
+        "The live catalog below is supplied by SC Craft Tools. Use it to identify "
+        "a blueprint and its recipe, then record the blueprint and material quantities "
+        "in your personal tracker."
     )
+
     link_col1, link_col2 = st.columns([1, 1])
     with link_col1:
         st.link_button(
@@ -3406,9 +3768,9 @@ def blueprints_page() -> None:
 
     st.markdown("### Live Blueprint Database")
     st.caption(
-        "Use the embedded database to search blueprints, ingredients, missions, "
-        "contractors, and systems. If the provider blocks embedded viewing, use "
-        "the Open Full Blueprint Database button above."
+        "Search the embedded database for blueprints, ingredients, missions, "
+        "contractors, and systems. If embedded viewing is blocked by the provider, "
+        "use the external database button above."
     )
     components.iframe(
         SC_CRAFT_TOOLS_URL,
@@ -3416,60 +3778,441 @@ def blueprints_page() -> None:
         scrolling=True,
     )
 
-    st.markdown("### Required Material Location Lookup")
+    render_rights_notice()
+
+    st.markdown("### My Blueprint Tracker")
     st.caption(
-        "After selecting a blueprint above, choose its required minerals here to "
-        "see the current UEX-backed mining locations and community spawn estimates."
+        "Record blueprints you own and their material requirements. The tracker "
+        "compares combined requirements against the ore and gems currently on hand "
+        "in your Ore Ledger."
     )
 
-    locations = load_mining_locations()
-    resources = sorted(locations["Resource"].dropna().unique().tolist())
-    selected_materials = st.multiselect(
-        "Blueprint materials",
-        resources,
-        key="blueprint_materials_filter",
-        placeholder="Select one or more required ores or gems",
-    )
-    system_options = sorted(locations["System"].dropna().unique().tolist())
-    selected_blueprint_systems = st.multiselect(
-        "Systems",
-        system_options,
-        default=system_options,
-        key="blueprint_system_filter",
-    )
+    blueprints = load_blueprints()
+    _, ores = load_data()
+    inventory = build_ore_inventory(ores)
 
-    material_locations = locations.copy()
-    if selected_materials:
-        material_locations = material_locations[
-            material_locations["Resource"].isin(selected_materials)
-        ]
-    else:
-        material_locations = material_locations.iloc[0:0]
-    if selected_blueprint_systems:
-        material_locations = material_locations[
-            material_locations["System"].isin(selected_blueprint_systems)
-        ]
-
-    if material_locations.empty:
-        st.info("Select blueprint materials to display their mining locations.")
-    else:
-        columns = [
-            "Resource",
-            "Category",
-            "System",
-            "Location",
-            "Site Type",
-            "Spawn Rate",
-            "Mining Method",
-            "UEX Updated",
-        ]
-        st.dataframe(
-            material_locations[columns].sort_values(
-                ["Resource", "System", "Location"]
-            ),
-            width="stretch",
-            hide_index=True,
+    if not st.session_state.get("blueprint_tracker_ready", False):
+        st.warning(
+            "The Blueprint Tracker database table is not installed yet. Run "
+            "`schema_migration_v3_blueprints.sql` in Supabase SQL Editor, then reload."
         )
+
+    add_tab, readiness_tab, manage_tab = st.tabs(
+        ["Add Blueprint", "Readiness & Materials", "Manage Blueprints"]
+    )
+
+    with add_tab:
+        st.markdown("#### Add an Owned Blueprint")
+        st.caption(
+            "Enter the material requirement for one craft. Planned builds multiply "
+            "those quantities in the combined readiness calculation."
+        )
+
+        resource_options = sorted(
+            set(
+                [
+                    resource
+                    for resource in ORE_TYPES
+                    if resource != "Other / Custom"
+                ]
+                + (
+                    inventory["Ore / Mineral"].dropna().astype(str).tolist()
+                    if not inventory.empty
+                    else []
+                )
+            )
+        )
+
+        blueprint_name = st.text_input(
+            "Blueprint name",
+            placeholder="Example: Purgatory Helmet",
+            key="new_blueprint_name",
+        )
+        field_col1, field_col2, field_col3 = st.columns(3)
+        with field_col1:
+            blueprint_category = st.selectbox(
+                "Category",
+                [
+                    "Armor",
+                    "Weapon",
+                    "Ship Component",
+                    "Vehicle Component",
+                    "Tool",
+                    "Consumable",
+                    "Other",
+                ],
+                key="new_blueprint_category",
+            )
+        with field_col2:
+            copies_owned = st.number_input(
+                "Copies owned",
+                min_value=1,
+                max_value=999,
+                value=1,
+                step=1,
+                key="new_blueprint_copies",
+            )
+        with field_col3:
+            target_builds = st.number_input(
+                "Planned builds",
+                min_value=1,
+                max_value=999,
+                value=1,
+                step=1,
+                key="new_blueprint_target_builds",
+            )
+
+        status_col, source_col = st.columns(2)
+        with status_col:
+            blueprint_status = st.selectbox(
+                "Tracker status",
+                ["Owned", "In Progress", "Ready to Craft", "Completed"],
+                key="new_blueprint_status",
+            )
+        with source_col:
+            source_location = st.text_input(
+                "Where it was acquired",
+                placeholder="Mission, contractor, location, or event",
+                key="new_blueprint_source",
+            )
+
+        selected_materials = st.multiselect(
+            "Required ores and gems",
+            resource_options,
+            key="new_blueprint_materials",
+            placeholder="Choose each material required by the recipe",
+        )
+
+        material_requirements: dict[str, float] = {}
+        if selected_materials:
+            st.markdown("##### Required amount per craft")
+            material_columns = st.columns(3)
+            for index, material in enumerate(selected_materials):
+                with material_columns[index % 3]:
+                    material_requirements[material] = st.number_input(
+                        material,
+                        min_value=0.01,
+                        value=1.0,
+                        step=0.25,
+                        format="%.2f",
+                        key=f"new_blueprint_material_{re.sub(r'[^a-z0-9]+', '_', material.lower())}",
+                        help="Enter the amount required for one planned craft.",
+                    )
+
+        blueprint_notes = st.text_area(
+            "Notes",
+            placeholder="Recipe notes, unlock details, or reminders",
+            key="new_blueprint_notes",
+        )
+
+        if st.button(
+            "Save Blueprint to Tracker",
+            key="save_blueprint_tracker",
+            width="stretch",
+        ):
+            if not blueprint_name.strip():
+                st.error("Enter a blueprint name.")
+            elif not material_requirements:
+                st.error("Select at least one required material.")
+            else:
+                payload = {
+                    "user_id": st.session_state.user_id,
+                    "blueprint_name": blueprint_name.strip(),
+                    "blueprint_category": blueprint_category,
+                    "blueprint_status": blueprint_status,
+                    "source_location": source_location.strip(),
+                    "copies_owned": int(copies_owned),
+                    "target_builds": int(target_builds),
+                    "materials": material_requirements,
+                    "notes": blueprint_notes.strip(),
+                }
+                try:
+                    insert_blueprint(payload)
+                    st.success("Blueprint saved to your tracker.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        "The blueprint could not be saved. Confirm that "
+                        "`schema_migration_v3_blueprints.sql` was run in Supabase. "
+                        f"Details: {exc}"
+                    )
+
+    with readiness_tab:
+        readiness, combined_materials = build_blueprint_readiness(
+            blueprints,
+            inventory,
+        )
+
+        if readiness.empty:
+            st.info("Add a blueprint to begin tracking material readiness.")
+        else:
+            ready_count = int(
+                (readiness["Readiness"] >= 100).sum()
+            )
+            required_total = (
+                float(combined_materials["Required (SCU)"].sum())
+                if not combined_materials.empty
+                else 0.0
+            )
+            on_hand_for_requirements = (
+                float(
+                    combined_materials[
+                        ["Required (SCU)", "On Hand (SCU)"]
+                    ].min(axis=1).sum()
+                )
+                if not combined_materials.empty
+                else 0.0
+            )
+            shortage_total = (
+                float(combined_materials["Shortage (SCU)"].sum())
+                if not combined_materials.empty
+                else 0.0
+            )
+
+            metric_1, metric_2, metric_3, metric_4 = st.columns(4)
+            metric_1.metric("Blueprints Tracked", f"{len(readiness):,}")
+            metric_2.metric("Ready to Craft", f"{ready_count:,}")
+            metric_3.metric(
+                "Required Materials",
+                f"{required_total:,.2f} SCU",
+            )
+            metric_4.metric(
+                "Material Shortage",
+                f"{shortage_total:,.2f} SCU",
+            )
+
+            st.markdown("#### Combined Material Readiness")
+            st.caption(
+                "This table combines the planned builds from every tracked blueprint "
+                "and compares the total requirement with your current on-hand inventory."
+            )
+            st.dataframe(
+                combined_materials,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Required (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "On Hand (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Shortage (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Surplus (SCU)": st.column_config.NumberColumn(
+                        format="%,.2f SCU"
+                    ),
+                    "Coverage": st.column_config.ProgressColumn(
+                        "Coverage",
+                        min_value=0,
+                        max_value=100,
+                        format="%.0f%%",
+                    ),
+                },
+            )
+
+            st.markdown("#### Blueprint Readiness")
+            st.caption(
+                "Individual readiness compares each recipe with current inventory. "
+                "Use the combined table above when multiple blueprints require the "
+                "same material."
+            )
+            st.dataframe(
+                readiness,
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Readiness": st.column_config.ProgressColumn(
+                        "Readiness",
+                        min_value=0,
+                        max_value=100,
+                        format="%.0f%%",
+                    ),
+                },
+            )
+
+            export_col1, export_col2 = st.columns(2)
+            with export_col1:
+                st.download_button(
+                    "Download Blueprint Readiness CSV",
+                    data=dataframe_csv_bytes(readiness),
+                    file_name="star_citizen_blueprint_readiness.csv",
+                    mime="text/csv",
+                    width="stretch",
+                )
+            with export_col2:
+                st.download_button(
+                    "Download Combined Materials CSV",
+                    data=dataframe_csv_bytes(combined_materials),
+                    file_name="star_citizen_blueprint_materials.csv",
+                    mime="text/csv",
+                    width="stretch",
+                )
+
+    with manage_tab:
+        if blueprints.empty:
+            st.info("No blueprints are available to manage.")
+        else:
+            blueprint_options = {
+                int(row["id"]): (
+                    f'ID {int(row["id"])} | {row["blueprint_name"]} | '
+                    f'{int(row.get("target_builds", 1) or 1)} planned'
+                )
+                for _, row in blueprints.iterrows()
+            }
+            selected_blueprint_id = st.selectbox(
+                "Select blueprint",
+                options=list(blueprint_options),
+                format_func=lambda value: blueprint_options[value],
+                key="manage_blueprint_select",
+            )
+            selected_row = blueprints.loc[
+                blueprints["id"] == selected_blueprint_id
+            ].iloc[0]
+            current_materials = normalize_blueprint_materials(
+                selected_row.get("materials", {})
+            )
+
+            with st.form("manage_blueprint_form"):
+                edit_name = st.text_input(
+                    "Blueprint name",
+                    value=str(selected_row.get("blueprint_name", "")),
+                )
+                edit_col1, edit_col2, edit_col3 = st.columns(3)
+                with edit_col1:
+                    categories = [
+                        "Armor",
+                        "Weapon",
+                        "Ship Component",
+                        "Vehicle Component",
+                        "Tool",
+                        "Consumable",
+                        "Other",
+                    ]
+                    current_category = str(
+                        selected_row.get("blueprint_category", "Other")
+                    )
+                    if current_category not in categories:
+                        categories.append(current_category)
+                    edit_category = st.selectbox(
+                        "Category",
+                        categories,
+                        index=categories.index(current_category),
+                    )
+                with edit_col2:
+                    edit_copies = st.number_input(
+                        "Copies owned",
+                        min_value=1,
+                        max_value=999,
+                        value=int(selected_row.get("copies_owned", 1) or 1),
+                        step=1,
+                    )
+                with edit_col3:
+                    edit_target = st.number_input(
+                        "Planned builds",
+                        min_value=1,
+                        max_value=999,
+                        value=int(selected_row.get("target_builds", 1) or 1),
+                        step=1,
+                    )
+
+                statuses = [
+                    "Owned",
+                    "In Progress",
+                    "Ready to Craft",
+                    "Completed",
+                ]
+                current_status = str(
+                    selected_row.get("blueprint_status", "Owned")
+                )
+                if current_status not in statuses:
+                    statuses.append(current_status)
+                edit_status = st.selectbox(
+                    "Tracker status",
+                    statuses,
+                    index=statuses.index(current_status),
+                )
+                edit_source = st.text_input(
+                    "Where it was acquired",
+                    value=str(selected_row.get("source_location", "") or ""),
+                )
+
+                st.markdown("##### Required amount per craft")
+                edited_materials: dict[str, float] = {}
+                if current_materials:
+                    material_columns = st.columns(3)
+                    for index, (material, quantity) in enumerate(
+                        sorted(current_materials.items())
+                    ):
+                        with material_columns[index % 3]:
+                            edited_materials[material] = st.number_input(
+                                material,
+                                min_value=0.01,
+                                value=float(quantity),
+                                step=0.25,
+                                format="%.2f",
+                                key=f"edit_blueprint_material_{selected_blueprint_id}_{re.sub(r'[^a-z0-9]+', '_', material.lower())}",
+                            )
+                else:
+                    st.caption(
+                        "This blueprint has no stored materials. Delete and recreate "
+                        "it to add a new material list."
+                    )
+
+                edit_notes = st.text_area(
+                    "Notes",
+                    value=str(selected_row.get("notes", "") or ""),
+                )
+                update_blueprint = st.form_submit_button(
+                    "Update Blueprint",
+                    width="stretch",
+                )
+
+            if update_blueprint:
+                payload = {
+                    "blueprint_name": edit_name.strip(),
+                    "blueprint_category": edit_category,
+                    "blueprint_status": edit_status,
+                    "source_location": edit_source.strip(),
+                    "copies_owned": int(edit_copies),
+                    "target_builds": int(edit_target),
+                    "materials": edited_materials,
+                    "notes": edit_notes.strip(),
+                }
+                try:
+                    update_record(
+                        "blueprint_tracker",
+                        selected_blueprint_id,
+                        payload,
+                    )
+                    st.success("Blueprint updated.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"The blueprint could not be updated: {exc}")
+
+            confirm_delete = st.checkbox(
+                "I understand this permanently deletes the selected blueprint.",
+                key="delete_blueprint_confirm",
+            )
+            if st.button(
+                "Delete Blueprint",
+                type="primary",
+                disabled=not confirm_delete,
+                key="delete_blueprint_button",
+                width="stretch",
+            ):
+                try:
+                    delete_record(
+                        "blueprint_tracker",
+                        selected_blueprint_id,
+                    )
+                    st.success("Blueprint deleted.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"The blueprint could not be deleted: {exc}")
+
+
 
 def export_page() -> None:
     page_banner(
@@ -3644,6 +4387,16 @@ def main() -> None:
 
         st.divider()
         st.caption("System status: All systems operational")
+        st.caption(
+            "Unofficial fan-made tool. Star Citizen and related content belong "
+            "to their respective rights holders. Not affiliated with or endorsed "
+            "by Cloud Imperium Games or Roberts Space Industries."
+        )
+        st.link_button(
+            "Official Star Citizen Website",
+            "https://robertsspaceindustries.com/",
+            width="stretch",
+        )
         if st.button("Sign out", width="stretch"):
             try:
                 client.auth.sign_out()
