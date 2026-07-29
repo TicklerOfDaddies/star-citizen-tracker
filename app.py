@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo, available_timezones
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
@@ -22,6 +23,15 @@ st.set_page_config(
 )
 
 APP_TIMEZONE = "America/Chicago"
+US_TIMEZONES = {
+    "Eastern (ET)": "America/New_York",
+    "Central (CT)": "America/Chicago",
+    "Mountain (MT)": "America/Denver",
+    "Pacific (PT)": "America/Los_Angeles",
+    "Alaska (AKT)": "America/Anchorage",
+    "Hawaii (HST)": "Pacific/Honolulu",
+}
+DEFAULT_TIMEZONE = "America/Chicago"
 COOKIE_PREFIX = "star-citizen-tracker/"
 COOKIE_REFRESH_TOKEN = "supabase_refresh_token"
 COOKIE_REMEMBERED_EMAIL = "remembered_email"
@@ -94,24 +104,24 @@ STAR_CITIZEN_COLORS = [
 
 
 def apply_custom_theme() -> None:
-    """Apply a polished dark operations-console theme."""
+    """Apply the bright, professional Star Citizen dashboard theme."""
     st.markdown(
         """
         <style>
         :root {
-            --app-bg: #050608;
-            --surface: #0b0e13;
-            --surface-2: #11151c;
-            --surface-3: #171c24;
-            --border: rgba(148, 163, 184, 0.16);
-            --border-strong: rgba(42, 224, 199, 0.34);
-            --accent: #2ae0c7;
-            --accent-2: #22c5e5;
-            --accent-soft: rgba(42, 224, 199, 0.12);
-            --text: #f7fafc;
-            --muted: #8e9aaa;
-            --subtle: #667181;
-            --warning: #ff9b45;
+            --app-bg: #f4f7fb;
+            --surface: #ffffff;
+            --surface-2: #f8fafc;
+            --surface-3: #eef4fb;
+            --border: #dbe4ee;
+            --border-strong: #8fc7ff;
+            --accent: #1378e5;
+            --accent-2: #11a7c8;
+            --accent-soft: #eaf4ff;
+            --text: #10233f;
+            --muted: #607087;
+            --subtle: #8492a6;
+            --success: #20a36a;
         }
 
         html, body, [class*="css"] {
@@ -121,316 +131,139 @@ def apply_custom_theme() -> None:
 
         .stApp {
             background:
-                radial-gradient(circle at 78% -18%, rgba(34, 197, 229, 0.08), transparent 34rem),
-                radial-gradient(circle at 10% 110%, rgba(42, 224, 199, 0.06), transparent 30rem),
-                var(--app-bg);
+                radial-gradient(circle at 88% -12%, rgba(19,120,229,.10), transparent 34rem),
+                linear-gradient(180deg, #f8fbff 0%, var(--app-bg) 100%);
             color: var(--text);
         }
 
         [data-testid="stHeader"] {
-            background: rgba(5, 6, 8, 0.78);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            background: rgba(248,251,255,.86);
+            border-bottom: 1px solid rgba(219,228,238,.82);
             backdrop-filter: blur(16px);
         }
 
-        [data-testid="stAppViewContainer"] > .main {
-            background: transparent;
-        }
-
         .block-container {
-            max-width: 1540px;
-            padding-top: 1rem;
+            max-width: 1580px;
+            padding-top: .8rem;
             padding-bottom: 3rem;
         }
 
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #080a0e 0%, #06070a 100%);
+            background: rgba(255,255,255,.98);
             border-right: 1px solid var(--border);
+            box-shadow: 10px 0 34px rgba(30,68,110,.06);
         }
 
-        section[data-testid="stSidebar"] > div {
-            padding-top: 1rem;
-        }
-
+        section[data-testid="stSidebar"] > div { padding-top: 1rem; }
         section[data-testid="stSidebar"] [data-testid="stImage"] img {
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+            max-height: 94px;
+            width: 100%;
+            object-fit: contain;
+            border-radius: 0;
         }
 
-        section[data-testid="stSidebar"] h1 {
-            font-size: 1.35rem;
-            margin-bottom: 0.1rem;
-        }
-
-        h1, h2, h3 {
-            color: var(--text) !important;
-            letter-spacing: -0.015em;
-        }
-
-        p, label, .stCaption {
-            color: var(--muted);
-        }
+        h1, h2, h3 { color: var(--text) !important; letter-spacing: -.018em; }
+        p, label, .stCaption { color: var(--muted); }
 
         .sc-banner {
             position: relative;
-            min-height: 205px;
+            min-height: 300px;
             display: flex;
             align-items: flex-end;
             overflow: hidden;
             border-radius: 18px;
-            border: 1px solid var(--border);
-            margin-bottom: 1.25rem;
+            border: 1px solid #cbd8e6;
+            margin-bottom: 1.15rem;
             background-position: center;
-            background-size: cover;
-            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.34);
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-color: #091827;
+            box-shadow: 0 18px 44px rgba(24,62,103,.16);
         }
 
         .sc-banner::after {
             content: "";
             position: absolute;
             inset: 0;
-            background:
-                linear-gradient(90deg, rgba(2, 4, 7, 0.96) 0%, rgba(5, 8, 12, 0.76) 44%, rgba(5, 8, 12, 0.18) 82%),
-                linear-gradient(0deg, rgba(2, 4, 7, 0.93) 0%, transparent 66%);
+            background: linear-gradient(0deg, rgba(4,17,31,.88) 0%, rgba(4,17,31,.08) 66%);
         }
 
-        .sc-banner-content {
-            position: relative;
-            z-index: 2;
-            max-width: 820px;
-            padding: 1.7rem 1.9rem;
-        }
+        .sc-banner-content { position: relative; z-index: 2; max-width: 830px; padding: 1.55rem 1.75rem; }
+        .sc-kicker { color: #8fdcff; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; margin-bottom: .38rem; }
+        .sc-banner-title { color: #fff; font-size: clamp(1.75rem,4vw,2.75rem); line-height: 1.04; font-weight: 800; margin: 0 0 .48rem; text-shadow: 0 3px 15px rgba(0,0,0,.42); }
+        .sc-banner-subtitle { color: #e3edf7; font-size: .98rem; max-width: 720px; margin: 0; }
 
-        .sc-kicker {
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.18em;
-            font-size: 0.72rem;
-            font-weight: 800;
-            margin-bottom: 0.42rem;
-        }
+        .dashboard-hero-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:14px; margin-bottom:1rem; }
+        .dashboard-hero-grid .sc-banner { margin-bottom:0; min-height:315px; }
+        .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(24,62,103,.12); color:var(--text); }
+        .time-card .time-now { font-size:2rem; font-weight:800; margin:.15rem 0; }
+        .time-card .time-date { font-size:.78rem; color:var(--muted); margin-bottom:.75rem; }
+        .time-zone-row { display:flex; justify-content:space-between; gap:.75rem; padding:.23rem 0; font-size:.77rem; border-bottom:1px solid #edf2f7; }
+        .time-zone-row:last-child { border-bottom:0; }
+        .time-settings { margin-top:.75rem; padding-top:.7rem; border-top:1px solid var(--border); font-size:.77rem; color:var(--accent); font-weight:700; }
 
-        .sc-banner-title {
-            color: #ffffff;
-            font-size: clamp(1.85rem, 4vw, 3rem);
-            line-height: 1.02;
-            font-weight: 790;
-            margin: 0 0 0.55rem 0;
-            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.48);
-        }
-
-        .sc-banner-subtitle {
-            color: #b9c4d0;
-            font-size: 0.98rem;
-            max-width: 720px;
-            margin: 0;
-        }
-
-        .dashboard-toolbar {
-            border: 1px solid var(--border);
-            background: rgba(11, 14, 19, 0.92);
-            border-radius: 14px;
-            padding: 0.95rem 1rem 0.15rem;
-            margin-bottom: 1rem;
-        }
-
-        .section-heading {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            gap: 1rem;
-            margin: 1.25rem 0 0.7rem;
-        }
-
-        .section-title {
-            color: var(--text);
-            font-size: 1.18rem;
-            font-weight: 760;
-            margin: 0;
-        }
-
-        .section-copy {
-            color: var(--muted);
-            font-size: 0.84rem;
-            margin: 0.15rem 0 0;
-        }
-
-        .chart-heading {
-            color: var(--text);
-            font-size: 0.98rem;
-            font-weight: 720;
-            margin: 0 0 0.12rem 0;
-        }
-
-        .chart-copy {
-            color: var(--muted);
-            font-size: 0.78rem;
-            margin: 0 0 0.3rem 0;
-        }
+        .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin:1.25rem 0 .7rem; }
+        .section-title { color:var(--text); font-size:1.18rem; font-weight:780; margin:0; }
+        .section-copy { color:var(--muted); font-size:.84rem; margin:.15rem 0 0; }
+        .chart-heading { color:var(--text); font-size:1.04rem; font-weight:760; margin:0 0 .12rem; }
+        .chart-copy { color:var(--muted); font-size:.8rem; margin:0 0 .25rem; }
 
         div[data-testid="stMetric"] {
-            background: linear-gradient(145deg, rgba(16, 20, 27, 0.98), rgba(10, 13, 18, 0.98));
-            border: 1px solid var(--border);
-            border-radius: 15px;
-            padding: 1rem 1rem 0.9rem;
-            min-height: 118px;
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
-            transition: transform 160ms ease, border-color 160ms ease;
+            background:var(--surface); border:1px solid var(--border); border-radius:15px;
+            padding:1rem; min-height:118px; box-shadow:0 10px 26px rgba(24,62,103,.08);
         }
-
-        div[data-testid="stMetric"]:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-strong);
-        }
-
-        [data-testid="stMetricLabel"] {
-            color: #8f9baa !important;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            font-size: 0.70rem !important;
-            font-weight: 720;
-        }
-
-        [data-testid="stMetricValue"] {
-            color: #f8fbff !important;
-            font-weight: 780;
-        }
+        [data-testid="stMetricLabel"] { color:#66768c !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
+        [data-testid="stMetricValue"] { color:var(--text) !important; font-weight:820; }
 
         [data-testid="stVerticalBlockBorderWrapper"] {
-            background: linear-gradient(145deg, rgba(14, 18, 24, 0.98), rgba(9, 12, 17, 0.98));
-            border: 1px solid var(--border) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 15px 38px rgba(0, 0, 0, 0.20);
+            background:var(--surface); border:1px solid var(--border) !important;
+            border-radius:16px !important; box-shadow:0 10px 26px rgba(24,62,103,.07);
         }
 
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button {
-            border: 1px solid rgba(42, 224, 199, 0.54);
-            border-radius: 10px;
-            background: linear-gradient(90deg, #128d88, #16a6b8);
-            color: #ffffff !important;
-            font-weight: 760;
-            min-height: 2.7rem;
-            box-shadow: 0 8px 20px rgba(34, 197, 229, 0.12);
-        }
+        .feature-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:.4rem 0 1rem; }
+        .feature-card { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 10px 26px rgba(24,62,103,.08); }
+        .feature-card img { width:100%; height:175px; display:block; object-fit:contain; background:#081624; }
+        .feature-card-body { padding:.85rem .9rem 1rem; }
+        .feature-card-title { color:var(--text); font-weight:780; font-size:.95rem; }
+        .feature-card-copy { color:var(--muted); font-size:.78rem; min-height:42px; margin:.3rem 0 .7rem; }
+        .feature-card-action { display:block; text-align:center; border:1px solid #8fc7ff; color:#1268c5; background:#f2f8ff; border-radius:9px; padding:.52rem; font-size:.78rem; font-weight:760; }
 
-        .stButton > button p,
-        .stButton > button span,
-        .stDownloadButton > button p,
-        .stDownloadButton > button span,
-        [data-testid="stFormSubmitButton"] > button p,
-        [data-testid="stFormSubmitButton"] > button span {
-            color: inherit !important;
-            font-weight: inherit !important;
+        .stButton > button, .stDownloadButton > button, [data-testid="stFormSubmitButton"] > button, .stLinkButton > a {
+            border:1px solid #85bfff; border-radius:10px; background:#f2f8ff; color:#1268c5 !important;
+            font-weight:760; min-height:2.75rem; box-shadow:none;
         }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover {
-            border-color: #9ff9ec;
-            background: linear-gradient(90deg, #20bcae, #22c5e5);
-            color: #02100f !important;
+        .stButton > button:hover, .stDownloadButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover, .stLinkButton > a:hover {
+            border-color:#1378e5; background:#e4f1ff; color:#0c57aa !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button {
-            width: 100%;
-            min-height: 2.85rem;
-            justify-content: flex-start;
-            padding: 0.65rem 0.85rem;
-            margin: 0.12rem 0;
-            border-radius: 9px;
-            font-size: 0.92rem;
-            letter-spacing: 0.005em;
-            text-align: left;
+            width:100%; height:3.35rem; min-height:3.35rem; justify-content:flex-start;
+            padding:.72rem .9rem; margin:.14rem 0; border-radius:11px; font-size:.9rem; text-align:left;
         }
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] { background:#fff; border:1px solid var(--border); color:#21354f !important; }
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover { background:#f2f8ff; border-color:#9ccaff; }
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] { background:#e9f4ff; border:1px solid #87beff; color:#0f65c1 !important; box-shadow:inset 3px 0 0 var(--accent); }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-            background: transparent;
-            border: 1px solid transparent;
-            color: #cbd5df !important;
-            box-shadow: none;
+        div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input, .stTextArea textarea, .stDateInput input {
+            background:#fff !important; border-color:#cfdbe8 !important; color:#142941 !important; border-radius:9px !important;
         }
-
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-            background: rgba(42, 224, 199, 0.08);
-            border-color: rgba(42, 224, 199, 0.20);
-            color: #ffffff !important;
-            transform: translateX(2px);
+        div[data-baseweb="select"] > div:focus-within, .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
+            border-color:#72b4fa !important; box-shadow:0 0 0 1px rgba(19,120,229,.18) !important;
         }
+        [data-testid="stDataFrame"] { border:1px solid var(--border); border-radius:13px; overflow:hidden; }
+        div[data-testid="stAlert"] { border:1px solid var(--border); border-radius:12px; background:#fff; }
+        [data-testid="stTabs"] button { color:var(--muted); }
+        [data-testid="stTabs"] button[aria-selected="true"] { color:var(--accent); border-bottom-color:var(--accent); }
+        hr { border-color:#e5ebf2; }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-            background: linear-gradient(90deg, rgba(42, 224, 199, 0.20), rgba(34, 197, 229, 0.12));
-            border: 1px solid rgba(42, 224, 199, 0.46);
-            color: #dffff9 !important;
-            box-shadow: inset 3px 0 0 var(--accent);
+        @media (max-width:1050px) {
+            .dashboard-hero-grid { grid-template-columns:1fr; }
+            .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
         }
-
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(90deg, rgba(42, 224, 199, 0.28), rgba(34, 197, 229, 0.18));
-            color: #ffffff !important;
-        }
-
-        div[data-baseweb="select"] > div,
-        .stTextInput input,
-        .stNumberInput input,
-        .stTextArea textarea {
-            background: #0d1117 !important;
-            border-color: rgba(148, 163, 184, 0.20) !important;
-            color: #f5f8fb !important;
-            border-radius: 9px !important;
-        }
-
-        div[data-baseweb="select"] > div:focus-within,
-        .stTextInput input:focus,
-        .stNumberInput input:focus,
-        .stTextArea textarea:focus {
-            border-color: rgba(42, 224, 199, 0.68) !important;
-            box-shadow: 0 0 0 1px rgba(42, 224, 199, 0.22) !important;
-        }
-
-        div[data-baseweb="select"] svg {
-            fill: var(--accent);
-        }
-
-        [data-testid="stDataFrame"] {
-            border: 1px solid var(--border);
-            border-radius: 13px;
-            overflow: hidden;
-        }
-
-        div[data-testid="stAlert"] {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: rgba(14, 18, 24, 0.92);
-        }
-
-        [data-testid="stTabs"] button {
-            color: var(--muted);
-        }
-
-        [data-testid="stTabs"] button[aria-selected="true"] {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-        }
-
-        hr {
-            border-color: rgba(148, 163, 184, 0.12);
-        }
-
-        @media (max-width: 720px) {
-            .sc-banner {
-                min-height: 190px;
-            }
-
-            .sc-banner-content {
-                padding: 1.25rem;
-            }
-
-            .sc-banner-subtitle {
-                font-size: 0.90rem;
-            }
+        @media (max-width:720px) {
+            .sc-banner { min-height:220px; }
+            .feature-grid { grid-template-columns:1fr; }
+            .feature-card img { height:auto; max-height:260px; }
         }
         </style>
         """,
@@ -442,8 +275,12 @@ def apply_custom_theme() -> None:
 def image_data_uri(filename: str) -> str:
     """Return a local image as a cached data URI for a CSS background."""
     image_path = ASSETS_DIR / filename
+    if not image_path.exists():
+        return ""
     encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
-    return f"data:image/jpeg;base64,{encoded}"
+    suffix = image_path.suffix.lower()
+    mime = "image/png" if suffix == ".png" else "image/jpeg"
+    return f"data:{mime};base64,{encoded}"
 
 
 def page_banner(
@@ -471,44 +308,22 @@ def page_banner(
     )
 
 
-def style_plotly_figure(figure, *, height: int = 330) -> None:
-    """Give Plotly charts the same dark dashboard appearance as the app."""
+def style_plotly_figure(figure, *, height: int = 430) -> None:
+    """Give Plotly charts the same bright professional appearance as the app."""
     figure.update_layout(
-        template="plotly_dark",
+        template="plotly_white",
         height=height,
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(5,7,10,0.34)",
-        font={"color": "#d9e1e8", "family": "Inter, sans-serif"},
+        plot_bgcolor="#ffffff",
+        font={"color": "#243a55", "family": "Inter, sans-serif"},
         colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 18, "r": 18, "t": 18, "b": 18},
+        margin={"l": 24, "r": 18, "t": 20, "b": 26},
         legend_title_text="",
-        legend={
-            "orientation": "h",
-            "yanchor": "bottom",
-            "y": 1.02,
-            "xanchor": "left",
-            "x": 0,
-        },
-        hoverlabel={
-            "bgcolor": "#10151c",
-            "bordercolor": "#2ae0c7",
-            "font_color": "#f7fafc",
-        },
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+        hoverlabel={"bgcolor": "#ffffff", "bordercolor": "#87beff", "font_color": "#10233f"},
     )
-    figure.update_xaxes(
-        gridcolor="rgba(148,163,184,0.09)",
-        zerolinecolor="rgba(148,163,184,0.14)",
-        linecolor="rgba(148,163,184,0.12)",
-        tickfont={"color": "#8e9aaa"},
-        title_font={"color": "#8e9aaa"},
-    )
-    figure.update_yaxes(
-        gridcolor="rgba(148,163,184,0.09)",
-        zerolinecolor="rgba(148,163,184,0.14)",
-        linecolor="rgba(148,163,184,0.12)",
-        tickfont={"color": "#8e9aaa"},
-        title_font={"color": "#8e9aaa"},
-    )
+    figure.update_xaxes(gridcolor="#e9eff6", zerolinecolor="#dfe7f0", linecolor="#d7e1ec", tickfont={"color": "#6f8095"}, title_font={"color": "#607087"})
+    figure.update_yaxes(gridcolor="#e9eff6", zerolinecolor="#dfe7f0", linecolor="#d7e1ec", tickfont={"color": "#6f8095"}, title_font={"color": "#607087"})
 
 
 def empty_dashboard_figure(message: str, *, donut: bool = False):
@@ -524,7 +339,7 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
             y0=0.16,
             x1=0.69,
             y1=0.84,
-            line={"color": "rgba(148,163,184,0.16)", "width": 18},
+            line={"color": "rgba(137,157,181,0.20)", "width": 18},
         )
         figure.update_xaxes(visible=False, range=[0, 1])
         figure.update_yaxes(visible=False, range=[0, 1])
@@ -549,10 +364,10 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
         y=0.5,
         xref="paper",
         yref="paper",
-        text=f"<b>No data yet</b><br><span style='color:#8e9aaa'>{message}</span>",
+        text=f"<b>No data yet</b><br><span style='color:#6f8095'>{message}</span>",
         showarrow=False,
         align="center",
-        font={"size": 14, "color": "#d9e1e8"},
+        font={"size": 14, "color": "#243a55"},
     )
     style_plotly_figure(figure)
     return figure
@@ -570,7 +385,7 @@ def chart_card(title: str, subtitle: str, figure, key: str) -> None:
         )
         st.plotly_chart(
             figure,
-            use_container_width=True,
+            width="stretch",
             config={"displayModeBar": False, "responsive": True},
             key=key,
         )
@@ -759,7 +574,7 @@ def login_screen(
                     "Your password is never saved."
                 ),
             )
-            submitted = st.form_submit_button("Sign in", use_container_width=True)
+            submitted = st.form_submit_button("Sign in", width="stretch")
 
         if submitted:
             try:
@@ -797,7 +612,7 @@ def login_screen(
             )
             submitted = st.form_submit_button(
                 "Create account",
-                use_container_width=True,
+                width="stretch",
             )
 
         if submitted:
@@ -970,7 +785,7 @@ def display_contract_table(contracts: pd.DataFrame) -> None:
 
     st.dataframe(
         table,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "Total Payout": st.column_config.NumberColumn(format="%,.0f aUEC"),
@@ -1016,7 +831,7 @@ def display_ore_table(ores: pd.DataFrame) -> None:
 
     st.dataframe(
         table,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
@@ -1024,13 +839,85 @@ def display_ore_table(ores: pd.DataFrame) -> None:
     )
 
 
-def dashboard_page() -> None:
-    page_banner(
-        "dashboard_banner.jpg",
-        "Operations Dashboard",
-        "See contract income, mining activity, trade value, and recent records immediately from one command view.",
-        "Live Command Overview",
+def selected_timezone() -> str:
+    """Return the user's chosen IANA timezone, falling back safely."""
+    return st.session_state.get("selected_timezone", DEFAULT_TIMEZONE)
+
+
+def timezone_settings() -> None:
+    """Render timezone controls in the sidebar settings section."""
+    common_options = list(US_TIMEZONES.values())
+    all_options = sorted(available_timezones())
+    current = selected_timezone()
+    mode = st.radio(
+        "Timezone options",
+        ["U.S. timezones", "All timezones"],
+        horizontal=True,
+        key="timezone_mode",
+        label_visibility="collapsed",
     )
+    choices = common_options if mode == "U.S. timezones" else all_options
+    if current not in choices:
+        choices = [current, *choices]
+    chosen = st.selectbox(
+        "Display timezone",
+        choices,
+        index=choices.index(current),
+        key="timezone_selector",
+    )
+    st.session_state.selected_timezone = chosen
+    st.caption(f"Current selection: {chosen}")
+
+
+def dashboard_hero() -> None:
+    """Render the dashboard banner and the U.S. timezone overview."""
+    background = image_data_uri("dashboard_banner.jpg")
+    now_utc = datetime.now(ZoneInfo("UTC"))
+    preferred = selected_timezone()
+    local_now = now_utc.astimezone(ZoneInfo(preferred))
+    rows = "".join(
+        f'<div class="time-zone-row"><span>{label}</span><strong>{now_utc.astimezone(ZoneInfo(zone)).strftime("%I:%M %p")}</strong></div>'
+        for label, zone in US_TIMEZONES.items()
+    )
+    st.markdown(
+        f"""
+        <div class="dashboard-hero-grid">
+            <section class="sc-banner" style="background-image:url('{background}');" aria-label="Operations Dashboard">
+                <div class="sc-banner-content">
+                    <div class="sc-kicker">Live Command Overview</div>
+                    <div class="sc-banner-title">Welcome back, Adrian</div>
+                    <p class="sc-banner-subtitle">Track, analyze, and optimize contracts, mining, trade, and saved operations across the Verse.</p>
+                </div>
+            </section>
+            <aside class="time-card">
+                <div style="font-size:.76rem;color:#607087;font-weight:750;">SELECTED TIMEZONE</div>
+                <div class="time-now">{local_now.strftime('%I:%M %p')}</div>
+                <div class="time-date">{local_now.strftime('%A, %B %d, %Y')}<br>{preferred}</div>
+                {rows}
+                <div class="time-settings">⚙ Change timezone in Sidebar Settings</div>
+            </aside>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def feature_dashboard_cards() -> None:
+    cards = [
+        ("contracts_feature.jpg", "Contracts Snapshot", "Track active contracts, completions, reputation, and earnings.", "View Contracts"),
+        ("ore_feature.jpg", "Ore Trends", "Monitor mining output, refinery yields, and resource trends.", "View Ore Ledger"),
+        ("records_feature.jpg", "Saved Records", "Access saved routes, cargo logs, and complete operation history.", "View Records"),
+        ("fleet_feature.jpg", "Fleet Overview", "Review vehicle readiness and keep your operational picture organized.", "View Fleet"),
+    ]
+    html = '<div class="feature-grid">'
+    for image, title, copy, action in cards:
+        html += f"<div class='feature-card'><img src='{image_data_uri(image)}' alt='{title}'><div class='feature-card-body'><div class='feature-card-title'>{title}</div><div class='feature-card-copy'>{copy}</div><div class='feature-card-action'>{action} &nbsp;&gt;</div></div></div>"
+    html += '</div>'
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def dashboard_page() -> None:
+    dashboard_hero()
 
     contracts, ores = load_data()
 
@@ -1076,12 +963,14 @@ def dashboard_page() -> None:
         else 0.0
     )
 
-    metric_columns = st.columns(5)
-    metric_columns[0].metric("Contracts", f"{len(contracts):,}")
-    metric_columns[1].metric("Net payout", format_money(contract_net))
-    metric_columns[2].metric("Personal shares", format_money(personal_share))
-    metric_columns[3].metric("Mined value", format_money(mined_value))
-    metric_columns[4].metric("Ore trade net", format_money(ore_sales - ore_purchases))
+    st.markdown("<div class='section-title'>Overview</div>", unsafe_allow_html=True)
+    metric_columns = st.columns(4)
+    metric_columns[0].metric("Contracts Completed", f"{len(contracts):,}")
+    metric_columns[1].metric("Ore Entries", f"{len(ores):,}")
+    metric_columns[2].metric("Total Earnings (aUEC)", format_money(personal_share))
+    metric_columns[3].metric("Ore Trade Net", format_money(ore_sales - ore_purchases))
+
+    feature_dashboard_cards()
 
     st.markdown(
         """
@@ -1129,7 +1018,7 @@ def dashboard_page() -> None:
             fillcolor="rgba(42,224,199,0.12)",
         )
         contract_time_figure.update_yaxes(rangemode="tozero")
-        style_plotly_figure(contract_time_figure)
+        style_plotly_figure(contract_time_figure, height=430)
 
         contract_type_data = (
             contracts.groupby("contract_type", as_index=False)
@@ -1153,7 +1042,7 @@ def dashboard_page() -> None:
             },
         )
         contract_type_figure.update_traces(marker_color="#22c5e5")
-        style_plotly_figure(contract_type_figure)
+        style_plotly_figure(contract_type_figure, height=430)
 
     if ores.empty:
         ore_value_figure = empty_dashboard_figure(
@@ -1196,7 +1085,7 @@ def dashboard_page() -> None:
             },
         )
         ore_value_figure.update_yaxes(rangemode="tozero")
-        style_plotly_figure(ore_value_figure)
+        style_plotly_figure(ore_value_figure, height=430)
 
         ore_mix_data = (
             ores.groupby("action", as_index=False)
@@ -1216,7 +1105,7 @@ def dashboard_page() -> None:
             textinfo="percent+label",
             marker={"line": {"color": "#0b0e13", "width": 3}},
         )
-        style_plotly_figure(ore_mix_figure)
+        style_plotly_figure(ore_mix_figure, height=430)
 
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
@@ -1328,7 +1217,7 @@ def contract_page() -> None:
         notes = st.text_area("Notes")
         submitted = st.form_submit_button(
             "Calculate and Save Contract",
-            use_container_width=True,
+            width="stretch",
         )
 
     if submitted:
@@ -1412,7 +1301,7 @@ def ore_page() -> None:
         )
         submitted = st.form_submit_button(
             "Save Ore Entry",
-            use_container_width=True,
+            width="stretch",
         )
 
     if submitted:
@@ -1744,13 +1633,13 @@ def records_page() -> None:
                 "application/vnd.openxmlformats-officedocument."
                 "spreadsheetml.sheet"
             ),
-            use_container_width=True,
+            width="stretch",
         )
     with export_col2:
         st.link_button(
             "Open Google Sheets",
             "https://sheets.new",
-            use_container_width=True,
+            width="stretch",
         )
     st.caption(
         "For Google Sheets, download the workbook, open Google Sheets, "
@@ -1782,6 +1671,58 @@ def records_page() -> None:
                 file_name="star_citizen_ore_ledger.csv",
                 mime="text/csv",
             )
+
+
+def saved_records_page() -> None:
+    page_banner(
+        "records_banner.jpg",
+        "Saved Records",
+        "Search and review your complete contract and resource transaction history.",
+        "Records Archive",
+    )
+    contracts, ores = load_data()
+    contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
+    with contract_tab:
+        display_contract_table(contracts)
+    with ore_tab:
+        display_ore_table(ores)
+
+
+def export_page() -> None:
+    page_banner(
+        "export_banner.jpg",
+        "Export Data",
+        "Download a polished workbook for Microsoft Excel or import it directly into Google Sheets.",
+        "Data Portability",
+    )
+    contracts, ores = load_data()
+    workbook_bytes = build_excel_export(contracts, ores)
+    st.markdown("### Complete workbook")
+    st.caption("Includes Summary, Contracts, and Ore Ledger worksheets.")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            "Download Excel / Google Sheets Workbook",
+            data=workbook_bytes,
+            file_name=f"star_citizen_tracker_export_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            width="stretch",
+        )
+    with col2:
+        st.link_button("Open Google Sheets", "https://sheets.new", width="stretch")
+    st.info("In Google Sheets, choose File > Import > Upload, then select the downloaded workbook.")
+    st.markdown("### Individual CSV files")
+    csv1, csv2 = st.columns(2)
+    with csv1:
+        contract_export = contracts.copy()
+        if "date_saved" in contract_export.columns:
+            contract_export["date_saved"] = contract_export["date_saved"].astype(str)
+        st.download_button("Download Contracts CSV", contract_export.to_csv(index=False).encode("utf-8"), "star_citizen_contracts.csv", "text/csv", width="stretch")
+    with csv2:
+        ore_export = ores.copy()
+        if "date_saved" in ore_export.columns:
+            ore_export["date_saved"] = ore_export["date_saved"].astype(str)
+        st.download_button("Download Ore Ledger CSV", ore_export.to_csv(index=False).encode("utf-8"), "star_citizen_ore_ledger.csv", "text/csv", width="stretch")
 
 
 def edit_records_page() -> None:
@@ -1860,7 +1801,7 @@ def edit_records_page() -> None:
             )
             update_submitted = st.form_submit_button(
                 "Update Contract",
-                use_container_width=True,
+                width="stretch",
             )
 
         if update_submitted:
@@ -1896,7 +1837,7 @@ def edit_records_page() -> None:
             "Delete Contract",
             type="primary",
             disabled=not confirm,
-            use_container_width=True,
+            width="stretch",
         ):
             try:
                 delete_record("contracts", selected_id)
@@ -1946,7 +1887,7 @@ def edit_records_page() -> None:
             )
             update_submitted = st.form_submit_button(
                 "Update Ore Entry",
-                use_container_width=True,
+                width="stretch",
             )
 
         if update_submitted:
@@ -1974,7 +1915,7 @@ def edit_records_page() -> None:
             "Delete Ore Entry",
             type="primary",
             disabled=not confirm,
-            use_container_width=True,
+            width="stretch",
         ):
             try:
                 delete_record("ore_transactions", selected_id)
@@ -1995,22 +1936,21 @@ def main() -> None:
         return
 
     with st.sidebar:
-        sidebar_art = ASSETS_DIR / "sidebar_art.jpg"
-        if sidebar_art.exists():
-            st.image(str(sidebar_art), use_container_width=True)
-        st.title("Star Citizen Tracker")
+        logo_path = ASSETS_DIR / "star_citizen_logo_black.png"
+        if logo_path.exists():
+            st.image(str(logo_path), width="stretch")
+        st.markdown("### Star Citizen Tracker")
         st.caption("Private operations console")
         st.caption(st.session_state.get("user_email", "Signed in"))
 
-        st.markdown("#### Navigation")
         navigation_pages = [
             "Dashboard",
             "Contract Calculator",
             "Ore Ledger",
-            "Records & Export",
+            "Saved Records",
             "Edit or Delete",
+            "Export Data",
         ]
-
         if "nav_page" not in st.session_state:
             st.session_state.nav_page = "Dashboard"
 
@@ -2020,15 +1960,17 @@ def main() -> None:
                 navigation_page,
                 key=f"nav_{navigation_page.lower().replace(' ', '_')}",
                 type="primary" if is_active else "secondary",
-                use_container_width=True,
+                width="stretch",
             ):
                 st.session_state.nav_page = navigation_page
                 st.rerun()
 
-        page = st.session_state.nav_page
+        with st.expander("⚙ Settings", expanded=False):
+            timezone_settings()
 
         st.divider()
-        if st.button("Sign out", use_container_width=True):
+        st.caption("System status: All systems operational")
+        if st.button("Sign out", width="stretch"):
             try:
                 client.auth.sign_out()
             finally:
@@ -2036,16 +1978,19 @@ def main() -> None:
                 clear_login_state()
                 st.rerun()
 
+    page = st.session_state.nav_page
     if page == "Dashboard":
         dashboard_page()
     elif page == "Contract Calculator":
         contract_page()
     elif page == "Ore Ledger":
         ore_page()
-    elif page == "Records & Export":
-        records_page()
+    elif page == "Saved Records":
+        saved_records_page()
     elif page == "Edit or Delete":
         edit_records_page()
+    elif page == "Export Data":
+        export_page()
 
 
 if __name__ == "__main__":
