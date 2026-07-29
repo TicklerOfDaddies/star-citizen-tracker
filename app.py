@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 import base64
@@ -11,6 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from supabase import Client, create_client
+from streamlit_cookies_manager_ext import EncryptedCookieManager
 
 
 st.set_page_config(
@@ -20,6 +22,9 @@ st.set_page_config(
 )
 
 APP_TIMEZONE = "America/Chicago"
+COOKIE_PREFIX = "star-citizen-tracker/"
+COOKIE_REFRESH_TOKEN = "supabase_refresh_token"
+COOKIE_REMEMBERED_EMAIL = "remembered_email"
 
 CONTRACT_TYPES = [
     "Appointment / Mission Giver",
@@ -591,12 +596,119 @@ def get_supabase() -> Client:
     return st.session_state.supabase_client
 
 
+def get_cookie_manager() -> EncryptedCookieManager | None:
+    """Load encrypted browser cookies when a cookie password is configured."""
+    try:
+        cookie_password = st.secrets["COOKIE_PASSWORD"]
+    except KeyError:
+        return None
+    if not cookie_password:
+        return None
+
+    if "cookie_manager" not in st.session_state:
+        st.session_state.cookie_manager = EncryptedCookieManager(
+            prefix=COOKIE_PREFIX,
+            password=str(cookie_password),
+        )
+
+    cookies = st.session_state.cookie_manager
+    if not cookies.ready():
+        st.stop()
+    return cookies
+
+
+def save_cookie_value(
+    cookies: EncryptedCookieManager | None,
+    key: str,
+    value: str,
+) -> None:
+    if cookies is None:
+        return
+    cookies[key] = value
+    cookies.save()
+
+
+def remove_cookie_value(
+    cookies: EncryptedCookieManager | None,
+    key: str,
+) -> None:
+    if cookies is None:
+        return
+    cookies.pop(key, None)
+    cookies.save()
+
+
+def remember_authenticated_session(
+    response: Any,
+    email: str,
+    keep_signed_in: bool,
+    cookies: EncryptedCookieManager | None,
+) -> None:
+    """Remember the email and, when selected, the Supabase refresh token."""
+    if cookies is None:
+        return
+
+    cookies[COOKIE_REMEMBERED_EMAIL] = email.strip()
+    session = getattr(response, "session", None)
+    refresh_token = getattr(session, "refresh_token", None) if session else None
+
+    if keep_signed_in and refresh_token:
+        cookies[COOKIE_REFRESH_TOKEN] = refresh_token
+    else:
+        cookies.pop(COOKIE_REFRESH_TOKEN, None)
+    cookies.save()
+
+
+def restore_login_from_cookie(
+    client: Client,
+    cookies: EncryptedCookieManager | None,
+) -> None:
+    """Restore a Supabase session after a full browser refresh."""
+    if cookies is None or "user_id" in st.session_state:
+        return
+
+    refresh_token = cookies.get(COOKIE_REFRESH_TOKEN)
+    if not refresh_token:
+        return
+
+    try:
+        response = client.auth.refresh_session(refresh_token)
+        user = getattr(response, "user", None)
+        session = getattr(response, "session", None)
+        if user is None and session is not None:
+            user = getattr(session, "user", None)
+
+        if user is None:
+            raise RuntimeError("The saved session did not include a user.")
+
+        user_email = getattr(user, "email", None) or cookies.get(
+            COOKIE_REMEMBERED_EMAIL,
+            "",
+        )
+        st.session_state.user_id = str(user.id)
+        st.session_state.user_email = user_email or "Signed in"
+
+        new_refresh_token = (
+            getattr(session, "refresh_token", None) if session else None
+        )
+        if new_refresh_token:
+            cookies[COOKIE_REFRESH_TOKEN] = new_refresh_token
+        if user_email:
+            cookies[COOKIE_REMEMBERED_EMAIL] = user_email
+        cookies.save()
+    except Exception:
+        remove_cookie_value(cookies, COOKIE_REFRESH_TOKEN)
+
+
 def clear_login_state() -> None:
     for key in ("user_id", "user_email", "supabase_client"):
         st.session_state.pop(key, None)
 
 
-def login_screen(client: Client) -> None:
+def login_screen(
+    client: Client,
+    cookies: EncryptedCookieManager | None,
+) -> None:
     page_banner(
         "hero_banner.jpg",
         "Star Citizen Tracker",
@@ -606,13 +718,34 @@ def login_screen(client: Client) -> None:
 
     login_tab, signup_tab = st.tabs(["Sign in", "Create account"])
 
+    remembered_email = (
+        cookies.get(COOKIE_REMEMBERED_EMAIL, "") if cookies is not None else ""
+    )
+    if "login_email" not in st.session_state:
+        st.session_state.login_email = remembered_email
+
     with login_tab:
+        if cookies is None:
+            st.warning(
+                "Persistent sign-in is not configured yet. Add COOKIE_PASSWORD "
+                "to Streamlit Secrets to keep this device signed in after a refresh."
+            )
+
         with st.form("login_form"):
             email = st.text_input("Email", key="login_email")
             password = st.text_input(
                 "Password",
                 type="password",
                 key="login_password",
+            )
+            keep_signed_in = st.checkbox(
+                "Keep me signed in on this device",
+                value=True,
+                disabled=cookies is None,
+                help=(
+                    "Stores an encrypted Supabase refresh token in this browser. "
+                    "Your password is never saved."
+                ),
             )
             submitted = st.form_submit_button("Sign in", use_container_width=True)
 
@@ -624,8 +757,15 @@ def login_screen(client: Client) -> None:
                 if response.user is None:
                     st.error("The sign-in response did not include a user.")
                 else:
+                    user_email = response.user.email or email.strip()
                     st.session_state.user_id = str(response.user.id)
-                    st.session_state.user_email = response.user.email or email.strip()
+                    st.session_state.user_email = user_email
+                    remember_authenticated_session(
+                        response,
+                        user_email,
+                        keep_signed_in,
+                        cookies,
+                    )
                     st.rerun()
             except Exception as exc:
                 st.error(f"Sign in failed: {exc}")
@@ -661,9 +801,14 @@ def login_screen(client: Client) -> None:
                         "confirmation is enabled, then sign in."
                     )
                 else:
+                    user_email = response.user.email or new_email.strip()
                     st.session_state.user_id = str(response.user.id)
-                    st.session_state.user_email = (
-                        response.user.email or new_email.strip()
+                    st.session_state.user_email = user_email
+                    remember_authenticated_session(
+                        response,
+                        user_email,
+                        True,
+                        cookies,
                     )
                     st.rerun()
             except Exception as exc:
@@ -1291,15 +1436,315 @@ def ore_page() -> None:
             st.error(f"The ore entry could not be saved: {exc}")
 
 
+def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
+    columns = {
+        "date_saved": "Date",
+        "contract_name": "Contract",
+        "contract_type": "Type",
+        "offer_group": "Offer Group",
+        "system_name": "System / Area",
+        "total_payout": "Total Payout",
+        "expenses": "Expenses",
+        "crew_members": "Crew Members",
+        "net_payout": "Net Payout",
+        "individual_share": "Individual Share",
+        "notes": "Notes",
+    }
+    export = contracts.rename(columns=columns).copy()
+    ordered = [
+        "Date",
+        "Contract",
+        "Type",
+        "Offer Group",
+        "System / Area",
+        "Total Payout",
+        "Expenses",
+        "Crew Members",
+        "Net Payout",
+        "Individual Share",
+        "Notes",
+    ]
+    export = export[[column for column in ordered if column in export.columns]]
+    if "Date" in export.columns:
+        export["Date"] = pd.to_datetime(export["Date"], errors="coerce")
+        if getattr(export["Date"].dt, "tz", None) is not None:
+            export["Date"] = export["Date"].dt.tz_localize(None)
+    return export
+
+
+def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
+    columns = {
+        "date_saved": "Date",
+        "action": "Action",
+        "ore_name": "Ore / Mineral",
+        "total_value": "Total Value",
+        "location": "Location",
+        "notes": "Notes",
+    }
+    export = ores.rename(columns=columns).copy()
+    ordered = [
+        "Date",
+        "Action",
+        "Ore / Mineral",
+        "Total Value",
+        "Location",
+        "Notes",
+    ]
+    export = export[[column for column in ordered if column in export.columns]]
+    if "Date" in export.columns:
+        export["Date"] = pd.to_datetime(export["Date"], errors="coerce")
+        if getattr(export["Date"].dt, "tz", None) is not None:
+            export["Date"] = export["Date"].dt.tz_localize(None)
+    return export
+
+
+def set_export_column_widths(worksheet: Any, frame: pd.DataFrame) -> None:
+    for column_index, column_name in enumerate(frame.columns):
+        values = frame[column_name].fillna("").astype(str)
+        maximum = max([len(str(column_name)), *values.map(len).tolist()])
+        worksheet.set_column(column_index, column_index, min(maximum + 2, 42))
+
+
+def build_excel_export(
+    contracts: pd.DataFrame,
+    ores: pd.DataFrame,
+) -> bytes:
+    """Create one formatted workbook that opens in Excel or Google Sheets."""
+    contract_export = prepare_contract_export(contracts)
+    ore_export = prepare_ore_export(ores)
+
+    gross_payout = (
+        float(contracts["total_payout"].sum())
+        if not contracts.empty and "total_payout" in contracts.columns
+        else 0.0
+    )
+    net_payout = (
+        float(contracts["net_payout"].sum())
+        if not contracts.empty and "net_payout" in contracts.columns
+        else 0.0
+    )
+    ore_value = (
+        float(ores["total_value"].sum())
+        if not ores.empty and "total_value" in ores.columns
+        else 0.0
+    )
+
+    output = BytesIO()
+    with pd.ExcelWriter(
+        output,
+        engine="xlsxwriter",
+        datetime_format="yyyy-mm-dd hh:mm AM/PM",
+    ) as writer:
+        workbook = writer.book
+        summary = workbook.add_worksheet("Summary")
+        writer.sheets["Summary"] = summary
+
+        title_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_size": 20,
+                "font_color": "#FFFFFF",
+                "bg_color": "#0B0E13",
+                "align": "left",
+                "valign": "vcenter",
+            }
+        )
+        label_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_color": "#8E9AAA",
+                "bg_color": "#11151C",
+                "border": 1,
+                "border_color": "#28313D",
+            }
+        )
+        value_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_size": 14,
+                "font_color": "#2AE0C7",
+                "bg_color": "#11151C",
+                "border": 1,
+                "border_color": "#28313D",
+            }
+        )
+        money_value_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_size": 14,
+                "font_color": "#2AE0C7",
+                "bg_color": "#11151C",
+                "border": 1,
+                "border_color": "#28313D",
+                "num_format": '#,##0 "aUEC"',
+            }
+        )
+        header_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_color": "#FFFFFF",
+                "bg_color": "#116B68",
+                "border": 1,
+                "border_color": "#2AE0C7",
+                "align": "center",
+                "valign": "vcenter",
+            }
+        )
+        money_format = workbook.add_format({"num_format": '#,##0 "aUEC"'})
+        date_format = workbook.add_format({"num_format": "yyyy-mm-dd hh:mm AM/PM"})
+
+        summary.set_tab_color("#2AE0C7")
+        summary.set_column("A:A", 23)
+        summary.set_column("B:B", 24)
+        summary.set_column("D:H", 15)
+        summary.set_row(0, 34)
+        summary.merge_range("A1:H1", "STAR CITIZEN TRACKER EXPORT", title_format)
+        summary.write("A3", "Account", label_format)
+        summary.write("B3", st.session_state.get("user_email", ""), value_format)
+        summary.write("A4", "Generated", label_format)
+        summary.write(
+            "B4",
+            datetime.now().strftime("%Y-%m-%d %I:%M %p"),
+            value_format,
+        )
+        summary.write("A6", "Contract Records", label_format)
+        summary.write_number("B6", len(contracts), value_format)
+        summary.write("A7", "Gross Contract Payout", label_format)
+        summary.write_number("B7", gross_payout, money_value_format)
+        summary.write("A8", "Net Contract Payout", label_format)
+        summary.write_number("B8", net_payout, money_value_format)
+        summary.write("A9", "Ore Ledger Entries", label_format)
+        summary.write_number("B9", len(ores), value_format)
+        summary.write("A10", "Recorded Ore Value", label_format)
+        summary.write_number("B10", ore_value, money_value_format)
+        summary.write(
+            "A12",
+            "This .xlsx file can be opened directly in Microsoft Excel or "
+            "uploaded into Google Sheets.",
+        )
+
+        contract_export.to_excel(
+            writer,
+            sheet_name="Contracts",
+            index=False,
+            startrow=0,
+        )
+        contract_sheet = writer.sheets["Contracts"]
+        contract_sheet.freeze_panes(1, 0)
+        contract_sheet.set_row(0, 24, header_format)
+        set_export_column_widths(contract_sheet, contract_export)
+        for column_index, column_name in enumerate(contract_export.columns):
+            contract_sheet.write(0, column_index, column_name, header_format)
+            if column_name == "Date":
+                contract_sheet.set_column(column_index, column_index, 22, date_format)
+            elif column_name in {
+                "Total Payout",
+                "Expenses",
+                "Net Payout",
+                "Individual Share",
+            }:
+                contract_sheet.set_column(column_index, column_index, 18, money_format)
+        if len(contract_export):
+            contract_sheet.add_table(
+                0,
+                0,
+                len(contract_export),
+                len(contract_export.columns) - 1,
+                {
+                    "name": "ContractsTable",
+                    "style": "Table Style Medium 2",
+                    "columns": [
+                        {"header": column} for column in contract_export.columns
+                    ],
+                },
+            )
+        elif len(contract_export.columns):
+            contract_sheet.autofilter(0, 0, 0, len(contract_export.columns) - 1)
+
+        ore_export.to_excel(
+            writer,
+            sheet_name="Ore Ledger",
+            index=False,
+            startrow=0,
+        )
+        ore_sheet = writer.sheets["Ore Ledger"]
+        ore_sheet.freeze_panes(1, 0)
+        ore_sheet.set_row(0, 24, header_format)
+        set_export_column_widths(ore_sheet, ore_export)
+        for column_index, column_name in enumerate(ore_export.columns):
+            ore_sheet.write(0, column_index, column_name, header_format)
+            if column_name == "Date":
+                ore_sheet.set_column(column_index, column_index, 22, date_format)
+            elif column_name == "Total Value":
+                ore_sheet.set_column(column_index, column_index, 18, money_format)
+        if len(ore_export):
+            ore_sheet.add_table(
+                0,
+                0,
+                len(ore_export),
+                len(ore_export.columns) - 1,
+                {
+                    "name": "OreLedgerTable",
+                    "style": "Table Style Medium 2",
+                    "columns": [
+                        {"header": column} for column in ore_export.columns
+                    ],
+                },
+            )
+        elif len(ore_export.columns):
+            ore_sheet.autofilter(0, 0, 0, len(ore_export.columns) - 1)
+
+    return output.getvalue()
+
+
 def records_page() -> None:
     page_banner(
         "records_banner.jpg",
-        "Saved Records",
+        "Records & Export",
         "Search, review, and export your complete contract and resource transaction history.",
         "Records Archive",
     )
 
     contracts, ores = load_data()
+
+    st.markdown(
+        """
+        <div class="section-heading">
+            <div>
+                <div class="section-title">Export all data</div>
+                <div class="section-copy">Download one formatted workbook with a summary, contracts, and ore ledger. The same file opens in Excel and imports directly into Google Sheets.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    export_col1, export_col2 = st.columns([1.2, 1])
+    with export_col1:
+        workbook_bytes = build_excel_export(contracts, ores)
+        st.download_button(
+            "Download Excel / Google Sheets Workbook",
+            data=workbook_bytes,
+            file_name=(
+                "star_citizen_tracker_export_"
+                f"{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+            ),
+            mime=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            ),
+            use_container_width=True,
+        )
+    with export_col2:
+        st.link_button(
+            "Open Google Sheets",
+            "https://sheets.new",
+            use_container_width=True,
+        )
+    st.caption(
+        "For Google Sheets, download the workbook, open Google Sheets, "
+        "then choose File > Import > Upload."
+    )
+
     contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
 
     with contract_tab:
@@ -1528,11 +1973,13 @@ def edit_records_page() -> None:
 
 
 def main() -> None:
+    cookies = get_cookie_manager()
     apply_custom_theme()
     client = get_supabase()
+    restore_login_from_cookie(client, cookies)
 
     if "user_id" not in st.session_state:
-        login_screen(client)
+        login_screen(client, cookies)
         return
 
     with st.sidebar:
@@ -1548,7 +1995,7 @@ def main() -> None:
             "Dashboard",
             "Contract Calculator",
             "Ore Ledger",
-            "Saved Records",
+            "Records & Export",
             "Edit or Delete",
         ]
 
@@ -1573,6 +2020,7 @@ def main() -> None:
             try:
                 client.auth.sign_out()
             finally:
+                remove_cookie_value(cookies, COOKIE_REFRESH_TOKEN)
                 clear_login_state()
                 st.rerun()
 
@@ -1582,7 +2030,7 @@ def main() -> None:
         contract_page()
     elif page == "Ore Ledger":
         ore_page()
-    elif page == "Saved Records":
+    elif page == "Records & Export":
         records_page()
     elif page == "Edit or Delete":
         edit_records_page()
