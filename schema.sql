@@ -23,10 +23,30 @@ create table if not exists public.ore_transactions (
     date_saved timestamptz not null default now(),
     action text not null check (action in ('Mined', 'Bought', 'Sold')),
     ore_name text not null,
-    total_value numeric not null check (total_value > 0),
+    quantity_scu numeric not null default 0 check (quantity_scu >= 0),
+    total_value numeric not null default 0 check (total_value >= 0),
     location text,
     notes text
+
 );
+
+-- Safe upgrades for existing deployments
+alter table public.ore_transactions
+    add column if not exists quantity_scu numeric not null default 0;
+
+alter table public.ore_transactions
+    drop constraint if exists ore_transactions_total_value_check;
+
+alter table public.ore_transactions
+    add constraint ore_transactions_total_value_check
+    check (total_value >= 0);
+
+alter table public.ore_transactions
+    drop constraint if exists ore_transactions_quantity_scu_check;
+
+alter table public.ore_transactions
+    add constraint ore_transactions_quantity_scu_check
+    check (quantity_scu >= 0);
 
 create index if not exists contracts_user_id_idx
     on public.contracts(user_id);

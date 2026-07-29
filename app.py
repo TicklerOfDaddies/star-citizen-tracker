@@ -8,13 +8,17 @@ from pathlib import Path
 from typing import Any
 import base64
 import html
+import json
 import re
+import time
+import zipfile
 
 import pandas as pd
 import requests
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 from supabase import Client, create_client
 from streamlit_cookies_manager_ext import EncryptedCookieManager
 
@@ -38,6 +42,8 @@ DEFAULT_TIMEZONE = "America/Chicago"
 COOKIE_PREFIX = "star-citizen-tracker/"
 COOKIE_REFRESH_TOKEN = "supabase_refresh_token"
 COOKIE_REMEMBERED_EMAIL = "remembered_email"
+DEFAULT_PUBLIC_APP_URL = "https://sccalculator.streamlit.app/"
+SC_CRAFT_TOOLS_URL = "https://sc-craft.tools/"
 
 CONTRACT_TYPES = [
     "Appointment / Mission Giver",
@@ -557,13 +563,13 @@ def get_supabase() -> Client:
 
 
 def get_cookie_manager() -> EncryptedCookieManager | None:
-    """Load encrypted browser cookies without blocking the whole app."""
+    """Load encrypted browser cookies before authentication is evaluated."""
     try:
         cookie_password = st.secrets["COOKIE_PASSWORD"]
     except KeyError:
         return None
 
-    if not cookie_password:
+    if not cookie_password or st.session_state.get("skip_cookie_restore"):
         return None
 
     try:
@@ -574,18 +580,27 @@ def get_cookie_manager() -> EncryptedCookieManager | None:
             )
 
         cookies = st.session_state.cookie_manager
+        if cookies.ready():
+            return cookies
 
-        # The browser cookie component may need one render cycle before it is
-        # ready. Returning None keeps the login page visible instead of
-        # stopping the entire Streamlit script on a blank screen.
-        if not cookies.ready():
-            return None
-
-        return cookies
-    except Exception:
-        # Persistent login is optional. The app should still load and allow a
-        # normal Supabase sign-in if browser cookie storage is unavailable.
+        # The cookie component is asynchronous. Stop before rendering the
+        # login page so a refresh is not mistaken for a signed-out session.
+        st.markdown("### Restoring your secure session")
+        st.caption(
+            "The app is loading the encrypted browser cookie used to keep "
+            "you signed in after a refresh."
+        )
+        st.info("This normally completes automatically in a moment.")
+        if st.button("Continue to sign in instead", width="stretch"):
+            st.session_state.skip_cookie_restore = True
+            st.rerun()
+        st.stop()
+    except Exception as exc:
         st.session_state.pop("cookie_manager", None)
+        st.warning(
+            "Persistent login is temporarily unavailable, but normal sign-in "
+            f"can still be used. Details: {exc}"
+        )
         return None
 
 
@@ -695,9 +710,13 @@ def remember_authenticated_session(
 
     if keep_signed_in and refresh_token:
         cookies[COOKIE_REFRESH_TOKEN] = refresh_token
+        st.session_state.pop("skip_cookie_restore", None)
     else:
         cookies.pop(COOKIE_REFRESH_TOKEN, None)
     cookies.save()
+    # Give the browser component a moment to persist the encrypted value
+    # before the Streamlit rerun begins.
+    time.sleep(0.20)
 
 
 def restore_login_from_cookie(
@@ -746,8 +765,134 @@ def clear_login_state() -> None:
         "user_email",
         "user_display_name",
         "supabase_client",
+        "password_recovery_active",
+        "recovery_error",
+        "skip_cookie_restore",
     ):
         st.session_state.pop(key, None)
+
+
+def get_public_app_url() -> str:
+    """Return the deployed app URL used by Supabase recovery emails."""
+    try:
+        configured = str(st.secrets["APP_PUBLIC_URL"]).strip()
+    except KeyError:
+        configured = ""
+    return configured or DEFAULT_PUBLIC_APP_URL
+
+
+def query_value(name: str) -> str:
+    """Read one query parameter as a simple string."""
+    value = st.query_params.get(name, "")
+    if isinstance(value, list):
+        return str(value[0]) if value else ""
+    return str(value or "")
+
+
+def handle_auth_redirect(
+    client: Client,
+    cookies: EncryptedCookieManager | None,
+) -> None:
+    """Handle Supabase recovery callbacks before showing the login page."""
+    code = query_value("code")
+    token_hash = query_value("token_hash")
+    recovery_flag = query_value("recovery")
+    auth_type = query_value("type")
+
+    if not any((code, token_hash, recovery_flag, auth_type == "recovery")):
+        return
+
+    if "user_id" not in st.session_state:
+        try:
+            if code:
+                response = client.auth.exchange_code_for_session(
+                    {"auth_code": code}
+                )
+            elif token_hash:
+                response = client.auth.verify_otp(
+                    {
+                        "token_hash": token_hash,
+                        "type": "recovery",
+                    }
+                )
+            else:
+                return
+
+            user = getattr(response, "user", None)
+            session = getattr(response, "session", None)
+            if user is None and session is not None:
+                user = getattr(session, "user", None)
+            if user is None:
+                raise RuntimeError("The recovery link did not include a user.")
+
+            user_email = getattr(user, "email", "") or ""
+            set_authenticated_user(user, user_email)
+            remember_authenticated_session(
+                response,
+                user_email,
+                True,
+                cookies,
+            )
+        except Exception as exc:
+            st.session_state.recovery_error = str(exc)
+            return
+
+    st.session_state.password_recovery_active = True
+    st.query_params.clear()
+
+
+def password_update_screen(
+    client: Client,
+    cookies: EncryptedCookieManager | None,
+) -> None:
+    """Let an authenticated recovery-session user choose a new password."""
+    page_banner(
+        "hero_banner.jpg",
+        "Choose a New Password",
+        "Your recovery link was accepted. Set a new password for this account.",
+        "Account Recovery",
+    )
+
+    with st.form("password_update_form"):
+        new_password = st.text_input(
+            "New password",
+            type="password",
+            help="Use at least 8 characters.",
+        )
+        confirm_password = st.text_input(
+            "Confirm new password",
+            type="password",
+        )
+        submitted = st.form_submit_button(
+            "Update Password",
+            width="stretch",
+        )
+
+    if submitted:
+        if len(new_password) < 8:
+            st.error("Use a password with at least 8 characters.")
+        elif new_password != confirm_password:
+            st.error("The passwords do not match.")
+        else:
+            try:
+                client.auth.update_user({"password": new_password})
+                st.session_state.pop("password_recovery_active", None)
+                st.session_state.pop("recovery_error", None)
+                st.success("Password updated. You are signed in.")
+                time.sleep(0.5)
+                st.rerun()
+            except Exception as exc:
+                st.error(f"The password could not be updated: {exc}")
+
+    if st.button("Cancel and sign out", width="stretch"):
+        try:
+            client.auth.sign_out()
+        except Exception:
+            pass
+        remove_cookie_value(cookies, COOKIE_REFRESH_TOKEN)
+        clear_login_state()
+        st.session_state.pop("password_recovery_active", None)
+        st.rerun()
 
 
 def login_screen(
@@ -761,7 +906,7 @@ def login_screen(
         "Operations Console",
     )
 
-    login_tab, signup_tab = st.tabs(["Sign in", "Create account"])
+    login_tab, signup_tab, recovery_tab = st.tabs(["Sign in", "Create account", "Recover account"])
 
     remembered_email = (
         cookies.get(COOKIE_REMEMBERED_EMAIL, "") if cookies is not None else ""
@@ -813,6 +958,50 @@ def login_screen(
                     st.rerun()
             except Exception as exc:
                 st.error(f"Sign in failed: {exc}")
+
+    with recovery_tab:
+        st.info(
+            "Your username is the email address used to create the account. "
+            "Enter that email below to receive a Supabase password-recovery link."
+        )
+        recovery_error = st.session_state.pop("recovery_error", "")
+        if recovery_error:
+            st.error(f"The recovery link could not be completed: {recovery_error}")
+
+        with st.form("password_recovery_request_form"):
+            recovery_email = st.text_input(
+                "Account email",
+                key="recovery_email",
+            )
+            recovery_submitted = st.form_submit_button(
+                "Send Password Reset Email",
+                width="stretch",
+            )
+
+        if recovery_submitted:
+            if "@" not in recovery_email:
+                st.error("Enter the email address used for the account.")
+            else:
+                try:
+                    redirect_url = (
+                        get_public_app_url().rstrip("/")
+                        + "/?recovery=1"
+                    )
+                    client.auth.reset_password_for_email(
+                        recovery_email.strip(),
+                        {"redirect_to": redirect_url},
+                    )
+                    st.success(
+                        "Recovery email sent. Open the link in that email, "
+                        "then return here to choose a new password."
+                    )
+                except Exception as exc:
+                    st.error(f"The recovery email could not be sent: {exc}")
+
+        st.caption(
+            "The app cannot reveal an unknown email address. If you no longer "
+            "remember which email you used, contact the app owner."
+        )
 
     with signup_tab:
         st.info(
@@ -898,11 +1087,86 @@ def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
                 utc=True,
             ).dt.tz_convert(APP_TIMEZONE)
 
+    # Existing deployments may not have the inventory quantity migration yet.
+    # Keep the app readable until the supplied SQL migration is run.
+    if "quantity_scu" not in ores.columns:
+        ores["quantity_scu"] = 0.0
+    ores["quantity_scu"] = pd.to_numeric(
+        ores["quantity_scu"],
+        errors="coerce",
+    ).fillna(0.0)
+
     return contracts, ores
 
 
 def format_money(value: float | int) -> str:
     return f"{float(value):,.0f} aUEC"
+
+
+def build_ore_inventory(ores: pd.DataFrame) -> pd.DataFrame:
+    """Calculate mined, bought, sold, and on-hand SCU by resource."""
+    columns = [
+        "Ore / Mineral",
+        "Mined (SCU)",
+        "Bought (SCU)",
+        "Sold (SCU)",
+        "On Hand (SCU)",
+        "Sales Value",
+        "Purchase Value",
+    ]
+    if ores.empty:
+        return pd.DataFrame(columns=columns)
+
+    working = ores.copy()
+    working["quantity_scu"] = pd.to_numeric(
+        working.get("quantity_scu", 0),
+        errors="coerce",
+    ).fillna(0.0)
+    working["total_value"] = pd.to_numeric(
+        working.get("total_value", 0),
+        errors="coerce",
+    ).fillna(0.0)
+
+    quantity_pivot = working.pivot_table(
+        index="ore_name",
+        columns="action",
+        values="quantity_scu",
+        aggfunc="sum",
+        fill_value=0.0,
+    )
+
+    for action in ("Mined", "Bought", "Sold"):
+        if action not in quantity_pivot.columns:
+            quantity_pivot[action] = 0.0
+
+    inventory = quantity_pivot[["Mined", "Bought", "Sold"]].copy()
+    inventory["On Hand"] = (
+        inventory["Mined"] + inventory["Bought"] - inventory["Sold"]
+    )
+
+    value_pivot = working.pivot_table(
+        index="ore_name",
+        columns="action",
+        values="total_value",
+        aggfunc="sum",
+        fill_value=0.0,
+    )
+    for action in ("Bought", "Sold"):
+        if action not in value_pivot.columns:
+            value_pivot[action] = 0.0
+
+    inventory["Sales Value"] = value_pivot["Sold"]
+    inventory["Purchase Value"] = value_pivot["Bought"]
+    inventory = inventory.reset_index().rename(
+        columns={
+            "ore_name": "Ore / Mineral",
+            "Mined": "Mined (SCU)",
+            "Bought": "Bought (SCU)",
+            "Sold": "Sold (SCU)",
+            "On Hand": "On Hand (SCU)",
+        }
+    )
+    return inventory[columns].sort_values("Ore / Mineral")
 
 
 def insert_contract(payload: dict[str, Any]) -> None:
@@ -1042,18 +1306,28 @@ def display_ore_table(ores: pd.DataFrame) -> None:
             "date_saved": "Date",
             "action": "Action",
             "ore_name": "Ore",
+            "quantity_scu": "Quantity (SCU)",
             "total_value": "Value",
             "location": "Location",
             "notes": "Notes",
         }
     ).copy()
 
+    quantity = pd.to_numeric(
+        table.get("Quantity (SCU)", 0),
+        errors="coerce",
+    ).fillna(0.0)
+    value = pd.to_numeric(table.get("Value", 0), errors="coerce").fillna(0.0)
+    table["Unit Value"] = value.where(quantity <= 0, value / quantity)
+
     ordered_columns = [
         "ID",
         "Date",
         "Action",
         "Ore",
+        "Quantity (SCU)",
         "Value",
+        "Unit Value",
         "Location",
         "Notes",
     ]
@@ -1067,7 +1341,9 @@ def display_ore_table(ores: pd.DataFrame) -> None:
         width="stretch",
         hide_index=True,
         column_config={
+            "Quantity (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
             "Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
+            "Unit Value": st.column_config.NumberColumn(format="%,.0f aUEC/SCU"),
         },
     )
 
@@ -1248,11 +1524,19 @@ def dashboard_page() -> None:
         else 0.0
     )
 
+    inventory = build_ore_inventory(ores)
+    on_hand_scu = (
+        float(inventory["On Hand (SCU)"].sum())
+        if not inventory.empty
+        else 0.0
+    )
+    total_earnings = personal_share + ore_sales
+
     st.markdown("<div class='section-title'>Overview</div>", unsafe_allow_html=True)
     metric_columns = st.columns(4)
     metric_columns[0].metric("Contracts Completed", f"{len(contracts):,}")
-    metric_columns[1].metric("Ore Entries", f"{len(ores):,}")
-    metric_columns[2].metric("Total Earnings (aUEC)", format_money(personal_share))
+    metric_columns[1].metric("Ore On Hand", f"{on_hand_scu:,.2f} SCU")
+    metric_columns[2].metric("Total Earnings", format_money(total_earnings))
     metric_columns[3].metric("Ore Trade Net", format_money(ore_sales - ore_purchases))
 
     feature_dashboard_cards()
@@ -1269,93 +1553,127 @@ def dashboard_page() -> None:
         unsafe_allow_html=True,
     )
 
-    if contracts.empty:
-        contract_time_figure = empty_dashboard_figure(
-            "Save a contract to begin tracking income over time."
+    earnings_parts: list[pd.DataFrame] = []
+
+    if not contracts.empty:
+        contract_events = contracts.dropna(subset=["date_saved"]).copy()
+        contract_events["Day"] = contract_events["date_saved"].dt.floor("D")
+        contract_events["Contract Take-Home"] = pd.to_numeric(
+            contract_events.get("individual_share", 0),
+            errors="coerce",
+        ).fillna(0.0)
+        earnings_parts.append(
+            contract_events[["Day", "Contract Take-Home"]]
+            .groupby("Day", as_index=False)
+            .sum()
         )
-        contract_type_figure = empty_dashboard_figure(
-            "Contract categories will appear here after your first mission."
+
+    if not ores.empty:
+        sale_events = ores.loc[ores["action"] == "Sold"].dropna(
+            subset=["date_saved"]
+        ).copy()
+        if not sale_events.empty:
+            sale_events["Day"] = sale_events["date_saved"].dt.floor("D")
+            sale_events["Ore Sales"] = pd.to_numeric(
+                sale_events.get("total_value", 0),
+                errors="coerce",
+            ).fillna(0.0)
+            earnings_parts.append(
+                sale_events[["Day", "Ore Sales"]]
+                .groupby("Day", as_index=False)
+                .sum()
+            )
+
+    if not earnings_parts:
+        total_earnings_figure = empty_dashboard_figure(
+            "Save a contract or ore sale to begin tracking earnings over time."
         )
     else:
-        contract_time_data = contracts.dropna(subset=["date_saved"]).copy()
-        contract_time_data["Day"] = contract_time_data["date_saved"].dt.floor("D")
-        contract_time_data = (
-            contract_time_data.groupby("Day", as_index=False)
-            .agg(
-                net_payout=("net_payout", "sum"),
-                contract_count=("id", "count"),
+        earnings_daily = earnings_parts[0]
+        for earnings_part in earnings_parts[1:]:
+            earnings_daily = earnings_daily.merge(
+                earnings_part,
+                on="Day",
+                how="outer",
             )
-            .sort_values("Day")
+        for column in ("Contract Take-Home", "Ore Sales"):
+            if column not in earnings_daily.columns:
+                earnings_daily[column] = 0.0
+        earnings_daily[["Contract Take-Home", "Ore Sales"]] = (
+            earnings_daily[["Contract Take-Home", "Ore Sales"]].fillna(0.0)
         )
-        contract_time_data["plot_value"] = contract_time_data["net_payout"].abs()
-        contract_time_data["Day Label"] = contract_time_data["Day"].dt.strftime(
+        earnings_daily["Total Earnings"] = (
+            earnings_daily["Contract Take-Home"] + earnings_daily["Ore Sales"]
+        )
+        earnings_daily = earnings_daily.sort_values("Day").reset_index(drop=True)
+        earnings_daily["x_position"] = list(range(len(earnings_daily)))
+        earnings_daily["Day Label"] = earnings_daily["Day"].dt.strftime(
             "%b %d, %Y"
         )
-        contract_time_data["value_label"] = contract_time_data["net_payout"].map(
+        earnings_daily["plot_value"] = earnings_daily["Total Earnings"].abs()
+        earnings_daily["value_label"] = earnings_daily["Total Earnings"].map(
             lambda value: f"{value:,.0f} aUEC"
         )
-        time_point_colors = [
+        earnings_colors = [
             "#20A36A" if value >= 0 else "#E5484D"
-            for value in contract_time_data["net_payout"]
+            for value in earnings_daily["Total Earnings"]
         ]
 
-        contract_time_figure = px.area(
-            contract_time_data,
-            x="Day Label",
-            y="plot_value",
-            markers=True,
-            custom_data=["net_payout", "contract_count", "value_label"],
-            labels={
-                "Day Label": "Day",
-                "plot_value": "Payout magnitude in aUEC",
-                "contract_count": "Contracts",
-            },
+        total_earnings_figure = go.Figure()
+        total_earnings_figure.add_trace(
+            go.Bar(
+                x=earnings_daily["x_position"],
+                y=earnings_daily["plot_value"],
+                marker_color=earnings_colors,
+                text=earnings_daily["value_label"],
+                textposition="outside",
+                cliponaxis=False,
+                customdata=earnings_daily[
+                    ["Contract Take-Home", "Ore Sales", "Total Earnings"]
+                ].to_numpy(),
+                hovertemplate=(
+                    "<b>%{customdata[2]:,.0f} aUEC total</b><br>"
+                    "Contract take-home: %{customdata[0]:,.0f} aUEC<br>"
+                    "Ore sales: %{customdata[1]:,.0f} aUEC<extra></extra>"
+                ),
+                name="Total Earnings",
+            )
         )
-        contract_time_figure.update_traces(
-            line={"width": 2.5, "color": "#1378E5"},
-            marker={
-                "color": time_point_colors,
-                "size": 10,
-                "line": {"color": "#ffffff", "width": 1.5},
-            },
-            fillcolor="rgba(19,120,229,0.10)",
-            mode="lines+markers+text",
-            text=contract_time_data["value_label"],
-            textposition="top center",
-            cliponaxis=False,
-            hovertemplate=(
-                "<b>%{x}</b><br>"
-                "Net payout: %{customdata[0]:,.0f} aUEC<br>"
-                "Contracts: %{customdata[1]}<extra></extra>"
-            ),
-        )
-        contract_time_figure.update_xaxes(
-            type="category",
-            categoryorder="array",
-            categoryarray=contract_time_data["Day Label"].tolist(),
+        tick_positions = earnings_daily["x_position"].tolist()
+        total_earnings_figure.update_xaxes(
+            type="linear",
             tickmode="array",
-            tickvals=contract_time_data["Day Label"].tolist(),
-            ticktext=contract_time_data["Day Label"].tolist(),
+            tickvals=tick_positions,
+            ticktext=earnings_daily["Day Label"].tolist(),
+            range=[-0.6, max(tick_positions[-1] + 0.6, 0.6)],
             title_text="Day",
         )
-        contract_time_figure.update_yaxes(rangemode="tozero")
-        style_plotly_figure(contract_time_figure, height=430)
-        contract_time_figure.update_layout(
+        total_earnings_figure.update_yaxes(
+            rangemode="tozero",
+            title_text="Earnings magnitude in aUEC",
+        )
+        style_plotly_figure(total_earnings_figure, height=430)
+        total_earnings_figure.update_layout(
             margin={"l": 38, "r": 28, "t": 54, "b": 60},
             showlegend=False,
         )
-        contract_time_figure.add_annotation(
+        total_earnings_figure.add_annotation(
             x=0,
             y=1.08,
             xref="paper",
             yref="paper",
-            text="<span style='color:#20A36A'>● Positive</span>&nbsp;&nbsp;&nbsp;"
-                 "<span style='color:#E5484D'>● Negative</span>",
+            text="<span style='color:#20A36A'>■ Positive</span>&nbsp;&nbsp;&nbsp;"
+                 "<span style='color:#E5484D'>■ Negative</span>",
             showarrow=False,
             xanchor="left",
             font={"size": 12},
         )
 
+    if contracts.empty:
+        contract_type_figure = empty_dashboard_figure(
+            "Contract categories will appear here after your first mission."
+        )
+    else:
         contract_type_data = (
             contracts.groupby("contract_type", as_index=False)
             .agg(
@@ -1448,7 +1766,7 @@ def dashboard_page() -> None:
         ]
         ore_value_data["plot_value"] = ore_value_data["total_value"].abs()
         ore_value_data["value_label"] = ore_value_data["total_value"].map(
-            lambda value: f"{value:,.0f}"
+            lambda value: f"{value:,.0f} aUEC"
         )
 
         ore_value_figure = px.bar(
@@ -1528,10 +1846,10 @@ def dashboard_page() -> None:
     chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         chart_card(
-            "Contract earnings over time",
-            "Daily net contract payout for the selected date range.",
-            contract_time_figure,
-            "dashboard_contract_time",
+            "Total earnings over time",
+            "Contract take-home plus recorded ore sales for the selected date range.",
+            total_earnings_figure,
+            "dashboard_total_earnings_time",
         )
     with chart_col2:
         chart_card(
@@ -1697,6 +2015,7 @@ def ore_page() -> None:
         "Industrial Operations",
     )
 
+    st.markdown("### Add Ore or Gem Activity")
     with st.form("ore_form", clear_on_submit=True):
         action = st.selectbox("Entry type", ["Mined", "Bought", "Sold"])
         selected_ore = st.selectbox("Ore or mineral", ORE_TYPES)
@@ -1704,11 +2023,29 @@ def ore_page() -> None:
         if selected_ore == "Other / Custom":
             custom_ore = st.text_input("Custom ore or mineral")
 
-        total_value = st.number_input(
-            "Total value",
-            min_value=0.0,
-            step=1000.0,
-        )
+        amount_col1, amount_col2 = st.columns(2)
+        with amount_col1:
+            quantity_scu = st.number_input(
+                "Quantity (SCU)",
+                min_value=0.0,
+                step=0.1,
+                format="%.2f",
+                help=(
+                    "Enter the amount mined, bought, or sold. On-hand inventory "
+                    "is calculated as mined plus bought minus sold."
+                ),
+            )
+        with amount_col2:
+            total_value = st.number_input(
+                "Total value (aUEC)",
+                min_value=0.0,
+                step=1000.0,
+                help=(
+                    "For Sold entries, enter the sale proceeds. For Bought entries, "
+                    "enter the purchase cost. Mined entries may use an estimated value."
+                ),
+            )
+
         location = st.text_input(
             "Location",
             placeholder="Example: Aberdeen, ARC-L1, Levski",
@@ -1731,28 +2068,67 @@ def ore_page() -> None:
 
         if not ore_name:
             st.error("Enter a custom ore or mineral.")
-            return
-        if total_value <= 0:
-            st.error("Enter a value greater than zero.")
-            return
+        elif quantity_scu <= 0 and total_value <= 0:
+            st.error("Enter a quantity, a value, or both.")
+        else:
+            payload = {
+                "user_id": st.session_state.user_id,
+                "action": action,
+                "ore_name": ore_name,
+                "quantity_scu": quantity_scu,
+                "total_value": total_value,
+                "location": location.strip(),
+                "notes": notes.strip(),
+            }
 
-        payload = {
-            "user_id": st.session_state.user_id,
-            "action": action,
-            "ore_name": ore_name,
-            "total_value": total_value,
-            "location": location.strip(),
-            "notes": notes.strip(),
-        }
+            try:
+                insert_ore(payload)
+                st.success(
+                    f"{action} entry saved: {ore_name} | "
+                    f"{quantity_scu:,.2f} SCU | {format_money(total_value)}"
+                )
+                st.rerun()
+            except Exception as exc:
+                error_text = str(exc)
+                if "quantity_scu" in error_text:
+                    st.error(
+                        "The quantity column is not installed yet. Run "
+                        "schema_migration_v2.sql in Supabase, then try again."
+                    )
+                else:
+                    st.error(f"The ore entry could not be saved: {exc}")
 
-        try:
-            insert_ore(payload)
-            st.success(
-                f"{action} entry saved: {ore_name} | "
-                f"{format_money(total_value)}"
-            )
-        except Exception as exc:
-            st.error(f"The ore entry could not be saved: {exc}")
+    _, ores = load_data()
+    inventory = build_ore_inventory(ores)
+
+    st.markdown("### On-Hand Ore and Gem Inventory")
+    if inventory.empty:
+        st.info("Add mined, bought, or sold quantities to begin tracking on-hand inventory.")
+    else:
+        total_on_hand = float(inventory["On Hand (SCU)"].sum())
+        total_sales = float(inventory["Sales Value"].sum())
+        total_purchases = float(inventory["Purchase Value"].sum())
+        inv_col1, inv_col2, inv_col3 = st.columns(3)
+        inv_col1.metric("Total On Hand", f"{total_on_hand:,.2f} SCU")
+        inv_col2.metric("Recorded Sales", format_money(total_sales))
+        inv_col3.metric("Trade Net", format_money(total_sales - total_purchases))
+
+        st.dataframe(
+            inventory,
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Mined (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
+                "Bought (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
+                "Sold (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
+                "On Hand (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
+                "Sales Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
+                "Purchase Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
+            },
+        )
+
+    st.markdown("### Recent Ore Activity")
+    display_ore_table(ores)
 
 
 def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
@@ -1796,7 +2172,8 @@ def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
         "date_saved": "Date",
         "action": "Action",
         "ore_name": "Ore / Mineral",
-        "total_value": "Total Value",
+        "quantity_scu": "Quantity (SCU)",
+        "total_value": "Total Value (aUEC)",
         "location": "Location",
         "notes": "Notes",
     }
@@ -1805,7 +2182,8 @@ def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
         "Date",
         "Action",
         "Ore / Mineral",
-        "Total Value",
+        "Quantity (SCU)",
+        "Total Value (aUEC)",
         "Location",
         "Notes",
     ]
@@ -1824,29 +2202,64 @@ def set_export_column_widths(worksheet: Any, frame: pd.DataFrame) -> None:
         worksheet.set_column(column_index, column_index, min(maximum + 2, 42))
 
 
-def build_excel_export(
+def export_summary_values(
     contracts: pd.DataFrame,
     ores: pd.DataFrame,
-) -> bytes:
-    """Create one formatted workbook that opens in Excel or Google Sheets."""
-    contract_export = prepare_contract_export(contracts)
-    ore_export = prepare_ore_export(ores)
-
+) -> list[list[Any]]:
+    """Return export-summary rows shared by Excel, CSV, and Google Sheets."""
     gross_payout = (
         float(contracts["total_payout"].sum())
         if not contracts.empty and "total_payout" in contracts.columns
         else 0.0
     )
-    net_payout = (
-        float(contracts["net_payout"].sum())
-        if not contracts.empty and "net_payout" in contracts.columns
+    contract_take_home = (
+        float(contracts["individual_share"].sum())
+        if not contracts.empty and "individual_share" in contracts.columns
         else 0.0
     )
-    ore_value = (
-        float(ores["total_value"].sum())
-        if not ores.empty and "total_value" in ores.columns
+    ore_sales = (
+        float(ores.loc[ores["action"] == "Sold", "total_value"].sum())
+        if not ores.empty
         else 0.0
     )
+    ore_purchases = (
+        float(ores.loc[ores["action"] == "Bought", "total_value"].sum())
+        if not ores.empty
+        else 0.0
+    )
+    inventory = build_ore_inventory(ores)
+    on_hand = (
+        float(inventory["On Hand (SCU)"].sum())
+        if not inventory.empty
+        else 0.0
+    )
+    total_earnings = contract_take_home + ore_sales
+
+    return [
+        ["Metric", "Value"],
+        ["Account", st.session_state.get("user_email", "")],
+        ["Generated", datetime.now().strftime("%Y-%m-%d %I:%M %p")],
+        ["Contract Records", len(contracts)],
+        ["Gross Contract Payout", gross_payout],
+        ["Contract Take-Home", contract_take_home],
+        ["Ore Ledger Entries", len(ores)],
+        ["Ore Sales", ore_sales],
+        ["Ore Purchases", ore_purchases],
+        ["Ore Trade Net", ore_sales - ore_purchases],
+        ["Ore On Hand (SCU)", on_hand],
+        ["Total Earnings", total_earnings],
+    ]
+
+
+def build_excel_export(
+    contracts: pd.DataFrame,
+    ores: pd.DataFrame,
+) -> bytes:
+    """Create a verified multi-sheet workbook for Excel and Google Sheets."""
+    contract_export = prepare_contract_export(contracts)
+    ore_export = prepare_ore_export(ores)
+    inventory_export = build_ore_inventory(ores)
+    summary_rows = export_summary_values(contracts, ores)
 
     output = BytesIO()
     with pd.ExcelWriter(
@@ -1855,165 +2268,257 @@ def build_excel_export(
         datetime_format="yyyy-mm-dd hh:mm AM/PM",
     ) as writer:
         workbook = writer.book
-        summary = workbook.add_worksheet("Summary")
-        writer.sheets["Summary"] = summary
-
         title_format = workbook.add_format(
             {
                 "bold": True,
                 "font_size": 20,
                 "font_color": "#FFFFFF",
-                "bg_color": "#0B0E13",
+                "bg_color": "#10233F",
                 "align": "left",
                 "valign": "vcenter",
-            }
-        )
-        label_format = workbook.add_format(
-            {
-                "bold": True,
-                "font_color": "#8E9AAA",
-                "bg_color": "#11151C",
-                "border": 1,
-                "border_color": "#28313D",
-            }
-        )
-        value_format = workbook.add_format(
-            {
-                "bold": True,
-                "font_size": 14,
-                "font_color": "#2AE0C7",
-                "bg_color": "#11151C",
-                "border": 1,
-                "border_color": "#28313D",
-            }
-        )
-        money_value_format = workbook.add_format(
-            {
-                "bold": True,
-                "font_size": 14,
-                "font_color": "#2AE0C7",
-                "bg_color": "#11151C",
-                "border": 1,
-                "border_color": "#28313D",
-                "num_format": '#,##0 "aUEC"',
             }
         )
         header_format = workbook.add_format(
             {
                 "bold": True,
                 "font_color": "#FFFFFF",
-                "bg_color": "#116B68",
+                "bg_color": "#1378E5",
                 "border": 1,
-                "border_color": "#2AE0C7",
+                "border_color": "#8FC7FF",
                 "align": "center",
                 "valign": "vcenter",
             }
         )
+        label_format = workbook.add_format(
+            {
+                "bold": True,
+                "font_color": "#243A55",
+                "bg_color": "#EAF4FF",
+                "border": 1,
+                "border_color": "#D1E3F5",
+            }
+        )
+        value_format = workbook.add_format(
+            {
+                "font_color": "#10233F",
+                "bg_color": "#FFFFFF",
+                "border": 1,
+                "border_color": "#D1E3F5",
+            }
+        )
         money_format = workbook.add_format({"num_format": '#,##0 "aUEC"'})
+        quantity_format = workbook.add_format({"num_format": '0.00 "SCU"'})
         date_format = workbook.add_format({"num_format": "yyyy-mm-dd hh:mm AM/PM"})
 
-        summary.set_tab_color("#2AE0C7")
-        summary.set_column("A:A", 23)
-        summary.set_column("B:B", 24)
-        summary.set_column("D:H", 15)
+        summary = workbook.add_worksheet("Summary")
+        writer.sheets["Summary"] = summary
+        summary.set_tab_color("#1378E5")
+        summary.set_column("A:A", 28)
+        summary.set_column("B:B", 26)
         summary.set_row(0, 34)
-        summary.merge_range("A1:H1", "STAR CITIZEN TRACKER EXPORT", title_format)
-        summary.write("A3", "Account", label_format)
-        summary.write("B3", st.session_state.get("user_email", ""), value_format)
-        summary.write("A4", "Generated", label_format)
-        summary.write(
-            "B4",
-            datetime.now().strftime("%Y-%m-%d %I:%M %p"),
-            value_format,
-        )
-        summary.write("A6", "Contract Records", label_format)
-        summary.write_number("B6", len(contracts), value_format)
-        summary.write("A7", "Gross Contract Payout", label_format)
-        summary.write_number("B7", gross_payout, money_value_format)
-        summary.write("A8", "Net Contract Payout", label_format)
-        summary.write_number("B8", net_payout, money_value_format)
-        summary.write("A9", "Ore Ledger Entries", label_format)
-        summary.write_number("B9", len(ores), value_format)
-        summary.write("A10", "Recorded Ore Value", label_format)
-        summary.write_number("B10", ore_value, money_value_format)
-        summary.write(
-            "A12",
-            "This .xlsx file can be opened directly in Microsoft Excel or "
-            "uploaded into Google Sheets.",
-        )
-
-        contract_export.to_excel(
-            writer,
-            sheet_name="Contracts",
-            index=False,
-            startrow=0,
-        )
-        contract_sheet = writer.sheets["Contracts"]
-        contract_sheet.freeze_panes(1, 0)
-        contract_sheet.set_row(0, 24, header_format)
-        set_export_column_widths(contract_sheet, contract_export)
-        for column_index, column_name in enumerate(contract_export.columns):
-            contract_sheet.write(0, column_index, column_name, header_format)
-            if column_name == "Date":
-                contract_sheet.set_column(column_index, column_index, 22, date_format)
-            elif column_name in {
-                "Total Payout",
-                "Expenses",
-                "Net Payout",
-                "Individual Share",
+        summary.merge_range("A1:F1", "STAR CITIZEN TRACKER EXPORT", title_format)
+        summary.write_row("A3", summary_rows[0], header_format)
+        for row_index, row in enumerate(summary_rows[1:], start=3):
+            summary.write(row_index, 0, row[0], label_format)
+            value = row[1]
+            if row[0] in {
+                "Gross Contract Payout",
+                "Contract Take-Home",
+                "Ore Sales",
+                "Ore Purchases",
+                "Ore Trade Net",
+                "Total Earnings",
             }:
-                contract_sheet.set_column(column_index, column_index, 18, money_format)
-        if len(contract_export):
-            contract_sheet.add_table(
-                0,
-                0,
-                len(contract_export),
-                len(contract_export.columns) - 1,
-                {
-                    "name": "ContractsTable",
-                    "style": "Table Style Medium 2",
-                    "columns": [
-                        {"header": column} for column in contract_export.columns
-                    ],
-                },
-            )
-        elif len(contract_export.columns):
-            contract_sheet.autofilter(0, 0, 0, len(contract_export.columns) - 1)
+                summary.write_number(row_index, 1, float(value), money_format)
+            elif row[0] == "Ore On Hand (SCU)":
+                summary.write_number(row_index, 1, float(value), quantity_format)
+            elif isinstance(value, (int, float)):
+                summary.write_number(row_index, 1, float(value), value_format)
+            else:
+                summary.write(row_index, 1, value, value_format)
 
-        ore_export.to_excel(
-            writer,
-            sheet_name="Ore Ledger",
-            index=False,
-            startrow=0,
-        )
-        ore_sheet = writer.sheets["Ore Ledger"]
-        ore_sheet.freeze_panes(1, 0)
-        ore_sheet.set_row(0, 24, header_format)
-        set_export_column_widths(ore_sheet, ore_export)
-        for column_index, column_name in enumerate(ore_export.columns):
-            ore_sheet.write(0, column_index, column_name, header_format)
-            if column_name == "Date":
-                ore_sheet.set_column(column_index, column_index, 22, date_format)
-            elif column_name == "Total Value":
-                ore_sheet.set_column(column_index, column_index, 18, money_format)
-        if len(ore_export):
-            ore_sheet.add_table(
-                0,
-                0,
-                len(ore_export),
-                len(ore_export.columns) - 1,
-                {
-                    "name": "OreLedgerTable",
-                    "style": "Table Style Medium 2",
-                    "columns": [
-                        {"header": column} for column in ore_export.columns
-                    ],
-                },
-            )
-        elif len(ore_export.columns):
-            ore_sheet.autofilter(0, 0, 0, len(ore_export.columns) - 1)
+        sheet_specs = [
+            ("Contracts", contract_export, {
+                "Date": date_format,
+                "Total Payout": money_format,
+                "Expenses": money_format,
+                "Net Payout": money_format,
+                "Individual Share": money_format,
+            }),
+            ("Ore Ledger", ore_export, {
+                "Date": date_format,
+                "Quantity (SCU)": quantity_format,
+                "Total Value (aUEC)": money_format,
+            }),
+            ("Ore Inventory", inventory_export, {
+                "Mined (SCU)": quantity_format,
+                "Bought (SCU)": quantity_format,
+                "Sold (SCU)": quantity_format,
+                "On Hand (SCU)": quantity_format,
+                "Sales Value": money_format,
+                "Purchase Value": money_format,
+            }),
+        ]
+
+        table_names = {
+            "Contracts": "ContractsTable",
+            "Ore Ledger": "OreLedgerTable",
+            "Ore Inventory": "OreInventoryTable",
+        }
+
+        for sheet_name, frame, formats in sheet_specs:
+            frame.to_excel(writer, sheet_name=sheet_name, index=False, startrow=0)
+            worksheet = writer.sheets[sheet_name]
+            worksheet.freeze_panes(1, 0)
+            worksheet.set_row(0, 24)
+            set_export_column_widths(worksheet, frame)
+            for column_index, column_name in enumerate(frame.columns):
+                worksheet.write(0, column_index, column_name, header_format)
+                if column_name in formats:
+                    width = 22 if column_name == "Date" else 18
+                    worksheet.set_column(
+                        column_index,
+                        column_index,
+                        width,
+                        formats[column_name],
+                    )
+            if len(frame) and len(frame.columns):
+                worksheet.add_table(
+                    0,
+                    0,
+                    len(frame),
+                    len(frame.columns) - 1,
+                    {
+                        "name": table_names[sheet_name],
+                        "style": "Table Style Medium 2",
+                        "columns": [
+                            {"header": column} for column in frame.columns
+                        ],
+                    },
+                )
+            elif len(frame.columns):
+                worksheet.autofilter(0, 0, 0, len(frame.columns) - 1)
 
     return output.getvalue()
+
+
+def dataframe_csv_bytes(frame: pd.DataFrame) -> bytes:
+    """Return an Excel-friendly UTF-8 CSV."""
+    export = frame.copy()
+    for column in export.columns:
+        if pd.api.types.is_datetime64_any_dtype(export[column]):
+            export[column] = export[column].astype(str)
+    return export.to_csv(index=False).encode("utf-8-sig")
+
+
+def build_csv_export_zip(
+    contracts: pd.DataFrame,
+    ores: pd.DataFrame,
+) -> bytes:
+    """Create a ZIP with every export table as a separate CSV."""
+    contract_export = prepare_contract_export(contracts)
+    ore_export = prepare_ore_export(ores)
+    inventory_export = build_ore_inventory(ores)
+    summary_export = pd.DataFrame(
+        export_summary_values(contracts, ores)[1:],
+        columns=["Metric", "Value"],
+    )
+
+    output = BytesIO()
+    with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("Summary.csv", dataframe_csv_bytes(summary_export))
+        archive.writestr("Contracts.csv", dataframe_csv_bytes(contract_export))
+        archive.writestr("Ore Ledger.csv", dataframe_csv_bytes(ore_export))
+        archive.writestr("Ore Inventory.csv", dataframe_csv_bytes(inventory_export))
+    return output.getvalue()
+
+
+def google_service_account_config() -> dict[str, Any] | None:
+    """Read optional Google service-account JSON from Streamlit Secrets."""
+    try:
+        raw = st.secrets["GOOGLE_SERVICE_ACCOUNT_JSON"]
+    except KeyError:
+        return None
+
+    if isinstance(raw, dict):
+        return dict(raw)
+    try:
+        return json.loads(str(raw))
+    except json.JSONDecodeError:
+        return None
+
+
+def create_filled_google_sheet(
+    contracts: pd.DataFrame,
+    ores: pd.DataFrame,
+) -> str:
+    """Create and share a populated Google Sheet when credentials are configured."""
+    credentials = google_service_account_config()
+    if not credentials:
+        raise RuntimeError(
+            "GOOGLE_SERVICE_ACCOUNT_JSON is not configured in Streamlit Secrets."
+        )
+
+    import gspread
+
+    client = gspread.service_account_from_dict(credentials)
+    title = f"Star Citizen Tracker {datetime.now().strftime('%Y-%m-%d %H%M')}"
+    spreadsheet = client.create(title)
+
+    summary_frame = pd.DataFrame(
+        export_summary_values(contracts, ores)[1:],
+        columns=["Metric", "Value"],
+    )
+    frames = {
+        "Summary": summary_frame,
+        "Contracts": prepare_contract_export(contracts),
+        "Ore Ledger": prepare_ore_export(ores),
+        "Ore Inventory": build_ore_inventory(ores),
+    }
+
+    first_sheet = spreadsheet.sheet1
+    first_sheet.update_title("Summary")
+
+    for index, (sheet_name, frame) in enumerate(frames.items()):
+        worksheet = (
+            first_sheet
+            if index == 0
+            else spreadsheet.add_worksheet(
+                title=sheet_name,
+                rows=max(len(frame) + 20, 100),
+                cols=max(len(frame.columns) + 5, 20),
+            )
+        )
+        safe_frame = frame.copy().fillna("")
+        for column in safe_frame.columns:
+            safe_frame[column] = safe_frame[column].map(
+                lambda value: (
+                    value.isoformat(sep=" ")
+                    if isinstance(value, (datetime, pd.Timestamp))
+                    else value
+                )
+            )
+        values = [safe_frame.columns.tolist(), *safe_frame.values.tolist()]
+        worksheet.update(range_name="A1", values=values)
+        worksheet.freeze(rows=1)
+        worksheet.format(
+            "1:1",
+            {
+                "backgroundColor": {"red": 0.075, "green": 0.47, "blue": 0.90},
+                "textFormat": {"foregroundColor": {"red": 1, "green": 1, "blue": 1}, "bold": True},
+            },
+        )
+
+    user_email = st.session_state.get("user_email", "")
+    if user_email and "@" in user_email:
+        spreadsheet.share(
+            user_email,
+            perm_type="user",
+            role="writer",
+            notify=False,
+        )
+
+    return spreadsheet.url
 
 
 def records_page() -> None:
@@ -2240,7 +2745,9 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
         ore_options = {
             int(row["id"]): (
                 f'ID {int(row["id"])} | {row["action"]} | '
-                f'{row["ore_name"]} | {format_money(row["total_value"])}'
+                f'{row["ore_name"]} | '
+                f'{float(row.get("quantity_scu", 0) or 0):,.2f} SCU | '
+                f'{format_money(row["total_value"])}'
             )
             for _, row in ores.iterrows()
         }
@@ -2259,11 +2766,21 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 index=["Mined", "Bought", "Sold"].index(record["action"]),
             )
             ore_name = st.text_input("Ore or mineral", value=record["ore_name"])
-            value = st.number_input(
-                "Total value",
-                min_value=0.0,
-                value=float(record["total_value"]),
-            )
+            edit_amount_col1, edit_amount_col2 = st.columns(2)
+            with edit_amount_col1:
+                quantity_scu = st.number_input(
+                    "Quantity (SCU)",
+                    min_value=0.0,
+                    value=float(record.get("quantity_scu", 0) or 0),
+                    step=0.1,
+                    format="%.2f",
+                )
+            with edit_amount_col2:
+                value = st.number_input(
+                    "Total value (aUEC)",
+                    min_value=0.0,
+                    value=float(record["total_value"]),
+                )
             location = st.text_input(
                 "Location",
                 value=record.get("location", "") or "",
@@ -2278,12 +2795,15 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
             )
 
         if update_submitted:
-            if not ore_name.strip() or value <= 0:
-                st.error("Ore name and a positive value are required.")
+            if not ore_name.strip():
+                st.error("Ore name is required.")
+            elif quantity_scu <= 0 and value <= 0:
+                st.error("Enter a quantity, a value, or both.")
             else:
                 payload = {
                     "action": action,
                     "ore_name": ore_name.strip(),
+                    "quantity_scu": quantity_scu,
                     "total_value": value,
                     "location": location.strip(),
                     "notes": notes.strip(),
@@ -2454,11 +2974,25 @@ def enrich_uex_spawn_rates(
         if not exact.empty:
             return str(exact.iloc[0]["Spawn Rate"])
 
-        unique_rates = matches["Spawn Rate"].dropna().astype(str).unique()
-        if len(unique_rates) == 1:
-            return unique_rates[0]
+        system_rates = (
+            matches["Spawn Rate"]
+            .dropna()
+            .astype(str)
+            .loc[lambda values: values.str.strip().ne("")]
+        )
+        if not system_rates.empty:
+            return f"{system_rates.mode().iloc[0]} (community estimate)"
 
-        return "Not published by UEX"
+        resource_rates = (
+            local.loc[local["_resource"] == resource, "Spawn Rate"]
+            .dropna()
+            .astype(str)
+            .loc[lambda values: values.str.strip().ne("")]
+        )
+        if not resource_rates.empty:
+            return f"{resource_rates.mode().iloc[0]} (resource estimate)"
+
+        return "UEX location confirmed; exact rate unavailable"
 
     live_rows["Spawn Rate"] = live_rows.apply(find_spawn_rate, axis=1)
     return live_rows
@@ -2789,21 +3323,20 @@ def mining_locations_page() -> None:
 
     st.markdown("### Location Reference")
 
+    display_columns = [
+        "Resource",
+        "Category",
+        "System",
+        "Location",
+        "Site Type",
+        "Spawn Rate",
+        "Mining Method",
+        "UEX Updated",
+    ]
+
     if filtered.empty:
         st.info("No locations match the current search and filters.")
     else:
-        display_columns = [
-            "Resource",
-            "Category",
-            "System",
-            "Location",
-            "Site Type",
-            "Spawn Rate",
-            "Mining Method",
-            "Source",
-            "UEX Updated",
-            "Notes",
-        ]
         st.dataframe(
             filtered[display_columns].sort_values(
                 ["Category", "Resource", "System", "Location"]
@@ -2818,15 +3351,13 @@ def mining_locations_page() -> None:
                 "Site Type": st.column_config.TextColumn("Spawn Area", width="medium"),
                 "Spawn Rate": st.column_config.TextColumn("Spawn Rate", width="medium"),
                 "Mining Method": st.column_config.TextColumn("Method", width="small"),
-                "Source": st.column_config.TextColumn("Source", width="medium"),
                 "UEX Updated": st.column_config.TextColumn("UEX Updated", width="medium"),
-                "Notes": st.column_config.TextColumn("Notes", width="large"),
             },
         )
 
     st.download_button(
         "Download Filtered Mining Locations CSV",
-        data=filtered.to_csv(index=False).encode("utf-8"),
+        data=dataframe_csv_bytes(filtered[display_columns]),
         file_name="star_citizen_mining_locations.csv",
         mime="text/csv",
         width="stretch",
@@ -2845,41 +3376,209 @@ def mining_locations_page() -> None:
         )
 
 
+
+def blueprints_page() -> None:
+    page_banner(
+        "contracts_banner.jpg",
+        "Crafting Blueprints",
+        "Browse the live community blueprint database, review required ingredients, and look up where the required ores and gems can be found.",
+        "Crafting Intelligence",
+    )
+
+    st.info(
+        "The complete blueprint catalog is provided live by SC Craft Tools, "
+        "which maintains more than 1,000 game-file-extracted recipes and updates "
+        "its database as patches change."
+    )
+    link_col1, link_col2 = st.columns([1, 1])
+    with link_col1:
+        st.link_button(
+            "Open Full Blueprint Database",
+            SC_CRAFT_TOOLS_URL,
+            width="stretch",
+        )
+    with link_col2:
+        st.link_button(
+            "Open Blueprint Finder",
+            "https://citizen-starter-guide.com/star-citizen-blueprint-finder/",
+            width="stretch",
+        )
+
+    st.markdown("### Live Blueprint Database")
+    st.caption(
+        "Use the embedded database to search blueprints, ingredients, missions, "
+        "contractors, and systems. If the provider blocks embedded viewing, use "
+        "the Open Full Blueprint Database button above."
+    )
+    components.iframe(
+        SC_CRAFT_TOOLS_URL,
+        height=920,
+        scrolling=True,
+    )
+
+    st.markdown("### Required Material Location Lookup")
+    st.caption(
+        "After selecting a blueprint above, choose its required minerals here to "
+        "see the current UEX-backed mining locations and community spawn estimates."
+    )
+
+    locations = load_mining_locations()
+    resources = sorted(locations["Resource"].dropna().unique().tolist())
+    selected_materials = st.multiselect(
+        "Blueprint materials",
+        resources,
+        key="blueprint_materials_filter",
+        placeholder="Select one or more required ores or gems",
+    )
+    system_options = sorted(locations["System"].dropna().unique().tolist())
+    selected_blueprint_systems = st.multiselect(
+        "Systems",
+        system_options,
+        default=system_options,
+        key="blueprint_system_filter",
+    )
+
+    material_locations = locations.copy()
+    if selected_materials:
+        material_locations = material_locations[
+            material_locations["Resource"].isin(selected_materials)
+        ]
+    else:
+        material_locations = material_locations.iloc[0:0]
+    if selected_blueprint_systems:
+        material_locations = material_locations[
+            material_locations["System"].isin(selected_blueprint_systems)
+        ]
+
+    if material_locations.empty:
+        st.info("Select blueprint materials to display their mining locations.")
+    else:
+        columns = [
+            "Resource",
+            "Category",
+            "System",
+            "Location",
+            "Site Type",
+            "Spawn Rate",
+            "Mining Method",
+            "UEX Updated",
+        ]
+        st.dataframe(
+            material_locations[columns].sort_values(
+                ["Resource", "System", "Location"]
+            ),
+            width="stretch",
+            hide_index=True,
+        )
+
 def export_page() -> None:
     page_banner(
         "export_banner.jpg",
         "Export Data",
-        "Download a polished workbook for Microsoft Excel or import it directly into Google Sheets.",
+        "Download verified Excel and CSV exports or create a populated Google Sheet when Google credentials are configured.",
         "Data Portability",
     )
     contracts, ores = load_data()
     workbook_bytes = build_excel_export(contracts, ores)
-    st.markdown("### Complete workbook")
-    st.caption("Includes Summary, Contracts, and Ore Ledger worksheets.")
-    col1, col2 = st.columns(2)
-    with col1:
+    csv_zip_bytes = build_csv_export_zip(contracts, ores)
+    inventory = build_ore_inventory(ores)
+
+    st.markdown("### Verified Complete Export")
+    st.caption(
+        "The workbook contains Summary, Contracts, Ore Ledger, and Ore Inventory worksheets."
+    )
+    download_col1, download_col2 = st.columns(2)
+    with download_col1:
         st.download_button(
-            "Download Excel / Google Sheets Workbook",
+            "Download Excel Workbook",
             data=workbook_bytes,
-            file_name=f"star_citizen_tracker_export_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            file_name=(
+                "star_citizen_tracker_export_"
+                f"{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+            ),
+            mime=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            ),
             width="stretch",
         )
-    with col2:
-        st.link_button("Open Google Sheets", "https://sheets.new", width="stretch")
-    st.info("In Google Sheets, choose File > Import > Upload, then select the downloaded workbook.")
-    st.markdown("### Individual CSV files")
-    csv1, csv2 = st.columns(2)
-    with csv1:
-        contract_export = contracts.copy()
-        if "date_saved" in contract_export.columns:
-            contract_export["date_saved"] = contract_export["date_saved"].astype(str)
-        st.download_button("Download Contracts CSV", contract_export.to_csv(index=False).encode("utf-8"), "star_citizen_contracts.csv", "text/csv", width="stretch")
-    with csv2:
-        ore_export = ores.copy()
-        if "date_saved" in ore_export.columns:
-            ore_export["date_saved"] = ore_export["date_saved"].astype(str)
-        st.download_button("Download Ore Ledger CSV", ore_export.to_csv(index=False).encode("utf-8"), "star_citizen_ore_ledger.csv", "text/csv", width="stretch")
+    with download_col2:
+        st.download_button(
+            "Download All CSV Files",
+            data=csv_zip_bytes,
+            file_name=(
+                "star_citizen_tracker_csv_export_"
+                f"{datetime.now().strftime('%Y-%m-%d')}.zip"
+            ),
+            mime="application/zip",
+            width="stretch",
+        )
+
+    st.markdown("### Google Sheets")
+    google_config = google_service_account_config()
+    if google_config:
+        if st.button("Create a Filled Google Sheet", width="stretch"):
+            try:
+                with st.spinner("Creating and filling your Google Sheet..."):
+                    sheet_url = create_filled_google_sheet(contracts, ores)
+                st.session_state.created_google_sheet_url = sheet_url
+                st.success("Google Sheet created and filled with your current data.")
+            except Exception as exc:
+                st.error(f"The Google Sheet could not be created: {exc}")
+        created_url = st.session_state.get("created_google_sheet_url")
+        if created_url:
+            st.link_button(
+                "Open the Filled Google Sheet",
+                created_url,
+                width="stretch",
+            )
+    else:
+        st.info(
+            "The previous Google Sheets button only opened a blank spreadsheet. "
+            "That misleading button has been removed. You can upload the downloaded "
+            "Excel workbook into Google Sheets now, or configure the optional Google "
+            "service account described below to create a filled sheet automatically."
+        )
+        with st.expander("Google Sheets automatic-export setup"):
+            st.markdown(
+                """
+                1. Create a Google Cloud service account.
+                2. Enable the Google Sheets API and Google Drive API.
+                3. Create a JSON key for the service account.
+                4. Add the entire JSON object to Streamlit Secrets as
+                   `GOOGLE_SERVICE_ACCOUNT_JSON`.
+                5. Reboot the app. The **Create a Filled Google Sheet** button will appear.
+                """
+            )
+
+    st.markdown("### Individual Files")
+    contract_export = prepare_contract_export(contracts)
+    ore_export = prepare_ore_export(ores)
+    csv_col1, csv_col2, csv_col3 = st.columns(3)
+    with csv_col1:
+        st.download_button(
+            "Contracts CSV",
+            dataframe_csv_bytes(contract_export),
+            "star_citizen_contracts.csv",
+            "text/csv",
+            width="stretch",
+        )
+    with csv_col2:
+        st.download_button(
+            "Ore Ledger CSV",
+            dataframe_csv_bytes(ore_export),
+            "star_citizen_ore_ledger.csv",
+            "text/csv",
+            width="stretch",
+        )
+    with csv_col3:
+        st.download_button(
+            "Ore Inventory CSV",
+            dataframe_csv_bytes(inventory),
+            "star_citizen_ore_inventory.csv",
+            "text/csv",
+            width="stretch",
+        )
 
 
 def edit_records_page() -> None:
@@ -2891,7 +3590,12 @@ def main() -> None:
     apply_custom_theme()
     cookies = get_cookie_manager()
     client = get_supabase()
+    handle_auth_redirect(client, cookies)
     restore_login_from_cookie(client, cookies)
+
+    if st.session_state.get("password_recovery_active"):
+        password_update_screen(client, cookies)
+        return
 
     if "user_id" not in st.session_state:
         login_screen(client, cookies)
@@ -2913,6 +3617,7 @@ def main() -> None:
             "Contract Calculator",
             "Ore Ledger",
             "Mining Locations",
+            "Blueprints",
             "Saved Records",
             "Export Data",
         ]
@@ -2956,6 +3661,8 @@ def main() -> None:
         ore_page()
     elif page == "Mining Locations":
         mining_locations_page()
+    elif page == "Blueprints":
+        blueprints_page()
     elif page == "Saved Records":
         saved_records_page()
     elif page == "Export Data":
