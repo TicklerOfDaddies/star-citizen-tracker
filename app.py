@@ -1652,9 +1652,8 @@ def apply_custom_theme() -> None:
             color: #FFFFFF !important;
         }
 
-        /* Hide the old thin underline indicator; the filled tab is the indicator */
-        [data-testid="stTabs"] [role="tab"] [data-baseweb="tab-highlight"],
-        [data-testid="stTabs"] [role="tablist"] > div:last-child {
+        /* The filled selected tab is the indicator. Do not hide the final tab. */
+        [data-testid="stTabs"] [role="tab"] [data-baseweb="tab-highlight"] {
             display: none !important;
         }
 
@@ -2333,6 +2332,99 @@ def apply_custom_theme() -> None:
             [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
                 min-height: 3.15rem !important;
             }
+        }
+
+        /* ================================================================
+           Final visual correction: readable olive/green text and flat buttons
+           ================================================================ */
+
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a,
+        [data-testid="stTabs"] [role="tab"],
+        button[data-baseweb="tab"] {
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover,
+        [data-testid="stTabs"] [role="tab"]:hover,
+        button[data-baseweb="tab"]:hover {
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        main [data-testid="stCaptionContainer"] p,
+        main .stCaption,
+        main .section-copy,
+        main .analytics-copy,
+        main .commodity-metric-detail,
+        main .dashboard-metric-detail,
+        main .dashboard-summary-detail,
+        main .profile-summary-detail,
+        main .profile-hero-bio,
+        main .profile-hero-email {
+            color: #66734F !important;
+        }
+
+        main .section-title,
+        main .analytics-title,
+        main .commodity-metric-value,
+        main .dashboard-metric-value,
+        main .dashboard-summary-value,
+        main .profile-summary-value,
+        main [data-testid="stMetricValue"] {
+            color: #2F4617 !important;
+        }
+
+        main .analytics-kicker,
+        main .commodity-metric-label,
+        main .dashboard-metric-label,
+        main .dashboard-summary-label,
+        main .profile-summary-label,
+        main [data-testid="stMetricLabel"] p {
+            color: #4C7814 !important;
+        }
+
+        main .commodity-metric-value.positive,
+        main .dashboard-metric-value.positive {
+            color: #4F8A10 !important;
+        }
+
+        main .commodity-metric-value.negative,
+        main .dashboard-metric-value.negative {
+            color: #D93D45 !important;
+        }
+
+        main [data-testid="stMarkdownContainer"] p {
+            color: #4E5E3D;
+        }
+
+        main [data-testid="stWidgetLabel"] p,
+        main label p {
+            color: #2F4617 !important;
+        }
+
+        main input,
+        main textarea,
+        main [role="combobox"] {
+            color: #273718 !important;
+            -webkit-text-fill-color: #273718 !important;
+        }
+
+        main input::placeholder,
+        main textarea::placeholder {
+            color: #778269 !important;
+            -webkit-text-fill-color: #778269 !important;
+        }
+
+        /* Keep all tab buttons visible; never hide a positional last child. */
+        [data-testid="stTabs"] [role="tablist"] > div:last-child {
+            display: initial;
         }
         </style>
         """,
@@ -4101,15 +4193,24 @@ def load_commodity_transactions() -> pd.DataFrame:
 
 def insert_commodity_transaction(
     payload: dict[str, Any],
-) -> dict[str, Any] | None:
-    """Insert a commodity row and return the database-confirmed record."""
+) -> dict[str, Any]:
+    """
+    Insert a commodity row and verify that Supabase can read it back.
+
+    A successful button click is not treated as saved until the inserted row
+    is returned or found in the user's latest database records.
+    """
     action = normalize_commodity_action(payload.get("action"))
     quantity = max(safe_float(payload.get("quantity_scu")), 0.0)
     unit_price = max(safe_float(payload.get("unit_price")), 0.0)
     fees = max(safe_float(payload.get("fees")), 0.0)
     total_value = quantity * unit_price
+    commodity_name = str(
+        payload.get("commodity_name", "")
+    ).strip()
+    user_id = str(payload.get("user_id", "")).strip()
 
-    if not str(payload.get("commodity_name", "")).strip():
+    if not commodity_name:
         raise ValueError("Commodity name is required.")
     if action not in {"Bought", "Sold", "Lost / Destroyed"}:
         raise ValueError("Choose Bought, Sold, or Lost / Destroyed.")
@@ -4117,12 +4218,13 @@ def insert_commodity_transaction(
         raise ValueError("Quantity must be greater than zero.")
     if unit_price <= 0:
         raise ValueError("Unit price must be greater than zero.")
+    if not user_id:
+        raise ValueError("The signed-in user ID is missing.")
 
     cleaned_payload = {
         **payload,
-        "commodity_name": str(
-            payload.get("commodity_name", "")
-        ).strip(),
+        "user_id": user_id,
+        "commodity_name": commodity_name,
         "action": action,
         "quantity_scu": quantity,
         "unit_price": unit_price,
@@ -4130,15 +4232,76 @@ def insert_commodity_transaction(
         "total_value": total_value,
     }
 
-    response = (
-        get_supabase()
-        .table("commodity_transactions")
-        .insert(cleaned_payload)
-        .execute()
-    )
-    data = response.data or []
-    return data[0] if data else None
+    table = get_supabase().table("commodity_transactions")
+    response = table.insert(cleaned_payload).execute()
+    returned_rows = list(response.data or [])
 
+    # Some PostgREST configurations return no representation after INSERT.
+    # Read the user's latest rows and locate the matching transaction.
+    if not returned_rows:
+        verification_response = (
+            get_supabase()
+            .table("commodity_transactions")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("id", desc=True)
+            .limit(20)
+            .execute()
+        )
+        returned_rows = list(
+            verification_response.data or []
+        )
+
+    normalized = normalize_commodity_transactions(
+        pd.DataFrame(returned_rows)
+    )
+    if normalized.empty:
+        raise RuntimeError(
+            "Supabase accepted no readable commodity row. Check the "
+            "commodity_transactions RLS policies and deployment logs."
+        )
+
+    matches = normalized[
+        (normalized["commodity_name"] == commodity_name)
+        & (normalized["action"] == action)
+        & (
+            (normalized["quantity_scu"] - quantity).abs()
+            <= 0.0001
+        )
+        & (
+            (normalized["unit_price"] - unit_price).abs()
+            <= 0.0001
+        )
+        & (
+            (normalized["total_value"] - total_value).abs()
+            <= 0.01
+        )
+    ]
+
+    if matches.empty:
+        raise RuntimeError(
+            "The database response did not contain the transaction that "
+            "was just submitted. The app did not report it as saved."
+        )
+
+    verified_row = matches.iloc[0]
+    raw_id = verified_row.get("id", 0)
+    verified_id = (
+        int(raw_id)
+        if pd.notna(raw_id) and safe_float(raw_id) > 0
+        else None
+    )
+
+    return {
+        "id": verified_id,
+        "commodity_name": commodity_name,
+        "action": action,
+        "quantity_scu": float(verified_row["quantity_scu"]),
+        "unit_price": float(verified_row["unit_price"]),
+        "fees": float(verified_row["fees"]),
+        "total_value": float(verified_row["total_value"]),
+        "cash_effect": float(verified_row["cash_effect"]),
+    }
 
 def commodity_summary_values(
     trades: pd.DataFrame,
@@ -4306,6 +4469,13 @@ def commodity_trade_tracker(
     if prefill_notice:
         st.success(prefill_notice)
 
+    save_receipt = st.session_state.pop(
+        "commodity_save_receipt",
+        None,
+    )
+    if save_receipt:
+        st.success(save_receipt)
+
     trades = load_commodity_transactions()
     totals = commodity_summary_values(trades)
 
@@ -4457,6 +4627,43 @@ def commodity_trade_tracker(
                     key="commodity_transaction_fees",
                 )
 
+            final_action = (
+                "Lost / Destroyed"
+                if shipment_lost
+                else transaction_type
+            )
+            verified_total = (
+                float(quantity_scu)
+                * float(calculated_unit_price)
+            )
+            verified_cash_effect = (
+                verified_total - float(fees)
+                if final_action == "Sold"
+                else -(verified_total + float(fees))
+            )
+            action_label = (
+                "Destroyed / Lost Shipment"
+                if shipment_lost
+                else (
+                    "Commodity Purchase"
+                    if transaction_type == "Bought"
+                    else "Commodity Sale"
+                )
+            )
+
+            st.info(
+                f"Verified math: {quantity_scu:,.2f} SCU × "
+                f"{calculated_unit_price:,.2f} aUEC/SCU = "
+                f"{verified_total:,.0f} aUEC. Net cash effect: "
+                f"{verified_cash_effect:+,.0f} aUEC."
+            )
+            quick_submitted = st.form_submit_button(
+                f"Save {action_label} Now",
+                type="primary",
+                width="stretch",
+            )
+
+            st.markdown("#### Optional route and shipment details")
             location_col1, location_col2 = st.columns(2)
             with location_col1:
                 origin = st.text_input(
@@ -4482,43 +4689,15 @@ def commodity_trade_tracker(
                     "Route notes, stock limits, loss reason, escort costs, "
                     "or other details"
                 ),
+                height=105,
                 key="commodity_transaction_notes",
             )
 
-            final_action = (
-                "Lost / Destroyed"
-                if shipment_lost
-                else transaction_type
-            )
-            verified_total = (
-                float(quantity_scu)
-                * float(calculated_unit_price)
-            )
-            verified_cash_effect = (
-                verified_total - float(fees)
-                if final_action == "Sold"
-                else -(verified_total + float(fees))
-            )
-
-            st.info(
-                f"Verified math: {quantity_scu:,.2f} SCU × "
-                f"{calculated_unit_price:,.2f} aUEC/SCU = "
-                f"{verified_total:,.0f} aUEC. Net cash effect: "
-                f"{verified_cash_effect:+,.0f} aUEC."
-            )
-
-            submitted = st.form_submit_button(
-                (
-                    "Record Destroyed / Lost Shipment"
-                    if shipment_lost
-                    else (
-                        "Record Commodity Purchase"
-                        if transaction_type == "Bought"
-                        else "Record Commodity Sale"
-                    )
-                ),
+            detailed_submitted = st.form_submit_button(
+                f"Save {action_label} with Details",
                 width="stretch",
             )
+            submitted = quick_submitted or detailed_submitted
 
         if submitted:
             if calculated_unit_price <= 0:
@@ -4542,13 +4721,16 @@ def commodity_trade_tracker(
                 try:
                     saved = insert_commodity_transaction(payload)
                     saved_id = (
-                        f" ID {saved.get('id')}"
-                        if saved and saved.get("id") is not None
+                        f"ID {saved['id']} · "
+                        if saved.get("id") is not None
                         else ""
                     )
-                    st.success(
-                        f"{final_action} activity saved.{saved_id} "
-                        f"Verified value: {verified_total:,.0f} aUEC."
+                    st.session_state["commodity_save_receipt"] = (
+                        f"{saved_id}{saved['action']} saved and verified in "
+                        f"Supabase: {saved['quantity_scu']:,.2f} SCU × "
+                        f"{saved['unit_price']:,.2f} aUEC/SCU = "
+                        f"{saved['total_value']:,.0f} aUEC. Net cash effect: "
+                        f"{saved['cash_effect']:+,.0f} aUEC."
                     )
                     st.rerun()
                 except Exception as exc:
@@ -7066,7 +7248,7 @@ def saved_records_page() -> None:
 
     with view_tab:
         contract_tab, ore_tab, commodity_tab = st.tabs(
-            ["Contracts", "Ore Ledger", "Commodities"]
+            ["Contracts", "Ore Ledger", "Commodity Ledger"]
         )
 
         with contract_tab:
@@ -10034,7 +10216,7 @@ def blueprints_page() -> None:
         "contractors, and systems. If embedded viewing is blocked by the provider, "
         "use the external database button above."
     )
-    st.iframe(
+    components.iframe(
         SC_CRAFT_TOOLS_URL,
         height=920,
         scrolling=True,
