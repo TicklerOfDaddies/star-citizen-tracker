@@ -197,16 +197,15 @@ def apply_custom_theme() -> None:
            remains visible instead of being cropped as a background. */
         .sc-page-banner {
             display: grid;
-            grid-template-columns: minmax(320px, .82fr) minmax(520px, 1.55fr);
-            min-height: 285px;
+            grid-template-columns: minmax(300px, .72fr) minmax(560px, 1.28fr);
+            align-items: stretch;
+            min-height: 272px;
             overflow: hidden;
-            border-radius: 18px;
-            border: 1px solid #cbd8e6;
+            border-radius: 20px;
+            border: 1px solid #d9e3ee;
             margin-bottom: 1.15rem;
-            background:
-                radial-gradient(circle at 14% 20%, rgba(32,151,255,.16), transparent 28rem),
-                linear-gradient(135deg, #07182a 0%, #0b2239 100%);
-            box-shadow: 0 18px 44px rgba(24,62,103,.16);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 18px 44px rgba(24,62,103,.10);
         }
 
         .sc-page-banner-copy {
@@ -215,8 +214,11 @@ def apply_custom_theme() -> None:
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 1.8rem 1.8rem 1.9rem;
-            color: #fff;
+            padding: 1.7rem 1.8rem 1.75rem;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(19,120,229,.12), transparent 14rem),
+                linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(248,251,255,.98) 100%);
         }
 
         .sc-page-banner-image-wrap {
@@ -225,25 +227,47 @@ def apply_custom_theme() -> None:
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 14px 18px 14px 8px;
+            padding: 1rem 1rem 1rem .2rem;
             background:
-                linear-gradient(90deg, rgba(7,24,42,.90) 0%, rgba(7,24,42,.34) 13%, rgba(7,24,42,0) 32%),
-                rgba(5,16,29,.28);
+                radial-gradient(circle at 10% 50%, rgba(19,120,229,.10), transparent 15rem),
+                linear-gradient(135deg, #edf5ff 0%, #f8fbff 100%);
+        }
+
+        .sc-page-banner-image-frame {
+            width: 100%;
+            height: 100%;
+            min-height: 238px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(143,199,255,.45);
+            background:
+                linear-gradient(135deg, rgba(9,24,39,.96) 0%, rgba(18,42,66,.90) 100%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(24,62,103,.10);
         }
 
         .sc-page-banner-image {
             width: 100%;
             height: 100%;
-            max-height: 255px;
+            max-height: 248px;
             object-fit: contain;
             object-position: center center;
             display: block;
-            border-radius: 12px;
         }
 
         .sc-page-banner .sc-kicker { margin-bottom: .5rem; }
-        .sc-page-banner .sc-banner-title { font-size: clamp(1.8rem, 3vw, 2.55rem); }
-        .sc-page-banner .sc-banner-subtitle { max-width: 540px; line-height: 1.55; }
+        .sc-page-banner .sc-banner-title {
+            font-size: clamp(1.8rem, 3vw, 2.55rem);
+            color: var(--text);
+            text-shadow: none;
+        }
+        .sc-page-banner .sc-banner-subtitle {
+            max-width: 520px;
+            line-height: 1.58;
+            color: var(--muted);
+        }
 
         .dashboard-hero-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:14px; margin-bottom:1rem; }
         .dashboard-hero-grid .sc-banner { margin-bottom:0; min-height:315px; }
@@ -312,7 +336,7 @@ def apply_custom_theme() -> None:
             .dashboard-hero-grid { grid-template-columns:1fr; }
             .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
             .sc-page-banner {
-                grid-template-columns: minmax(280px, .9fr) minmax(420px, 1.25fr);
+                grid-template-columns: minmax(280px, .84fr) minmax(420px, 1.16fr);
             }
         }
         @media (max-width:820px) {
@@ -321,15 +345,17 @@ def apply_custom_theme() -> None:
                 min-height: 0;
             }
             .sc-page-banner-copy {
-                padding: 1.45rem 1.4rem 1.15rem;
+                padding: 1.45rem 1.4rem 1rem;
             }
             .sc-page-banner-image-wrap {
+                min-height: 0;
+                padding: 0 1rem 1rem;
+            }
+            .sc-page-banner-image-frame {
                 min-height: 210px;
-                padding: 0 14px 14px;
-                background: rgba(5,16,29,.22);
             }
             .sc-page-banner-image {
-                max-height: 235px;
+                max-height: 220px;
             }
         }
         @media (max-width:720px) {
@@ -361,7 +387,7 @@ def page_banner(
     subtitle: str,
     kicker: str,
 ) -> None:
-    """Render a split page banner without cropping the supplied image."""
+    """Render a cleaner split page banner while preserving the image."""
     image_uri = image_data_uri(image_filename)
     st.markdown(
         f"""
@@ -372,11 +398,13 @@ def page_banner(
                 <p class="sc-banner-subtitle">{subtitle}</p>
             </div>
             <div class="sc-page-banner-image-wrap">
-                <img
-                    class="sc-page-banner-image"
-                    src="{image_uri}"
-                    alt="{title}"
-                />
+                <div class="sc-page-banner-image-frame">
+                    <img
+                        class="sc-page-banner-image"
+                        src="{image_uri}"
+                        alt="{title}"
+                    />
+                </div>
             </div>
         </section>
         """,
@@ -1753,67 +1781,32 @@ def saved_records_page() -> None:
     page_banner(
         "records_banner.jpg",
         "Saved Records",
-        "Search and review your complete contract and resource transaction history.",
+        "Search, review, edit, and delete your complete contract and ore transaction history from one command page.",
         "Records Archive",
     )
     contracts, ores = load_data()
-    contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
-    with contract_tab:
-        display_contract_table(contracts)
-    with ore_tab:
-        display_ore_table(ores)
+
+    view_tab, manage_tab = st.tabs(["View Records", "Manage Records"])
+
+    with view_tab:
+        contract_tab, ore_tab = st.tabs(["Contracts", "Ore Ledger"])
+        with contract_tab:
+            display_contract_table(contracts)
+        with ore_tab:
+            display_ore_table(ores)
+
+    with manage_tab:
+        st.markdown("### Edit or Delete Records")
+        st.caption("Select a saved contract or ore entry, update the values you need, or permanently remove duplicate and outdated entries.")
+        manage_records_section(contracts, ores)
 
 
-def export_page() -> None:
-    page_banner(
-        "export_banner.jpg",
-        "Export Data",
-        "Download a polished workbook for Microsoft Excel or import it directly into Google Sheets.",
-        "Data Portability",
-    )
-    contracts, ores = load_data()
-    workbook_bytes = build_excel_export(contracts, ores)
-    st.markdown("### Complete workbook")
-    st.caption("Includes Summary, Contracts, and Ore Ledger worksheets.")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.download_button(
-            "Download Excel / Google Sheets Workbook",
-            data=workbook_bytes,
-            file_name=f"star_citizen_tracker_export_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            width="stretch",
-        )
-    with col2:
-        st.link_button("Open Google Sheets", "https://sheets.new", width="stretch")
-    st.info("In Google Sheets, choose File > Import > Upload, then select the downloaded workbook.")
-    st.markdown("### Individual CSV files")
-    csv1, csv2 = st.columns(2)
-    with csv1:
-        contract_export = contracts.copy()
-        if "date_saved" in contract_export.columns:
-            contract_export["date_saved"] = contract_export["date_saved"].astype(str)
-        st.download_button("Download Contracts CSV", contract_export.to_csv(index=False).encode("utf-8"), "star_citizen_contracts.csv", "text/csv", width="stretch")
-    with csv2:
-        ore_export = ores.copy()
-        if "date_saved" in ore_export.columns:
-            ore_export["date_saved"] = ore_export["date_saved"].astype(str)
-        st.download_button("Download Ore Ledger CSV", ore_export.to_csv(index=False).encode("utf-8"), "star_citizen_ore_ledger.csv", "text/csv", width="stretch")
-
-
-def edit_records_page() -> None:
-    page_banner(
-        "edit_banner.jpg",
-        "Edit or Delete Records",
-        "Correct mistakes, revise saved values, or permanently remove duplicate entries.",
-        "Data Maintenance",
-    )
-
-    contracts, ores = load_data()
+def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
     record_type = st.radio(
         "Record type",
         ["Contract", "Ore Entry"],
         horizontal=True,
+        key="manage_record_type",
     )
 
     if record_type == "Contract":
@@ -1832,6 +1825,7 @@ def edit_records_page() -> None:
             "Select contract",
             options=list(contract_options),
             format_func=lambda value: contract_options[value],
+            key="manage_contract_select",
         )
         record = contracts.loc[contracts["id"] == selected_id].iloc[0]
 
@@ -1907,13 +1901,15 @@ def edit_records_page() -> None:
                     st.error(f"The contract could not be updated: {exc}")
 
         confirm = st.checkbox(
-            "I understand this permanently deletes the selected contract."
+            "I understand this permanently deletes the selected contract.",
+            key="delete_contract_confirm",
         )
         if st.button(
             "Delete Contract",
             type="primary",
             disabled=not confirm,
             width="stretch",
+            key="delete_contract_button",
         ):
             try:
                 delete_record("contracts", selected_id)
@@ -1938,6 +1934,7 @@ def edit_records_page() -> None:
             "Select ore entry",
             options=list(ore_options),
             format_func=lambda value: ore_options[value],
+            key="manage_ore_select",
         )
         record = ores.loc[ores["id"] == selected_id].iloc[0]
 
@@ -1985,13 +1982,15 @@ def edit_records_page() -> None:
                     st.error(f"The ore entry could not be updated: {exc}")
 
         confirm = st.checkbox(
-            "I understand this permanently deletes the selected ore entry."
+            "I understand this permanently deletes the selected ore entry.",
+            key="delete_ore_confirm",
         )
         if st.button(
             "Delete Ore Entry",
             type="primary",
             disabled=not confirm,
             width="stretch",
+            key="delete_ore_button",
         ):
             try:
                 delete_record("ore_transactions", selected_id)
@@ -1999,6 +1998,47 @@ def edit_records_page() -> None:
                 st.rerun()
             except Exception as exc:
                 st.error(f"The ore entry could not be deleted: {exc}")
+
+def export_page() -> None:
+    page_banner(
+        "export_banner.jpg",
+        "Export Data",
+        "Download a polished workbook for Microsoft Excel or import it directly into Google Sheets.",
+        "Data Portability",
+    )
+    contracts, ores = load_data()
+    workbook_bytes = build_excel_export(contracts, ores)
+    st.markdown("### Complete workbook")
+    st.caption("Includes Summary, Contracts, and Ore Ledger worksheets.")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            "Download Excel / Google Sheets Workbook",
+            data=workbook_bytes,
+            file_name=f"star_citizen_tracker_export_{datetime.now().strftime('%Y-%m-%d')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            width="stretch",
+        )
+    with col2:
+        st.link_button("Open Google Sheets", "https://sheets.new", width="stretch")
+    st.info("In Google Sheets, choose File > Import > Upload, then select the downloaded workbook.")
+    st.markdown("### Individual CSV files")
+    csv1, csv2 = st.columns(2)
+    with csv1:
+        contract_export = contracts.copy()
+        if "date_saved" in contract_export.columns:
+            contract_export["date_saved"] = contract_export["date_saved"].astype(str)
+        st.download_button("Download Contracts CSV", contract_export.to_csv(index=False).encode("utf-8"), "star_citizen_contracts.csv", "text/csv", width="stretch")
+    with csv2:
+        ore_export = ores.copy()
+        if "date_saved" in ore_export.columns:
+            ore_export["date_saved"] = ore_export["date_saved"].astype(str)
+        st.download_button("Download Ore Ledger CSV", ore_export.to_csv(index=False).encode("utf-8"), "star_citizen_ore_ledger.csv", "text/csv", width="stretch")
+
+
+def edit_records_page() -> None:
+    """Backward-compatible wrapper kept in case a direct link still targets this page."""
+    saved_records_page()
 
 
 def main() -> None:
@@ -2024,7 +2064,6 @@ def main() -> None:
             "Contract Calculator",
             "Ore Ledger",
             "Saved Records",
-            "Edit or Delete",
             "Export Data",
         ]
         if "nav_page" not in st.session_state:
@@ -2063,8 +2102,6 @@ def main() -> None:
         ore_page()
     elif page == "Saved Records":
         saved_records_page()
-    elif page == "Edit or Delete":
-        edit_records_page()
     elif page == "Export Data":
         export_page()
 
