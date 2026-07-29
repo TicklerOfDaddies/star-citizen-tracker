@@ -22,6 +22,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from supabase import Client, create_client
 from streamlit_cookies_manager_ext import EncryptedCookieManager
+from PIL import Image, ImageOps
 
 
 st.set_page_config(
@@ -45,6 +46,9 @@ COOKIE_REFRESH_TOKEN = "supabase_refresh_token"
 COOKIE_REMEMBERED_EMAIL = "remembered_email"
 DEFAULT_PUBLIC_APP_URL = "https://sccalculator.streamlit.app/"
 SC_CRAFT_TOOLS_URL = "https://sc-craft.tools/"
+AVATAR_BUCKET = "avatars"
+AVATAR_SIZE = (512, 512)
+MAX_AVATAR_BYTES = 2 * 1024 * 1024
 
 CONTRACT_TYPES = [
     "Appointment / Mission Giver",
@@ -593,6 +597,216 @@ def apply_custom_theme() -> None:
             }
         }
 
+        .sidebar-profile-card {
+            margin: .5rem 0 .7rem;
+            padding: .85rem;
+            border: 1px solid #c9dce6;
+            border-radius: 15px;
+            background:
+                radial-gradient(circle at top left, rgba(13,118,148,.13), transparent 10rem),
+                linear-gradient(145deg, #ffffff 0%, #eef7fa 100%);
+            box-shadow: 0 9px 22px rgba(18,74,99,.08);
+        }
+
+        .sidebar-profile-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-width: 0;
+        }
+
+        .sidebar-profile-avatar,
+        .sidebar-profile-initials {
+            width: 52px;
+            height: 52px;
+            flex: 0 0 52px;
+            border-radius: 50%;
+            border: 2px solid #8bc6d6;
+            box-shadow: 0 6px 16px rgba(10,85,107,.17);
+            object-fit: cover;
+            background: #0d7694;
+        }
+
+        .sidebar-profile-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.02rem;
+            font-weight: 850;
+            letter-spacing: .02em;
+        }
+
+        .sidebar-profile-copy {
+            min-width: 0;
+        }
+
+        .sidebar-profile-name {
+            color: #102f43;
+            font-size: .95rem;
+            font-weight: 820;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-profile-email {
+            color: #60778a;
+            font-size: .71rem;
+            line-height: 1.35;
+            margin-top: .18rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-hero {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 1.3rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1.35rem 1.5rem;
+            border: 1px solid #c8dce6;
+            border-radius: 20px;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(13,118,148,.17), transparent 17rem),
+                linear-gradient(135deg, #ffffff 0%, #edf7fa 100%);
+            box-shadow: 0 16px 36px rgba(18,74,99,.11);
+        }
+
+        .profile-avatar-large,
+        .profile-avatar-large-initials {
+            width: 124px;
+            height: 124px;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow:
+                0 0 0 2px #79bdd0,
+                0 12px 28px rgba(8,70,91,.18);
+            object-fit: cover;
+            background: linear-gradient(135deg, #0d7694 0%, #064f66 100%);
+        }
+
+        .profile-avatar-large-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 2.2rem;
+            font-weight: 880;
+            letter-spacing: .03em;
+        }
+
+        .profile-hero-kicker {
+            color: #0d7694;
+            font-size: .72rem;
+            font-weight: 820;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            margin-bottom: .35rem;
+        }
+
+        .profile-hero-name {
+            color: #10233f;
+            font-size: clamp(1.65rem, 3vw, 2.45rem);
+            font-weight: 850;
+            line-height: 1.05;
+            letter-spacing: -.025em;
+        }
+
+        .profile-hero-email {
+            color: #607087;
+            font-size: .9rem;
+            margin-top: .38rem;
+        }
+
+        .profile-hero-bio {
+            color: #536b7e;
+            font-size: .86rem;
+            line-height: 1.55;
+            margin-top: .65rem;
+            max-width: 800px;
+        }
+
+        .profile-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: .6rem 0 1rem;
+        }
+
+        .profile-summary-card {
+            min-width: 0;
+            min-height: 108px;
+            padding: .95rem 1rem;
+            border: 1px solid #ccdee6;
+            border-radius: 15px;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(18,74,99,.07);
+        }
+
+        .profile-summary-label {
+            color: #637b8d;
+            font-size: .69rem;
+            font-weight: 790;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .profile-summary-value {
+            color: #10374d;
+            font-size: 1.1rem;
+            font-weight: 830;
+            margin-top: .42rem;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-summary-detail {
+            color: #7b8b9b;
+            font-size: .7rem;
+            line-height: 1.35;
+            margin-top: .25rem;
+        }
+
+        .profile-section-card {
+            padding: 1.05rem 1.1rem;
+            border: 1px solid #cfdee7;
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 9px 22px rgba(18,74,99,.07);
+        }
+
+        .profile-security-note {
+            margin: .55rem 0 .8rem;
+            padding: .75rem .85rem;
+            border-left: 4px solid #0d7694;
+            border-radius: 9px;
+            background: #edf8fb;
+            color: #436477;
+            font-size: .78rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            .profile-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            .profile-hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                justify-items: center;
+            }
+
+            .profile-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .rights-notice {
             margin-top: 1rem;
             padding: .9rem 1rem;
@@ -1069,54 +1283,673 @@ def resolve_user_display_name(user: Any, email: str = "") -> str:
     return first_piece.title() if first_piece else "Citizen"
 
 
+def user_metadata_dict(user: Any) -> dict[str, Any]:
+    """Return a mutable Supabase user-metadata dictionary."""
+    metadata = (
+        getattr(user, "user_metadata", None)
+        or getattr(user, "raw_user_meta_data", None)
+        or {}
+    )
+    return dict(metadata) if isinstance(metadata, dict) else {}
+
+
 def set_authenticated_user(user: Any, fallback_email: str = "") -> None:
-    """Store the signed-in user's ID, email, and display name."""
+    """Store the signed-in user's account and profile information."""
     user_email = getattr(user, "email", None) or fallback_email or ""
+    metadata = user_metadata_dict(user)
+
     st.session_state.user_id = str(user.id)
     st.session_state.user_email = user_email or "Signed in"
     st.session_state.user_display_name = resolve_user_display_name(
         user,
         user_email,
     )
+    st.session_state.user_callsign = str(
+        metadata.get("callsign", "") or ""
+    ).strip()
+    st.session_state.user_bio = str(
+        metadata.get("bio", "") or ""
+    ).strip()
+    st.session_state.user_avatar_url = str(
+        metadata.get("avatar_url", "") or ""
+    ).strip()
+    st.session_state.user_avatar_path = str(
+        metadata.get("avatar_path", "") or ""
+    ).strip()
+
+    metadata_timezone = str(
+        metadata.get("timezone", "") or ""
+    ).strip()
+    if metadata_timezone in available_timezones():
+        st.session_state.selected_timezone = metadata_timezone
+
+    created_at = getattr(user, "created_at", None)
+    if created_at:
+        st.session_state.user_created_at = str(created_at)
+
+
+def profile_initials(name: str, email: str = "") -> str:
+    """Return one or two initials for the avatar fallback."""
+    source = name.strip() or email.split("@", 1)[0]
+    pieces = [
+        piece
+        for piece in re.split(r"[\s._\-+]+", source)
+        if piece
+    ]
+    if not pieces:
+        return "SC"
+    if len(pieces) == 1:
+        return pieces[0][:2].upper()
+    return (pieces[0][0] + pieces[-1][0]).upper()
+
+
+def avatar_markup(
+    *,
+    avatar_url: str,
+    display_name: str,
+    email: str,
+    large: bool = False,
+) -> str:
+    """Return avatar image or initials HTML."""
+    safe_name = html.escape(display_name or "Citizen")
+    if avatar_url:
+        css_class = (
+            "profile-avatar-large"
+            if large
+            else "sidebar-profile-avatar"
+        )
+        return (
+            f'<img class="{css_class}" '
+            f'src="{html.escape(avatar_url, quote=True)}" '
+            f'alt="{safe_name} profile picture" />'
+        )
+
+    initials = html.escape(profile_initials(display_name, email))
+    css_class = (
+        "profile-avatar-large-initials"
+        if large
+        else "sidebar-profile-initials"
+    )
+    return f'<div class="{css_class}">{initials}</div>'
+
+
+def public_storage_url(value: Any) -> str:
+    """Extract a public URL from supabase-py return shapes."""
+    if isinstance(value, str):
+        return value
+
+    if isinstance(value, dict):
+        for key in ("publicUrl", "public_url", "url"):
+            candidate = value.get(key)
+            if candidate:
+                return str(candidate)
+        data = value.get("data")
+        if isinstance(data, dict):
+            for key in ("publicUrl", "public_url", "url"):
+                candidate = data.get(key)
+                if candidate:
+                    return str(candidate)
+
+    candidate = getattr(value, "public_url", None)
+    if candidate:
+        return str(candidate)
+
+    return ""
+
+
+def prepare_avatar_bytes(uploaded_file: Any) -> bytes:
+    """Center-crop an uploaded image and return a web-friendly JPEG."""
+    raw_bytes = uploaded_file.getvalue()
+    if len(raw_bytes) > MAX_AVATAR_BYTES:
+        raise ValueError("Profile pictures must be 2 MB or smaller.")
+
+    image = Image.open(BytesIO(raw_bytes))
+    image = ImageOps.exif_transpose(image).convert("RGB")
+    avatar = ImageOps.fit(
+        image,
+        AVATAR_SIZE,
+        method=Image.Resampling.LANCZOS,
+        centering=(0.5, 0.5),
+    )
+
+    output = BytesIO()
+    avatar.save(
+        output,
+        format="JPEG",
+        quality=90,
+        optimize=True,
+        progressive=True,
+    )
+    return output.getvalue()
+
+
+def save_profile_metadata(
+    client: Client,
+    updates: dict[str, Any],
+) -> None:
+    """Merge profile updates into Supabase user metadata."""
+    response = client.auth.get_user()
+    current_user = getattr(response, "user", None)
+    current_metadata = (
+        user_metadata_dict(current_user)
+        if current_user is not None
+        else {}
+    )
+    merged_metadata = {**current_metadata, **updates}
+
+    updated_response = client.auth.update_user(
+        {"data": merged_metadata}
+    )
+    updated_user = getattr(updated_response, "user", None)
+    if updated_user is not None:
+        set_authenticated_user(
+            updated_user,
+            st.session_state.get("user_email", ""),
+        )
+    else:
+        for key, value in updates.items():
+            session_key = {
+                "display_name": "user_display_name",
+                "callsign": "user_callsign",
+                "bio": "user_bio",
+                "avatar_url": "user_avatar_url",
+                "avatar_path": "user_avatar_path",
+                "timezone": "selected_timezone",
+            }.get(key)
+            if session_key:
+                st.session_state[session_key] = value
+
+
+def upload_profile_avatar(
+    client: Client,
+    uploaded_file: Any,
+) -> None:
+    """Upload a normalized avatar and save its URL in user metadata."""
+    avatar_bytes = prepare_avatar_bytes(uploaded_file)
+    avatar_path = f"{st.session_state.user_id}/avatar.jpg"
+
+    storage = client.storage.from_(AVATAR_BUCKET)
+    storage.upload(
+        path=avatar_path,
+        file=avatar_bytes,
+        file_options={
+            "content-type": "image/jpeg",
+            "cache-control": "3600",
+            "upsert": "true",
+        },
+    )
+
+    public_url = public_storage_url(
+        storage.get_public_url(avatar_path)
+    )
+    if not public_url:
+        raise RuntimeError(
+            "Supabase uploaded the avatar but did not return a public URL."
+        )
+
+    cache_busted_url = (
+        public_url.split("?", 1)[0] + f"?v={int(time.time())}"
+    )
+    save_profile_metadata(
+        client,
+        {
+            "avatar_url": cache_busted_url,
+            "avatar_path": avatar_path,
+        },
+    )
+
+
+def remove_profile_avatar(client: Client) -> None:
+    """Remove the current avatar and restore initials."""
+    avatar_path = st.session_state.get("user_avatar_path", "")
+    if avatar_path:
+        try:
+            client.storage.from_(AVATAR_BUCKET).remove([avatar_path])
+        except Exception:
+            pass
+
+    save_profile_metadata(
+        client,
+        {
+            "avatar_url": "",
+            "avatar_path": "",
+        },
+    )
+
+
+def parse_account_date(value: str) -> str:
+    """Format Supabase account timestamps for display."""
+    if not value:
+        return "Not available"
+    try:
+        parsed = pd.to_datetime(value, utc=True)
+        return parsed.tz_convert(
+            ZoneInfo(selected_timezone())
+        ).strftime("%b %d, %Y")
+    except Exception:
+        return str(value)[:10]
+
+
+def refresh_profile_user(client: Client) -> Any | None:
+    """Refresh profile details from the authenticated Supabase user."""
+    try:
+        response = client.auth.get_user()
+        user = getattr(response, "user", None)
+        if user is not None:
+            set_authenticated_user(
+                user,
+                st.session_state.get("user_email", ""),
+            )
+        return user
+    except Exception:
+        return None
+
+
+def profile_page(
+    client: Client,
+    cookies: EncryptedCookieManager | None,
+) -> None:
+    """Render a full account and profile experience."""
+    current_user = refresh_profile_user(client)
+
+    display_name = st.session_state.get(
+        "user_display_name",
+        "Citizen",
+    )
+    email = st.session_state.get("user_email", "Signed in")
+    callsign = st.session_state.get("user_callsign", "")
+    bio = st.session_state.get("user_bio", "")
+    avatar_url = st.session_state.get("user_avatar_url", "")
+    created_at = (
+        getattr(current_user, "created_at", None)
+        if current_user is not None
+        else st.session_state.get("user_created_at", "")
+    )
+
+    hero_bio = (
+        bio
+        or "Manage your identity, security, profile picture, and "
+        "personal app preferences."
+    )
+    callsign_text = (
+        f"Callsign: {html.escape(callsign)}"
+        if callsign
+        else "Star Citizen operations account"
+    )
+
+    st.markdown(
+        f"""
+        <section class="profile-hero">
+            {avatar_markup(
+                avatar_url=avatar_url,
+                display_name=display_name,
+                email=email,
+                large=True,
+            )}
+            <div>
+                <div class="profile-hero-kicker">Account Command Center</div>
+                <div class="profile-hero-name">
+                    {html.escape(display_name)}
+                </div>
+                <div class="profile-hero-email">
+                    {html.escape(email)} · {callsign_text}
+                </div>
+                <div class="profile-hero-bio">
+                    {html.escape(hero_bio)}
+                </div>
+            </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    summary_cards = [
+        {
+            "label": "Member Since",
+            "value": parse_account_date(str(created_at or "")),
+            "detail": "Supabase account creation date",
+        },
+        {
+            "label": "Display Timezone",
+            "value": selected_timezone(),
+            "detail": "Used throughout dashboards and exports",
+        },
+        {
+            "label": "Profile Picture",
+            "value": "Uploaded" if avatar_url else "Initials",
+            "detail": "Stored in your Supabase avatar folder",
+        },
+        {
+            "label": "Account Email",
+            "value": email,
+            "detail": "Used as the account username",
+        },
+    ]
+
+    st.markdown(
+        '<div class="profile-summary-grid">'
+        + "".join(
+            (
+                '<div class="profile-summary-card">'
+                f'<div class="profile-summary-label">{html.escape(card["label"])}</div>'
+                f'<div class="profile-summary-value">{html.escape(card["value"])}</div>'
+                f'<div class="profile-summary-detail">{html.escape(card["detail"])}</div>'
+                "</div>"
+            )
+            for card in summary_cards
+        )
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+    profile_tab, security_tab, preferences_tab = st.tabs(
+        ["Profile & Picture", "Security & Login", "Preferences"]
+    )
+
+    with profile_tab:
+        picture_col, details_col = st.columns([1, 1.55])
+
+        with picture_col:
+            st.markdown("### Profile Picture")
+            with st.container(border=True):
+                st.markdown(
+                    avatar_markup(
+                        avatar_url=avatar_url,
+                        display_name=display_name,
+                        email=email,
+                        large=True,
+                    ),
+                    unsafe_allow_html=True,
+                )
+                avatar_file = st.file_uploader(
+                    "Upload a new profile picture",
+                    type=["jpg", "jpeg", "png", "webp"],
+                    accept_multiple_files=False,
+                    help=(
+                        "The image is center-cropped to a square and resized "
+                        "to 512 × 512. Maximum file size: 2 MB."
+                    ),
+                    key="profile_avatar_upload",
+                )
+
+                if st.button(
+                    "Upload Profile Picture",
+                    key="upload_profile_avatar_button",
+                    disabled=avatar_file is None,
+                    width="stretch",
+                ):
+                    try:
+                        upload_profile_avatar(client, avatar_file)
+                        st.success("Profile picture updated.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(
+                            "The profile picture could not be uploaded. "
+                            "Run `schema_migration_v5_profile_avatars.sql` "
+                            f"in Supabase first. Details: {exc}"
+                        )
+
+                if st.button(
+                    "Remove Profile Picture",
+                    key="remove_profile_avatar_button",
+                    disabled=not bool(avatar_url),
+                    width="stretch",
+                ):
+                    try:
+                        remove_profile_avatar(client)
+                        st.success("Profile picture removed.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(
+                            f"The profile picture could not be removed: {exc}"
+                        )
+
+        with details_col:
+            st.markdown("### Public Profile Details")
+            with st.form("comprehensive_profile_form"):
+                new_display_name = st.text_input(
+                    "Display name",
+                    value=display_name,
+                    help="Shown in the dashboard greeting and sidebar.",
+                )
+                new_callsign = st.text_input(
+                    "Callsign or handle",
+                    value=callsign,
+                    placeholder="Optional Star Citizen callsign",
+                )
+                new_bio = st.text_area(
+                    "Profile description",
+                    value=bio,
+                    placeholder=(
+                        "Add a short description of your play style, "
+                        "organization role, or preferred activities."
+                    ),
+                    max_chars=500,
+                    height=150,
+                )
+                save_profile = st.form_submit_button(
+                    "Save Profile Changes",
+                    width="stretch",
+                )
+
+            if save_profile:
+                cleaned_name = new_display_name.strip()
+                if not cleaned_name:
+                    st.error("Enter a display name.")
+                else:
+                    try:
+                        save_profile_metadata(
+                            client,
+                            {
+                                "display_name": cleaned_name,
+                                "callsign": new_callsign.strip(),
+                                "bio": new_bio.strip(),
+                            },
+                        )
+                        st.success("Profile details updated.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(
+                            f"The profile could not be updated: {exc}"
+                        )
+
+    with security_tab:
+        security_col1, security_col2 = st.columns(2)
+
+        with security_col1:
+            st.markdown("### Email Address")
+            with st.container(border=True):
+                st.text_input(
+                    "Current account email",
+                    value=email,
+                    disabled=True,
+                    key="current_profile_email",
+                )
+                with st.form("change_email_form"):
+                    new_email = st.text_input(
+                        "New email address",
+                        placeholder="new-address@example.com",
+                    )
+                    change_email = st.form_submit_button(
+                        "Request Email Change",
+                        width="stretch",
+                    )
+
+                if change_email:
+                    if "@" not in new_email:
+                        st.error("Enter a valid email address.")
+                    elif new_email.strip().lower() == email.lower():
+                        st.info("That is already your account email.")
+                    else:
+                        try:
+                            client.auth.update_user(
+                                {"email": new_email.strip()}
+                            )
+                            st.success(
+                                "Email-change request submitted. Check the "
+                                "confirmation messages sent by Supabase."
+                            )
+                        except Exception as exc:
+                            st.error(
+                                f"The email could not be changed: {exc}"
+                            )
+
+        with security_col2:
+            st.markdown("### Password")
+            with st.container(border=True):
+                st.markdown(
+                    """
+                    <div class="profile-security-note">
+                        Use at least 8 characters. Supabase may require a
+                        security code for sensitive password changes,
+                        depending on the project's authentication settings.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                if st.button(
+                    "Send Password Security Code",
+                    key="send_password_security_code",
+                    width="stretch",
+                ):
+                    try:
+                        client.auth.reauthenticate()
+                        st.success(
+                            "Security code sent to your account email."
+                        )
+                    except Exception as exc:
+                        st.error(
+                            f"The security code could not be sent: {exc}"
+                        )
+
+                with st.form("profile_password_change_form"):
+                    new_password = st.text_input(
+                        "New password",
+                        type="password",
+                    )
+                    confirm_password = st.text_input(
+                        "Confirm new password",
+                        type="password",
+                    )
+                    password_nonce = st.text_input(
+                        "Security code",
+                        placeholder=(
+                            "Optional unless Supabase requires reauthentication"
+                        ),
+                    )
+                    update_password = st.form_submit_button(
+                        "Change Password",
+                        width="stretch",
+                    )
+
+                if update_password:
+                    if len(new_password) < 8:
+                        st.error(
+                            "Use a password with at least 8 characters."
+                        )
+                    elif new_password != confirm_password:
+                        st.error("The passwords do not match.")
+                    else:
+                        attributes: dict[str, Any] = {
+                            "password": new_password
+                        }
+                        if password_nonce.strip():
+                            attributes["nonce"] = password_nonce.strip()
+                        try:
+                            client.auth.update_user(attributes)
+                            st.success(
+                                "Password updated successfully. Your current "
+                                "session remains active."
+                            )
+                        except Exception as exc:
+                            st.error(
+                                "The password could not be changed. Send a "
+                                f"security code and try again. Details: {exc}"
+                            )
+
+        st.markdown("### Session Controls")
+        with st.container(border=True):
+            st.caption(
+                "Signing out removes this browser's saved Supabase refresh "
+                "token. Your account and saved records remain unchanged."
+            )
+            if st.button(
+                "Sign Out of This Device",
+                key="profile_sign_out",
+                width="stretch",
+            ):
+                try:
+                    client.auth.sign_out()
+                finally:
+                    remove_cookie_value(
+                        cookies,
+                        COOKIE_REFRESH_TOKEN,
+                    )
+                    clear_login_state()
+                    st.rerun()
+
+    with preferences_tab:
+        st.markdown("### Timezone & Display Preferences")
+        with st.container(border=True):
+            mode = st.radio(
+                "Timezone list",
+                ["U.S. timezones", "All timezones"],
+                horizontal=True,
+                key="profile_timezone_mode",
+            )
+            options = (
+                list(US_TIMEZONES.values())
+                if mode == "U.S. timezones"
+                else sorted(available_timezones())
+            )
+            current_timezone = selected_timezone()
+            if current_timezone not in options:
+                options = [current_timezone, *options]
+
+            profile_timezone = st.selectbox(
+                "Display timezone",
+                options,
+                index=options.index(current_timezone),
+                key="profile_timezone_selector",
+            )
+            st.caption(
+                "This timezone is used for dashboard dates, account dates, "
+                "saved records, and exports."
+            )
+
+            if st.button(
+                "Save Timezone Preference",
+                key="save_profile_timezone",
+                width="stretch",
+            ):
+                try:
+                    save_profile_metadata(
+                        client,
+                        {"timezone": profile_timezone},
+                    )
+                    st.session_state.selected_timezone = profile_timezone
+                    st.success("Timezone preference saved.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        f"The timezone could not be saved: {exc}"
+                    )
 
 
 def profile_settings(client: Client) -> None:
-    """Let the current user update the name shown in the app."""
-    current_name = st.session_state.get("user_display_name", "Citizen")
-
-    with st.form("profile_settings_form"):
-        new_name = st.text_input(
-            "Display name",
-            value=current_name,
-            help="This name appears in your dashboard greeting.",
-        )
-        submitted = st.form_submit_button(
-            "Save display name",
-            width="stretch",
-        )
-
-    if submitted:
-        cleaned_name = new_name.strip()
-        if not cleaned_name:
-            st.error("Enter a display name.")
-            return
-
-        try:
-            response = client.auth.update_user(
-                {"data": {"display_name": cleaned_name}}
-            )
-            updated_user = getattr(response, "user", None)
-            if updated_user is not None:
-                set_authenticated_user(
-                    updated_user,
-                    st.session_state.get("user_email", ""),
-                )
-            else:
-                st.session_state.user_display_name = cleaned_name
-            st.success("Display name updated.")
-            st.rerun()
-        except Exception as exc:
-            st.error(f"The display name could not be updated: {exc}")
+    """Backward-compatible compact link to the full profile page."""
+    st.caption(
+        "Profile, password, picture, email, and timezone settings are "
+        "available on the My Profile page."
+    )
+    if st.button(
+        "Open My Profile",
+        key="open_profile_from_settings",
+        width="stretch",
+    ):
+        st.session_state.nav_page = "My Profile"
+        st.rerun()
 
 
 def remember_authenticated_session(
@@ -2543,7 +3376,7 @@ def dashboard_hero() -> None:
                 <div class="time-now">{local_now.strftime('%I:%M %p')}</div>
                 <div class="time-date">{local_now.strftime('%A, %B %d, %Y')}<br>{preferred}</div>
                 {rows}
-                <div class="time-settings">⚙ Change timezone in Sidebar Settings</div>
+                <div class="time-settings">⚙ Change timezone in My Profile → Preferences</div>
             </aside>
         </div>
         """,
@@ -7214,10 +8047,54 @@ def main() -> None:
             st.image(str(logo_path), width="stretch")
         st.markdown("### Star Citizen Tracker")
         st.caption("Private operations console")
-        st.markdown(
-            f"**{html.escape(st.session_state.get('user_display_name', 'Citizen'))}**"
+
+        sidebar_display_name = st.session_state.get(
+            "user_display_name",
+            "Citizen",
         )
-        st.caption(st.session_state.get("user_email", "Signed in"))
+        sidebar_email = st.session_state.get(
+            "user_email",
+            "Signed in",
+        )
+        sidebar_avatar_url = st.session_state.get(
+            "user_avatar_url",
+            "",
+        )
+        st.markdown(
+            f"""
+            <div class="sidebar-profile-card">
+                <div class="sidebar-profile-row">
+                    {avatar_markup(
+                        avatar_url=sidebar_avatar_url,
+                        display_name=sidebar_display_name,
+                        email=sidebar_email,
+                        large=False,
+                    )}
+                    <div class="sidebar-profile-copy">
+                        <div class="sidebar-profile-name">
+                            {html.escape(sidebar_display_name)}
+                        </div>
+                        <div class="sidebar-profile-email">
+                            {html.escape(sidebar_email)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button(
+            "Manage My Profile",
+            key="sidebar_manage_profile",
+            type=(
+                "primary"
+                if st.session_state.get("nav_page") == "My Profile"
+                else "secondary"
+            ),
+            width="stretch",
+        ):
+            st.session_state.nav_page = "My Profile"
+            st.rerun()
 
         navigation_pages = [
             "Dashboard",
@@ -7243,13 +8120,6 @@ def main() -> None:
                 st.session_state.nav_page = navigation_page
                 st.rerun()
 
-        with st.expander("⚙ Settings", expanded=False):
-            st.markdown("#### Profile")
-            profile_settings(client)
-            st.divider()
-            st.markdown("#### Timezone")
-            timezone_settings()
-
         st.divider()
         st.caption("System status: All systems operational")
         st.caption(
@@ -7271,7 +8141,9 @@ def main() -> None:
                 st.rerun()
 
     page = st.session_state.nav_page
-    if page == "Dashboard":
+    if page == "My Profile":
+        profile_page(client, cookies)
+    elif page == "Dashboard":
         dashboard_page()
     elif page == "Contract Calculator":
         contract_page()
