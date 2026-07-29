@@ -1,1 +1,46 @@
-
+Resource,Category,System,Location,Site Type,Spawn Rate,Mining Method,Notes
+Aphorite,Gem,Stanton,Aberdeen caves and surface deposits,Cave / Surface,Common,Hand / ROC,Lower-value blue gem; commonly found with other FPS gems.
+Aphorite,Gem,Stanton,Daymar caves and surface deposits,Cave / Surface,Common,Hand / ROC,Search cave systems and small gem clusters.
+Aphorite,Gem,Pyro,Pyro caves and rocky moon surfaces,Cave / Surface,Common,Hand / ROC,Broad availability; exact density varies by patch and region.
+Dolivine,Gem,Stanton,Aberdeen and Klescher cave network,Cave,35–37% reported,Hand / ROC,Frequently found in small-scale deposits.
+Dolivine,Gem,Stanton,microTech surface and cave deposits,Cave / Surface,36.9% reported,Hand / ROC,Cold-region gem deposits.
+Dolivine,Gem,Pyro,"Adir, Fairo, Ignis, Vatra, Vuur",Moon / Surface,35–37% reported,Hand / ROC,Common across several Pyro bodies.
+Hadanite,Gem,Stanton,Aberdeen surface and caves,Cave / Surface,Uncommon,Hand / ROC,High-value pink-purple gem.
+Hadanite,Gem,Stanton,"Arial, Daymar, Magda, Lyria",Moon / Surface,Uncommon,ROC,Look for small gem clusters on planetary surfaces.
+Hadanite,Gem,Stanton,Aaron Halo,Asteroid belt,Rare,Ship / ROC,Reported among harvestable minerals in the belt.
+Hadanite,Gem,Pyro,Rocky moons and cave systems,Cave / Surface,Uncommon,Hand / ROC,Patch-dependent distribution.
+Feynmaline,Gem,Stanton,Caves and small surface deposits,Cave / Surface,Rare,ROC,Ground-vehicle mineable mineral.
+Janalite,Gem,Stanton,Deep caves and rare small deposits,Cave,Extremely rare,Hand,One of the rarest and most valuable hand-mined minerals.
+Janalite,Gem,Pyro,Remote caves and high-risk locations,Cave,Extremely rare,Hand,Very low occurrence; check deep cave branches.
+Riccite,Gem,Pyro,Seismically active worlds and moons,Surface / Cave,Very rare,ROC / Hand,Associated with heavy seismic activity.
+Stileron,Gem,Nyx,Glaciem Ring and remote rocky bodies,Asteroid / Surface,Very rare,Ship / ROC,Rare specialty mineral; verify after major patches.
+Agricium,Ore,Stanton,"Lyria, Daymar, Magda, Aaron Halo",Moon / Asteroid,Uncommon,Ship,High-value ore; often mixed with lower-value materials.
+Agricium,Ore,Pyro,"Adir, Bloom, Terminus",Moon / Planet,Uncommon,Ship,Look for higher-quality deposits on remote surfaces.
+Aluminum,Ore,Stanton,Most moons and Lagrange asteroid fields,Moon / Asteroid,Common,Ship,Low-value common ore.
+Aluminum,Ore,Pyro,Most rocky planets and moons,Planet / Moon,Common,Ship,Common filler material.
+Beryl,Ore,Stanton,"Daymar, Yela, Aaron Halo",Moon / Asteroid,Common,Ship,Common industrial mineral.
+Bexalite,Ore,Stanton,"Lyria, Magda, Arial",Moon,Rare,Ship,Valuable and often sought for focused mining runs.
+Bexalite,Ore,Pyro,"Bloom, Terminus, Vatra",Planet / Moon,Rare,Ship,Remote deposits may offer better concentrations.
+Borase,Ore,Stanton,Aaron Halo and Lagrange asteroid fields,Asteroid,Uncommon,Ship,Asteroid mining target.
+Borase,Ore,Pyro,Pyro Clusters and asteroid regions,Asteroid,Uncommon,Ship,Often found in mixed asteroid deposits.
+Copper,Ore,Stanton,"Most moons, planets, and asteroid fields",Mixed,Common,Ship,Widely distributed.
+Corundum,Ore,Stanton,Magda,Moon,34.8% reported,Ship,Common mineral on Magda.
+Corundum,Ore,Stanton,MIC-L2 and MIC-L5,Asteroid,23.9% reported,Ship,Common asteroid resource.
+Diamond,Ore,Stanton,"Lyria, Aaron Halo, Lagrange fields",Moon / Asteroid,Uncommon,Ship,Moderate-value ore.
+Gold,Ore,Stanton,"ARC-L5, CRU-L1/L2/L4, HUR-L1/L3/L4, MIC-L3",Asteroid,18% reported,Ship,Current reported asteroid-field rate.
+Gold,Ore,Pyro,"Adir, Bloom, Vuur",Moon / Planet,18% reported,Ship,Reported on selected Pyro bodies.
+Gold,Ore,Nyx,Glaciem Ring and Keeger Belt,Asteroid,2% reported,Ship,Rare in Nyx asteroid regions.
+Hephaestanite,Ore,Stanton,"Aaron Halo, Lyria, Aberdeen",Asteroid / Moon,Uncommon,Ship,Useful mid-value ore.
+Iron,Ore,Stanton,Most planetary bodies and asteroid fields,Mixed,Common,Ship,Very widely distributed.
+Iron,Ore,Pyro,Most rocky planets and moons,Mixed,Common,Ship,Common throughout Pyro.
+Laranite,Ore,Stanton,"Lyria, Arial, Aberdeen, Aaron Halo",Moon / Asteroid,Uncommon,Ship,Popular mid-to-high value ore.
+Laranite,Ore,Pyro,"Bloom, Terminus, Vuur",Planet / Moon,Uncommon,Ship,Found in mixed surface deposits.
+Ouratite,Ore,Stanton,"Aberdeen, Arial, Hurston",Moon / Planet,10% reported,Ship,Rare armor-related hydrocarbon.
+Ouratite,Ore,Pyro,Terminus,Planet,10% reported,Ship,Reported Pyro location.
+Quantanium,Ore,Stanton,"Lyria, Aaron Halo, Lagrange asteroid fields",Moon / Asteroid,Rare,Ship,Volatile high-value ore; transport quickly.
+Quantanium,Ore,Pyro,Pyro asteroid clusters and remote bodies,Asteroid / Surface,Rare,Ship,High risk and high value.
+Quartz,Ore,Stanton,Most moons and asteroid fields,Mixed,Common,Ship,Common low-value mineral.
+Taranite,Ore,Stanton,"Lyria, Aberdeen, Arial",Moon,Rare,Ship,High-value ore in selected deposits.
+Titanium,Ore,Stanton,Aaron Halo and most rocky moons,Moon / Asteroid,Common,Ship,Common industrial ore.
+Tungsten,Ore,Stanton,Aaron Halo and Lagrange asteroid fields,Asteroid,Common,Ship,Common asteroid mineral.
+Tungsten,Ore,Pyro,Asteroid clusters and rocky moons,Asteroid / Moon,Common,Ship,Widely available in industrial deposits.
