@@ -8,6 +8,7 @@ import base64
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 from supabase import Client, create_client
 
@@ -88,33 +89,43 @@ STAR_CITIZEN_COLORS = [
 
 
 def apply_custom_theme() -> None:
-    """Apply the Star Citizen-inspired visual theme."""
+    """Apply a polished dark operations-console theme."""
     st.markdown(
         """
         <style>
         :root {
-            --sc-bg: #06111b;
-            --sc-panel: #0c1b28;
-            --sc-panel-2: #102536;
-            --sc-border: rgba(88, 197, 235, 0.28);
-            --sc-cyan: #00c8ff;
-            --sc-cyan-soft: #7ce7ff;
-            --sc-orange: #ff8a2a;
-            --sc-text: #eaf8ff;
-            --sc-muted: #93afbf;
+            --app-bg: #050608;
+            --surface: #0b0e13;
+            --surface-2: #11151c;
+            --surface-3: #171c24;
+            --border: rgba(148, 163, 184, 0.16);
+            --border-strong: rgba(42, 224, 199, 0.34);
+            --accent: #2ae0c7;
+            --accent-2: #22c5e5;
+            --accent-soft: rgba(42, 224, 199, 0.12);
+            --text: #f7fafc;
+            --muted: #8e9aaa;
+            --subtle: #667181;
+            --warning: #ff9b45;
+        }
+
+        html, body, [class*="css"] {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+                BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .stApp {
             background:
-                radial-gradient(circle at 85% 0%, rgba(0, 200, 255, 0.10), transparent 28rem),
-                radial-gradient(circle at 0% 100%, rgba(255, 138, 42, 0.07), transparent 30rem),
-                linear-gradient(180deg, #06111b 0%, #081521 48%, #06111b 100%);
-            color: var(--sc-text);
+                radial-gradient(circle at 78% -18%, rgba(34, 197, 229, 0.08), transparent 34rem),
+                radial-gradient(circle at 10% 110%, rgba(42, 224, 199, 0.06), transparent 30rem),
+                var(--app-bg);
+            color: var(--text);
         }
 
         [data-testid="stHeader"] {
-            background: rgba(6, 17, 27, 0.78);
-            backdrop-filter: blur(14px);
+            background: rgba(5, 6, 8, 0.78);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            backdrop-filter: blur(16px);
         }
 
         [data-testid="stAppViewContainer"] > .main {
@@ -122,44 +133,52 @@ def apply_custom_theme() -> None:
         }
 
         .block-container {
-            max-width: 1480px;
-            padding-top: 1.4rem;
+            max-width: 1540px;
+            padding-top: 1rem;
             padding-bottom: 3rem;
         }
 
         section[data-testid="stSidebar"] {
-            background:
-                linear-gradient(180deg, rgba(8, 25, 38, 0.98), rgba(5, 15, 24, 0.98));
-            border-right: 1px solid var(--sc-border);
+            background: linear-gradient(180deg, #080a0e 0%, #06070a 100%);
+            border-right: 1px solid var(--border);
+        }
+
+        section[data-testid="stSidebar"] > div {
+            padding-top: 1rem;
         }
 
         section[data-testid="stSidebar"] [data-testid="stImage"] img {
-            border-radius: 16px;
-            border: 1px solid var(--sc-border);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+        }
+
+        section[data-testid="stSidebar"] h1 {
+            font-size: 1.35rem;
+            margin-bottom: 0.1rem;
         }
 
         h1, h2, h3 {
-            color: var(--sc-text) !important;
-            letter-spacing: 0.02em;
+            color: var(--text) !important;
+            letter-spacing: -0.015em;
         }
 
         p, label, .stCaption {
-            color: var(--sc-muted);
+            color: var(--muted);
         }
 
         .sc-banner {
             position: relative;
-            min-height: 255px;
+            min-height: 205px;
             display: flex;
             align-items: flex-end;
             overflow: hidden;
-            border-radius: 20px;
-            border: 1px solid var(--sc-border);
-            margin-bottom: 1.6rem;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.25rem;
             background-position: center;
             background-size: cover;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.38);
+            box-shadow: 0 22px 55px rgba(0, 0, 0, 0.34);
         }
 
         .sc-banner::after {
@@ -167,122 +186,245 @@ def apply_custom_theme() -> None:
             position: absolute;
             inset: 0;
             background:
-                linear-gradient(90deg, rgba(2, 10, 17, 0.95) 0%, rgba(4, 15, 24, 0.74) 42%, rgba(4, 15, 24, 0.12) 78%),
-                linear-gradient(0deg, rgba(2, 10, 17, 0.94) 0%, transparent 60%);
+                linear-gradient(90deg, rgba(2, 4, 7, 0.96) 0%, rgba(5, 8, 12, 0.76) 44%, rgba(5, 8, 12, 0.18) 82%),
+                linear-gradient(0deg, rgba(2, 4, 7, 0.93) 0%, transparent 66%);
         }
 
         .sc-banner-content {
             position: relative;
             z-index: 2;
-            max-width: 760px;
-            padding: 2rem 2.2rem;
+            max-width: 820px;
+            padding: 1.7rem 1.9rem;
         }
 
         .sc-kicker {
-            color: var(--sc-cyan-soft);
+            color: var(--accent);
             text-transform: uppercase;
-            letter-spacing: 0.17em;
-            font-size: 0.78rem;
-            font-weight: 700;
-            margin-bottom: 0.45rem;
+            letter-spacing: 0.18em;
+            font-size: 0.72rem;
+            font-weight: 800;
+            margin-bottom: 0.42rem;
         }
 
         .sc-banner-title {
             color: #ffffff;
-            font-size: clamp(2rem, 4vw, 3.35rem);
+            font-size: clamp(1.85rem, 4vw, 3rem);
             line-height: 1.02;
-            font-weight: 760;
-            margin: 0 0 0.65rem 0;
-            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.48);
+            font-weight: 790;
+            margin: 0 0 0.55rem 0;
+            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.48);
         }
 
         .sc-banner-subtitle {
-            color: #c7dce8;
-            font-size: 1.02rem;
-            max-width: 680px;
+            color: #b9c4d0;
+            font-size: 0.98rem;
+            max-width: 720px;
             margin: 0;
         }
 
+        .dashboard-toolbar {
+            border: 1px solid var(--border);
+            background: rgba(11, 14, 19, 0.92);
+            border-radius: 14px;
+            padding: 0.95rem 1rem 0.15rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 1.25rem 0 0.7rem;
+        }
+
+        .section-title {
+            color: var(--text);
+            font-size: 1.18rem;
+            font-weight: 760;
+            margin: 0;
+        }
+
+        .section-copy {
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin: 0.15rem 0 0;
+        }
+
+        .chart-heading {
+            color: var(--text);
+            font-size: 0.98rem;
+            font-weight: 720;
+            margin: 0 0 0.12rem 0;
+        }
+
+        .chart-copy {
+            color: var(--muted);
+            font-size: 0.78rem;
+            margin: 0 0 0.3rem 0;
+        }
+
         div[data-testid="stMetric"] {
-            background:
-                linear-gradient(145deg, rgba(14, 36, 52, 0.96), rgba(8, 24, 37, 0.96));
-            border: 1px solid var(--sc-border);
+            background: linear-gradient(145deg, rgba(16, 20, 27, 0.98), rgba(10, 13, 18, 0.98));
+            border: 1px solid var(--border);
             border-radius: 15px;
             padding: 1rem 1rem 0.9rem;
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+            min-height: 118px;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
+            transition: transform 160ms ease, border-color 160ms ease;
+        }
+
+        div[data-testid="stMetric"]:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-strong);
         }
 
         [data-testid="stMetricLabel"] {
-            color: #8eb2c4 !important;
+            color: #8f9baa !important;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.70rem !important;
+            font-weight: 720;
         }
 
         [data-testid="stMetricValue"] {
-            color: #f2fbff !important;
+            color: #f8fbff !important;
+            font-weight: 780;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background: linear-gradient(145deg, rgba(14, 18, 24, 0.98), rgba(9, 12, 17, 0.98));
+            border: 1px solid var(--border) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 15px 38px rgba(0, 0, 0, 0.20);
         }
 
         .stButton > button,
         .stDownloadButton > button,
         [data-testid="stFormSubmitButton"] > button {
-            border: 1px solid rgba(124, 231, 255, 0.50);
+            border: 1px solid rgba(42, 224, 199, 0.54);
             border-radius: 10px;
-            background: linear-gradient(90deg, #007da8, #00a8dc);
-            color: #ffffff;
-            font-weight: 700;
-            box-shadow: 0 8px 18px rgba(0, 168, 220, 0.16);
+            background: linear-gradient(90deg, #128d88, #16a6b8);
+            color: #ffffff !important;
+            font-weight: 760;
+            min-height: 2.7rem;
+            box-shadow: 0 8px 20px rgba(34, 197, 229, 0.12);
+        }
+
+        .stButton > button p,
+        .stButton > button span,
+        .stDownloadButton > button p,
+        .stDownloadButton > button span,
+        [data-testid="stFormSubmitButton"] > button p,
+        [data-testid="stFormSubmitButton"] > button span {
+            color: inherit !important;
+            font-weight: inherit !important;
         }
 
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover {
-            border-color: #9af0ff;
-            background: linear-gradient(90deg, #0098c8, #00c8ff);
-            color: #021019;
+            border-color: #9ff9ec;
+            background: linear-gradient(90deg, #20bcae, #22c5e5);
+            color: #02100f !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button {
+            width: 100%;
+            min-height: 2.85rem;
+            justify-content: flex-start;
+            padding: 0.65rem 0.85rem;
+            margin: 0.12rem 0;
+            border-radius: 9px;
+            font-size: 0.92rem;
+            letter-spacing: 0.005em;
+            text-align: left;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #cbd5df !important;
+            box-shadow: none;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
+            background: rgba(42, 224, 199, 0.08);
+            border-color: rgba(42, 224, 199, 0.20);
+            color: #ffffff !important;
+            transform: translateX(2px);
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+            background: linear-gradient(90deg, rgba(42, 224, 199, 0.20), rgba(34, 197, 229, 0.12));
+            border: 1px solid rgba(42, 224, 199, 0.46);
+            color: #dffff9 !important;
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+            background: linear-gradient(90deg, rgba(42, 224, 199, 0.28), rgba(34, 197, 229, 0.18));
+            color: #ffffff !important;
         }
 
         div[data-baseweb="select"] > div,
         .stTextInput input,
         .stNumberInput input,
         .stTextArea textarea {
-            background: rgba(13, 32, 47, 0.94) !important;
-            border-color: rgba(103, 192, 224, 0.30) !important;
-            color: #eefbff !important;
+            background: #0d1117 !important;
+            border-color: rgba(148, 163, 184, 0.20) !important;
+            color: #f5f8fb !important;
+            border-radius: 9px !important;
+        }
+
+        div[data-baseweb="select"] > div:focus-within,
+        .stTextInput input:focus,
+        .stNumberInput input:focus,
+        .stTextArea textarea:focus {
+            border-color: rgba(42, 224, 199, 0.68) !important;
+            box-shadow: 0 0 0 1px rgba(42, 224, 199, 0.22) !important;
         }
 
         div[data-baseweb="select"] svg {
-            fill: var(--sc-cyan-soft);
+            fill: var(--accent);
         }
 
         [data-testid="stDataFrame"] {
-            border: 1px solid var(--sc-border);
-            border-radius: 14px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
             overflow: hidden;
         }
 
         div[data-testid="stAlert"] {
-            border: 1px solid rgba(103, 192, 224, 0.25);
+            border: 1px solid var(--border);
             border-radius: 12px;
+            background: rgba(14, 18, 24, 0.92);
+        }
+
+        [data-testid="stTabs"] button {
+            color: var(--muted);
         }
 
         [data-testid="stTabs"] button[aria-selected="true"] {
-            color: var(--sc-cyan-soft);
-            border-bottom-color: var(--sc-cyan);
+            color: var(--accent);
+            border-bottom-color: var(--accent);
         }
 
         hr {
-            border-color: rgba(103, 192, 224, 0.18);
+            border-color: rgba(148, 163, 184, 0.12);
         }
 
         @media (max-width: 720px) {
             .sc-banner {
-                min-height: 205px;
+                min-height: 190px;
             }
 
             .sc-banner-content {
-                padding: 1.35rem;
+                padding: 1.25rem;
             }
 
             .sc-banner-subtitle {
-                font-size: 0.92rem;
+                font-size: 0.90rem;
             }
         }
         </style>
@@ -324,30 +466,109 @@ def page_banner(
     )
 
 
-def style_plotly_figure(figure) -> None:
-    """Give Plotly charts the same dark sci-fi appearance as the app."""
+def style_plotly_figure(figure, *, height: int = 330) -> None:
+    """Give Plotly charts the same dark dashboard appearance as the app."""
     figure.update_layout(
         template="plotly_dark",
+        height=height,
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(7,20,31,0.72)",
-        font={"color": "#dff6ff"},
+        plot_bgcolor="rgba(5,7,10,0.34)",
+        font={"color": "#d9e1e8", "family": "Inter, sans-serif"},
         colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 20, "r": 20, "t": 35, "b": 20},
+        margin={"l": 18, "r": 18, "t": 18, "b": 18},
         legend_title_text="",
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "left",
+            "x": 0,
+        },
         hoverlabel={
-            "bgcolor": "#0b1c29",
-            "bordercolor": "#00c8ff",
-            "font_color": "#f2fbff",
+            "bgcolor": "#10151c",
+            "bordercolor": "#2ae0c7",
+            "font_color": "#f7fafc",
         },
     )
     figure.update_xaxes(
-        gridcolor="rgba(124,231,255,0.10)",
-        zerolinecolor="rgba(124,231,255,0.18)",
+        gridcolor="rgba(148,163,184,0.09)",
+        zerolinecolor="rgba(148,163,184,0.14)",
+        linecolor="rgba(148,163,184,0.12)",
+        tickfont={"color": "#8e9aaa"},
+        title_font={"color": "#8e9aaa"},
     )
     figure.update_yaxes(
-        gridcolor="rgba(124,231,255,0.10)",
-        zerolinecolor="rgba(124,231,255,0.18)",
+        gridcolor="rgba(148,163,184,0.09)",
+        zerolinecolor="rgba(148,163,184,0.14)",
+        linecolor="rgba(148,163,184,0.12)",
+        tickfont={"color": "#8e9aaa"},
+        title_font={"color": "#8e9aaa"},
     )
+
+
+def empty_dashboard_figure(message: str, *, donut: bool = False):
+    """Return a visible chart shell when the current filters have no data."""
+    figure = go.Figure()
+
+    if donut:
+        figure.add_shape(
+            type="circle",
+            xref="paper",
+            yref="paper",
+            x0=0.31,
+            y0=0.16,
+            x1=0.69,
+            y1=0.84,
+            line={"color": "rgba(148,163,184,0.16)", "width": 18},
+        )
+        figure.update_xaxes(visible=False, range=[0, 1])
+        figure.update_yaxes(visible=False, range=[0, 1])
+    else:
+        figure.update_xaxes(
+            title_text="",
+            showgrid=True,
+            range=[0, 6],
+            tickvals=list(range(7)),
+            ticktext=["" for _ in range(7)],
+        )
+        figure.update_yaxes(
+            title_text="aUEC",
+            showgrid=True,
+            range=[0, 1],
+            tickvals=[0, 0.5, 1],
+            ticktext=["0", "", ""],
+        )
+
+    figure.add_annotation(
+        x=0.5,
+        y=0.5,
+        xref="paper",
+        yref="paper",
+        text=f"<b>No data yet</b><br><span style='color:#8e9aaa'>{message}</span>",
+        showarrow=False,
+        align="center",
+        font={"size": 14, "color": "#d9e1e8"},
+    )
+    style_plotly_figure(figure)
+    return figure
+
+
+def chart_card(title: str, subtitle: str, figure, key: str) -> None:
+    """Render a dashboard chart inside a consistent card."""
+    with st.container(border=True):
+        st.markdown(
+            f"""
+            <div class="chart-heading">{title}</div>
+            <div class="chart-copy">{subtitle}</div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(
+            figure,
+            use_container_width=True,
+            config={"displayModeBar": False, "responsive": True},
+            key=key,
+        )
 
 
 
@@ -649,24 +870,27 @@ def display_ore_table(ores: pd.DataFrame) -> None:
 def dashboard_page() -> None:
     page_banner(
         "dashboard_banner.jpg",
-        "Interactive Dashboard",
-        "Review contract income, ore activity, trends, and mission performance from one command view.",
-        "Command Analytics",
+        "Operations Dashboard",
+        "See contract income, mining activity, trade value, and recent records immediately from one command view.",
+        "Live Command Overview",
     )
 
     contracts, ores = load_data()
 
-    filter_col1, filter_col2 = st.columns([1, 2])
-    with filter_col1:
-        date_range = st.selectbox(
-            "Date range",
-            ["All Time", "Last 7 Days", "Last 30 Days", "Last 90 Days"],
-        )
-    with filter_col2:
-        search_text = st.text_input(
-            "Search",
-            placeholder="Contract, ore, type, location, or notes",
-        )
+    with st.container(border=True):
+        filter_col1, filter_col2 = st.columns([1, 2])
+        with filter_col1:
+            date_range = st.selectbox(
+                "Date range",
+                ["All Time", "Last 7 Days", "Last 30 Days", "Last 90 Days"],
+                key="dashboard_date_range",
+            )
+        with filter_col2:
+            search_text = st.text_input(
+                "Search records",
+                placeholder="Contract, ore, type, location, or notes",
+                key="dashboard_search",
+            )
 
     contracts = filter_data(contracts, date_range, search_text)
     ores = filter_data(ores, date_range, search_text)
@@ -680,9 +904,7 @@ def dashboard_page() -> None:
         else 0.0
     )
     mined_value = (
-        float(
-            ores.loc[ores["action"] == "Mined", "total_value"].sum()
-        )
+        float(ores.loc[ores["action"] == "Mined", "total_value"].sum())
         if not ores.empty
         else 0.0
     )
@@ -699,171 +921,196 @@ def dashboard_page() -> None:
 
     metric_columns = st.columns(5)
     metric_columns[0].metric("Contracts", f"{len(contracts):,}")
-    metric_columns[1].metric("Net contract payout", format_money(contract_net))
+    metric_columns[1].metric("Net payout", format_money(contract_net))
     metric_columns[2].metric("Personal shares", format_money(personal_share))
     metric_columns[3].metric("Mined value", format_money(mined_value))
-    metric_columns[4].metric(
-        "Ore trade net",
-        format_money(ore_sales - ore_purchases),
+    metric_columns[4].metric("Ore trade net", format_money(ore_sales - ore_purchases))
+
+    st.markdown(
+        """
+        <div class="section-heading">
+            <div>
+                <div class="section-title">Performance overview</div>
+                <div class="section-copy">All primary charts stay visible, including before the first record is entered.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    view = st.selectbox(
-        "Dashboard view",
-        [
-            "Overview",
-            "Contracts Table",
-            "Ore Ledger Table",
-            "Contract Earnings by Type",
-            "Contract Earnings Over Time",
-            "Ore Value by Mineral",
-            "Ore Activity Over Time",
-            "Ore Activity Mix",
-        ],
+    if contracts.empty:
+        contract_time_figure = empty_dashboard_figure(
+            "Save a contract to begin tracking income over time."
+        )
+        contract_type_figure = empty_dashboard_figure(
+            "Contract categories will appear here after your first mission."
+        )
+    else:
+        contract_time_data = contracts.dropna(subset=["date_saved"]).copy()
+        contract_time_data["Day"] = contract_time_data["date_saved"].dt.floor("D")
+        contract_time_data = (
+            contract_time_data.groupby("Day", as_index=False)
+            .agg(
+                net_payout=("net_payout", "sum"),
+                contract_count=("id", "count"),
+            )
+            .sort_values("Day")
+        )
+        contract_time_figure = px.area(
+            contract_time_data,
+            x="Day",
+            y="net_payout",
+            markers=True,
+            hover_data=["contract_count"],
+            labels={
+                "net_payout": "Net payout in aUEC",
+                "contract_count": "Contracts",
+            },
+        )
+        contract_time_figure.update_traces(
+            line={"width": 2.5},
+            fillcolor="rgba(42,224,199,0.12)",
+        )
+        contract_time_figure.update_yaxes(rangemode="tozero")
+        style_plotly_figure(contract_time_figure)
+
+        contract_type_data = (
+            contracts.groupby("contract_type", as_index=False)
+            .agg(
+                net_payout=("net_payout", "sum"),
+                contract_count=("id", "count"),
+            )
+            .sort_values("net_payout", ascending=True)
+            .tail(8)
+        )
+        contract_type_figure = px.bar(
+            contract_type_data,
+            x="net_payout",
+            y="contract_type",
+            orientation="h",
+            hover_data=["contract_count"],
+            labels={
+                "net_payout": "Net payout in aUEC",
+                "contract_type": "Contract type",
+                "contract_count": "Contracts",
+            },
+        )
+        contract_type_figure.update_traces(marker_color="#22c5e5")
+        style_plotly_figure(contract_type_figure)
+
+    if ores.empty:
+        ore_value_figure = empty_dashboard_figure(
+            "Mined, bought, and sold mineral values will appear here."
+        )
+        ore_mix_figure = empty_dashboard_figure(
+            "Your mining and trade activity mix will appear here.",
+            donut=True,
+        )
+    else:
+        ore_value_data = (
+            ores.groupby(["ore_name", "action"], as_index=False)
+            .agg(
+                total_value=("total_value", "sum"),
+                entry_count=("id", "count"),
+            )
+            .sort_values("total_value", ascending=False)
+        )
+        leading_ores = (
+            ore_value_data.groupby("ore_name")["total_value"]
+            .sum()
+            .nlargest(8)
+            .index
+        )
+        ore_value_data = ore_value_data[
+            ore_value_data["ore_name"].isin(leading_ores)
+        ]
+        ore_value_figure = px.bar(
+            ore_value_data,
+            x="ore_name",
+            y="total_value",
+            color="action",
+            barmode="group",
+            hover_data=["entry_count"],
+            labels={
+                "ore_name": "Ore or mineral",
+                "total_value": "Value in aUEC",
+                "action": "Entry type",
+                "entry_count": "Entries",
+            },
+        )
+        ore_value_figure.update_yaxes(rangemode="tozero")
+        style_plotly_figure(ore_value_figure)
+
+        ore_mix_data = (
+            ores.groupby("action", as_index=False)
+            .agg(
+                total_value=("total_value", "sum"),
+                entry_count=("id", "count"),
+            )
+        )
+        ore_mix_figure = px.pie(
+            ore_mix_data,
+            names="action",
+            values="total_value",
+            hole=0.62,
+            hover_data=["entry_count"],
+        )
+        ore_mix_figure.update_traces(
+            textinfo="percent+label",
+            marker={"line": {"color": "#0b0e13", "width": 3}},
+        )
+        style_plotly_figure(ore_mix_figure)
+
+    chart_col1, chart_col2 = st.columns(2)
+    with chart_col1:
+        chart_card(
+            "Contract earnings over time",
+            "Daily net contract payout for the selected date range.",
+            contract_time_figure,
+            "dashboard_contract_time",
+        )
+    with chart_col2:
+        chart_card(
+            "Contract earnings by type",
+            "Top contract categories ranked by total net payout.",
+            contract_type_figure,
+            "dashboard_contract_type",
+        )
+
+    chart_col3, chart_col4 = st.columns(2)
+    with chart_col3:
+        chart_card(
+            "Ore value by mineral",
+            "Compare mined, purchased, and sold value by resource.",
+            ore_value_figure,
+            "dashboard_ore_value",
+        )
+    with chart_col4:
+        chart_card(
+            "Ore activity mix",
+            "Share of total recorded ore value by activity type.",
+            ore_mix_figure,
+            "dashboard_ore_mix",
+        )
+
+    st.markdown(
+        """
+        <div class="section-heading">
+            <div>
+                <div class="section-title">Recent records</div>
+                <div class="section-copy">Review the underlying contract and ore entries without leaving the dashboard.</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    if view == "Overview":
-        st.subheader("Contracts")
+    contract_tab, ore_tab = st.tabs(["Contracts", "Ore ledger"])
+    with contract_tab:
         display_contract_table(contracts)
-        st.subheader("Ore Ledger")
+    with ore_tab:
         display_ore_table(ores)
 
-    elif view == "Contracts Table":
-        display_contract_table(contracts)
-
-    elif view == "Ore Ledger Table":
-        display_ore_table(ores)
-
-    elif view == "Contract Earnings by Type":
-        if contracts.empty:
-            st.info("No contract records match the current filters.")
-        else:
-            chart_data = (
-                contracts.groupby("contract_type", as_index=False)
-                .agg(
-                    net_payout=("net_payout", "sum"),
-                    contract_count=("id", "count"),
-                )
-                .sort_values("net_payout", ascending=True)
-            )
-            figure = px.bar(
-                chart_data,
-                x="net_payout",
-                y="contract_type",
-                orientation="h",
-                hover_data=["contract_count"],
-                labels={
-                    "net_payout": "Net payout in aUEC",
-                    "contract_type": "Contract type",
-                    "contract_count": "Contracts",
-                },
-            )
-            style_plotly_figure(figure)
-            st.plotly_chart(figure, use_container_width=True)
-
-    elif view == "Contract Earnings Over Time":
-        if contracts.empty:
-            st.info("No contract records match the current filters.")
-        else:
-            chart_data = contracts.dropna(subset=["date_saved"]).copy()
-            chart_data["Day"] = chart_data["date_saved"].dt.floor("D")
-            chart_data = (
-                chart_data.groupby("Day", as_index=False)
-                .agg(
-                    net_payout=("net_payout", "sum"),
-                    contract_count=("id", "count"),
-                )
-                .sort_values("Day")
-            )
-            figure = px.line(
-                chart_data,
-                x="Day",
-                y="net_payout",
-                markers=True,
-                hover_data=["contract_count"],
-                labels={
-                    "net_payout": "Net payout in aUEC",
-                    "contract_count": "Contracts",
-                },
-            )
-            figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
-            st.plotly_chart(figure, use_container_width=True)
-
-    elif view == "Ore Value by Mineral":
-        if ores.empty:
-            st.info("No ore records match the current filters.")
-        else:
-            chart_data = (
-                ores.groupby(["ore_name", "action"], as_index=False)
-                .agg(
-                    total_value=("total_value", "sum"),
-                    entry_count=("id", "count"),
-                )
-            )
-            figure = px.bar(
-                chart_data,
-                x="ore_name",
-                y="total_value",
-                color="action",
-                barmode="group",
-                hover_data=["entry_count"],
-                labels={
-                    "ore_name": "Ore or mineral",
-                    "total_value": "Value in aUEC",
-                    "action": "Entry type",
-                    "entry_count": "Entries",
-                },
-            )
-            figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
-            st.plotly_chart(figure, use_container_width=True)
-
-    elif view == "Ore Activity Over Time":
-        if ores.empty:
-            st.info("No ore records match the current filters.")
-        else:
-            chart_data = ores.dropna(subset=["date_saved"]).sort_values(
-                "date_saved"
-            )
-            figure = px.line(
-                chart_data,
-                x="date_saved",
-                y="total_value",
-                color="action",
-                markers=True,
-                hover_data=["ore_name", "location", "notes"],
-                labels={
-                    "date_saved": "Date and time",
-                    "total_value": "Value in aUEC",
-                    "action": "Entry type",
-                    "ore_name": "Ore",
-                },
-            )
-            figure.update_yaxes(rangemode="tozero")
-            style_plotly_figure(figure)
-            st.plotly_chart(figure, use_container_width=True)
-
-    elif view == "Ore Activity Mix":
-        if ores.empty:
-            st.info("No ore records match the current filters.")
-        else:
-            chart_data = (
-                ores.groupby("action", as_index=False)
-                .agg(
-                    total_value=("total_value", "sum"),
-                    entry_count=("id", "count"),
-                )
-            )
-            figure = px.pie(
-                chart_data,
-                names="action",
-                values="total_value",
-                hole=0.45,
-                hover_data=["entry_count"],
-            )
-            figure.update_traces(textinfo="percent+label")
-            style_plotly_figure(figure)
-            st.plotly_chart(figure, use_container_width=True)
 
 
 def contract_page() -> None:
@@ -1296,16 +1543,30 @@ def main() -> None:
         st.caption("Private operations console")
         st.caption(st.session_state.get("user_email", "Signed in"))
 
-        page = st.radio(
-            "Navigation",
-            [
-                "Dashboard",
-                "Contract Calculator",
-                "Ore Ledger",
-                "Saved Records",
-                "Edit or Delete",
-            ],
-        )
+        st.markdown("#### Navigation")
+        navigation_pages = [
+            "Dashboard",
+            "Contract Calculator",
+            "Ore Ledger",
+            "Saved Records",
+            "Edit or Delete",
+        ]
+
+        if "nav_page" not in st.session_state:
+            st.session_state.nav_page = "Dashboard"
+
+        for navigation_page in navigation_pages:
+            is_active = st.session_state.nav_page == navigation_page
+            if st.button(
+                navigation_page,
+                key=f"nav_{navigation_page.lower().replace(' ', '_')}",
+                type="primary" if is_active else "secondary",
+                use_container_width=True,
+            ):
+                st.session_state.nav_page = navigation_page
+                st.rerun()
+
+        page = st.session_state.nav_page
 
         st.divider()
         if st.button("Sign out", use_container_width=True):
