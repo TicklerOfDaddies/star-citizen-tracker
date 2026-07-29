@@ -1402,6 +1402,299 @@ def apply_custom_theme() -> None:
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ================================================================
+           Streamlit 1.4x+ control visibility overrides
+           These role/test-id selectors cover the current Streamlit DOM.
+           ================================================================ */
+
+        /* Clearly boxed text, number, password, email, date, and search inputs */
+        [data-testid="stTextInput"] div[data-baseweb="input"],
+        [data-testid="stNumberInput"] div[data-baseweb="input"],
+        [data-testid="stDateInput"] div[data-baseweb="input"],
+        [data-testid="stTimeInput"] div[data-baseweb="input"],
+        [data-testid="stSearchbox"] div[data-baseweb="input"] {
+            min-height: 3.15rem !important;
+            background: #ffffff !important;
+            border: 2px solid #76aeca !important;
+            border-radius: 11px !important;
+            box-shadow:
+                0 3px 9px rgba(24, 83, 108, .08),
+                inset 0 1px 2px rgba(15, 62, 84, .035) !important;
+            overflow: hidden !important;
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease,
+                background .15s ease !important;
+        }
+
+        [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stNumberInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
+        [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
+            border-color: #2987a5 !important;
+            box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
+        }
+
+        [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
+        [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
+            border-color: #057c99 !important;
+            background: #fbfeff !important;
+            box-shadow:
+                0 0 0 4px rgba(5, 124, 153, .16),
+                0 6px 15px rgba(24, 83, 108, .12) !important;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stDateInput"] input,
+        [data-testid="stTimeInput"] input,
+        [data-testid="stSearchbox"] input {
+            min-height: 3rem !important;
+            padding: .68rem .78rem !important;
+            border: 0 !important;
+            outline: 0 !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            color: #102e47 !important;
+            -webkit-text-fill-color: #102e47 !important;
+            font-size: .9rem !important;
+            font-weight: 560 !important;
+        }
+
+        /* Text areas need a full visible perimeter */
+        [data-testid="stTextArea"] textarea {
+            min-height: 9rem !important;
+            padding: .82rem .86rem !important;
+            background: #ffffff !important;
+            border: 2px solid #76aeca !important;
+            border-radius: 11px !important;
+            color: #102e47 !important;
+            -webkit-text-fill-color: #102e47 !important;
+            box-shadow:
+                0 3px 9px rgba(24, 83, 108, .08),
+                inset 0 1px 2px rgba(15, 62, 84, .035) !important;
+            font-size: .9rem !important;
+            line-height: 1.48 !important;
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease !important;
+        }
+
+        [data-testid="stTextArea"] textarea:hover {
+            border-color: #2987a5 !important;
+        }
+
+        [data-testid="stTextArea"] textarea:focus {
+            border-color: #057c99 !important;
+            box-shadow:
+                0 0 0 4px rgba(5, 124, 153, .16),
+                0 6px 15px rgba(24, 83, 108, .12) !important;
+            outline: none !important;
+        }
+
+        /* Selectboxes and multiselects */
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div,
+        [data-testid="stSelectbox"] [role="combobox"],
+        [data-testid="stMultiSelect"] [role="combobox"] {
+            min-height: 3.15rem !important;
+            background: #ffffff !important;
+            border: 2px solid #76aeca !important;
+            border-radius: 11px !important;
+            color: #102e47 !important;
+            box-shadow: 0 3px 9px rgba(24, 83, 108, .08) !important;
+            transition:
+                border-color .15s ease,
+                box-shadow .15s ease !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
+            border-color: #2987a5 !important;
+            box-shadow: 0 5px 13px rgba(24, 83, 108, .13) !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
+            border-color: #057c99 !important;
+            box-shadow:
+                0 0 0 4px rgba(5, 124, 153, .16),
+                0 6px 15px rgba(24, 83, 108, .12) !important;
+        }
+
+        [data-testid="stSelectbox"] div[data-baseweb="select"] *,
+        [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
+            color: #102e47 !important;
+            -webkit-text-fill-color: #102e47 !important;
+        }
+
+        /* Visible placeholders */
+        [data-testid="stTextInput"] input::placeholder,
+        [data-testid="stNumberInput"] input::placeholder,
+        [data-testid="stTextArea"] textarea::placeholder,
+        [data-testid="stDateInput"] input::placeholder,
+        [data-testid="stSearchbox"] input::placeholder {
+            color: #73889a !important;
+            -webkit-text-fill-color: #73889a !important;
+            opacity: 1 !important;
+            font-weight: 500 !important;
+        }
+
+        /* Input labels */
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stTextInput"] label p,
+        [data-testid="stNumberInput"] label p,
+        [data-testid="stTextArea"] label p,
+        [data-testid="stSelectbox"] label p,
+        [data-testid="stMultiSelect"] label p,
+        [data-testid="stDateInput"] label p {
+            color: #0e3650 !important;
+            font-size: .82rem !important;
+            font-weight: 800 !important;
+        }
+
+        /* Number-input +/- controls */
+        [data-testid="stNumberInput"] button {
+            min-width: 2.55rem !important;
+            min-height: 3rem !important;
+            border: 0 !important;
+            border-left: 1px solid #bdd3de !important;
+            border-radius: 0 !important;
+            background: #edf6f9 !important;
+            color: #0b5069 !important;
+            box-shadow: none !important;
+        }
+
+        [data-testid="stNumberInput"] button:hover {
+            background: #d8edf3 !important;
+            color: #063d50 !important;
+        }
+
+        /* File upload area */
+        [data-testid="stFileUploaderDropzone"] {
+            border: 2px dashed #76aeca !important;
+            background: #f6fbfd !important;
+            padding: 1.15rem !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"]:hover {
+            border-color: #057c99 !important;
+            background: #edf8fb !important;
+        }
+
+        /* Current Streamlit tabs: prominent segmented navigation */
+        [data-testid="stTabs"] [role="tablist"] {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: .58rem !important;
+            padding: .58rem !important;
+            margin: .45rem 0 1rem !important;
+            border: 1.5px solid #abcbd8 !important;
+            border-radius: 14px !important;
+            background: #e7f2f6 !important;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.9),
+                0 5px 14px rgba(24,83,108,.07) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] {
+            flex: 1 1 145px !important;
+            min-width: 120px !important;
+            min-height: 3.05rem !important;
+            padding: .65rem .9rem !important;
+            border: 1.5px solid #8fb9c9 !important;
+            border-radius: 10px !important;
+            background: #ffffff !important;
+            color: #174e65 !important;
+            font-size: .84rem !important;
+            font-weight: 800 !important;
+            line-height: 1.2 !important;
+            box-shadow: 0 4px 10px rgba(24,83,108,.07) !important;
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                color .15s ease,
+                transform .15s ease,
+                box-shadow .15s ease !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] * {
+            color: inherit !important;
+            font-size: inherit !important;
+            font-weight: inherit !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"]:hover {
+            background: #cfe9f0 !important;
+            border-color: #4093ad !important;
+            color: #073f54 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 7px 15px rgba(24,83,108,.14) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            background:
+                linear-gradient(135deg, #0b8da8 0%, #05627a 100%) !important;
+            border-color: #055b70 !important;
+            color: #ffffff !important;
+            box-shadow:
+                inset 4px 0 0 #63d9ee,
+                0 8px 18px rgba(5,98,122,.23) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] * {
+            color: #ffffff !important;
+        }
+
+        /* Hide the old thin underline indicator; the filled tab is the indicator */
+        [data-testid="stTabs"] [role="tab"] [data-baseweb="tab-highlight"],
+        [data-testid="stTabs"] [role="tablist"] > div:last-child {
+            display: none !important;
+        }
+
+        /* Radio options used as record-type selectors */
+        [data-testid="stRadio"] [role="radiogroup"] {
+            gap: .55rem !important;
+            padding: .48rem !important;
+            border: 1.5px solid #abcbd8 !important;
+            border-radius: 12px !important;
+            background: #edf6f9 !important;
+        }
+
+        [data-testid="stRadio"] label {
+            padding: .45rem .7rem !important;
+            border: 1px solid #b8d2dc !important;
+            border-radius: 9px !important;
+            background: #ffffff !important;
+        }
+
+        /* Checkbox outline */
+        [data-testid="stCheckbox"] label {
+            padding: .52rem .65rem !important;
+            border: 1px solid #bdd3de !important;
+            border-radius: 9px !important;
+            background: #f8fbfd !important;
+        }
+
+        /* Form/card padding and separation */
+        [data-testid="stForm"] {
+            padding: 1.15rem !important;
+            border: 1.5px solid #aac8d6 !important;
+            border-radius: 16px !important;
+            background: #ffffff !important;
+            box-shadow: 0 10px 24px rgba(24,83,108,.09) !important;
+        }
+
+        @media (max-width: 760px) {
+            [data-testid="stTabs"] [role="tab"] {
+                flex: 1 1 100% !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
