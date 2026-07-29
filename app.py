@@ -359,19 +359,39 @@ def apply_custom_theme() -> None:
             border-radius: 10px;
             background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
             color: #ffffff !important;
-            font-weight: 760;
+            font-size: .92rem !important;
+            font-weight: 750 !important;
+            line-height: 1.2 !important;
+            letter-spacing: .005em;
             min-height: 2.75rem;
             box-shadow: 0 7px 16px rgba(7,95,121,.18);
+            transition:
+                background .16s ease,
+                border-color .16s ease,
+                color .16s ease,
+                box-shadow .16s ease,
+                transform .16s ease;
+        }
+
+        .stButton > button *,
+        .stDownloadButton > button *,
+        [data-testid="stFormSubmitButton"] > button *,
+        .stLinkButton > a * {
+            color: inherit !important;
+            font-size: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
         }
 
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover,
         .stLinkButton > a:hover {
-            border-color: #064f66;
-            background: linear-gradient(135deg, #096783 0%, #054e64 100%);
+            border-color: #043f53;
+            background: linear-gradient(135deg, #075a73 0%, #043f53 100%);
             color: #ffffff !important;
-            box-shadow: 0 9px 20px rgba(7,95,121,.24);
+            box-shadow: 0 10px 22px rgba(4,63,83,.28);
+            transform: translateY(-1px);
         }
 
         .stButton > button:disabled,
@@ -381,31 +401,63 @@ def apply_custom_theme() -> None:
             border-color: #c1ccd4 !important;
             color: #6e7e8b !important;
             box-shadow: none !important;
+            transform: none !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button {
-            width:100%; height:3.35rem; min-height:3.35rem; justify-content:flex-start;
-            padding:.72rem .9rem; margin:.14rem 0; border-radius:11px; font-size:.9rem; text-align:left;
+            width:100%;
+            height:3.35rem;
+            min-height:3.35rem;
+            justify-content:flex-start;
+            padding:.72rem .9rem;
+            margin:.14rem 0;
+            border-radius:11px;
+            font-size:.92rem !important;
+            text-align:left;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-            background: #eef8fb;
-            border: 1px solid #b5d8e4;
-            color: #14556c !important;
+            background: #edf6f9;
+            border: 1px solid #b7d5df;
+            color: #1d5366 !important;
             box-shadow: none;
         }
 
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
+            color: #1d5366 !important;
+        }
+
         section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-            background: #dff1f6;
-            border-color: #7cbacc;
-            color: #0b4a60 !important;
+            background: #cfe8ef;
+            border-color: #68a9bb;
+            color: #0b4357 !important;
+            box-shadow: 0 7px 16px rgba(30,104,126,.12);
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
+            color: #0b4357 !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
             background: linear-gradient(135deg, #0d7694 0%, #075f79 100%);
             border: 1px solid #075f79;
             color: #ffffff !important;
-            box-shadow: inset 4px 0 0 #55d7f1, 0 7px 16px rgba(7,95,121,.18);
+            box-shadow:
+                inset 4px 0 0 #55d7f1,
+                0 8px 18px rgba(7,95,121,.22);
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
+            color: #ffffff !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
+            background: linear-gradient(135deg, #095f79 0%, #044c62 100%);
+            border-color: #044c62;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover * {
+            color: #ffffff !important;
         }
 
         .rights-notice {
@@ -423,11 +475,61 @@ def apply_custom_theme() -> None:
             color: #123850;
         }
 
-        div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input, .stTextArea textarea, .stDateInput input {
-            background:#fff !important; border-color:#cfdbe8 !important; color:#142941 !important; border-radius:9px !important;
+        div[data-baseweb="select"] > div,
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stDateInput"] input,
+        .stTextInput input,
+        .stNumberInput input,
+        .stTextArea textarea,
+        .stDateInput input,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            background: #ffffff !important;
+            border-color: #b9c9d8 !important;
+            color: #10233f !important;
+            -webkit-text-fill-color: #10233f !important;
+            caret-color: #0d7694 !important;
+            border-radius: 9px !important;
+            opacity: 1 !important;
         }
-        div[data-baseweb="select"] > div:focus-within, .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
-            border-color:#72b4fa !important; box-shadow:0 0 0 1px rgba(19,120,229,.18) !important;
+
+        [data-testid="stTextInput"] input::placeholder,
+        [data-testid="stNumberInput"] input::placeholder,
+        [data-testid="stTextArea"] textarea::placeholder,
+        input[type="text"]::placeholder,
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #7b8ba0 !important;
+            -webkit-text-fill-color: #7b8ba0 !important;
+            opacity: 1 !important;
+        }
+
+        [data-testid="stTextInput"] label,
+        [data-testid="stNumberInput"] label,
+        [data-testid="stTextArea"] label,
+        [data-testid="stDateInput"] label {
+            color: #344b65 !important;
+            font-weight: 650 !important;
+        }
+
+        div[data-baseweb="select"] > div:focus-within,
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stNumberInput"] input:focus,
+        [data-testid="stTextArea"] textarea:focus,
+        [data-testid="stDateInput"] input:focus,
+        .stTextInput input:focus,
+        .stNumberInput input:focus,
+        .stTextArea textarea:focus {
+            border-color: #0d7694 !important;
+            box-shadow: 0 0 0 2px rgba(13,118,148,.16) !important;
+            outline: none !important;
+        }
+
+        [data-baseweb="input"] {
+            background: #ffffff !important;
         }
         [data-testid="stDataFrame"] { border:1px solid var(--border); border-radius:13px; overflow:hidden; }
         div[data-testid="stAlert"] { border:1px solid var(--border); border-radius:12px; background:#fff; }
@@ -3793,9 +3895,14 @@ def blueprints_page() -> None:
 
     if not st.session_state.get("blueprint_tracker_ready", False):
         st.warning(
-            "The Blueprint Tracker database table is not installed yet. Run "
-            "`schema_migration_v3_blueprints.sql` in Supabase SQL Editor, then reload."
+            "The Blueprint Tracker database connection is not ready. Run "
+            "`schema_migration_v3_blueprints_repair.sql` in Supabase SQL Editor, "
+            "wait about 10 seconds, then reload the app."
         )
+        blueprint_error = st.session_state.get("blueprint_tracker_error", "")
+        if blueprint_error:
+            with st.expander("Show database error details"):
+                st.code(blueprint_error)
 
     add_tab, readiness_tab, manage_tab = st.tabs(
         ["Add Blueprint", "Readiness & Materials", "Manage Blueprints"]
@@ -3933,8 +4040,8 @@ def blueprints_page() -> None:
                 except Exception as exc:
                     st.error(
                         "The blueprint could not be saved. Confirm that "
-                        "`schema_migration_v3_blueprints.sql` was run in Supabase. "
-                        f"Details: {exc}"
+                        "`schema_migration_v3_blueprints_repair.sql` was run in "
+                        f"Supabase. Details: {exc}"
                     )
 
     with readiness_tab:
