@@ -3093,6 +3093,46 @@ def apply_custom_theme() -> None:
                 height: 4.1rem;
             }
         }
+
+        /* ================================================================
+           Quiet submission confirmations
+           Successful actions use compact inline text instead of pop-ups.
+           ================================================================ */
+        .quiet-action-confirmation {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            width: fit-content;
+            max-width: 100%;
+            margin: .45rem 0 .8rem;
+            padding: .42rem .68rem;
+            background: #F4FAE9;
+            border: 1px solid #91B95B;
+            border-radius: 8px;
+            color: #36550F;
+            font-size: .84rem;
+            font-weight: 700;
+            line-height: 1.35;
+            box-shadow: none;
+        }
+
+        .quiet-action-confirmation span:last-child {
+            color: #36550F !important;
+        }
+
+        .quiet-action-indicator {
+            flex: 0 0 .48rem;
+            width: .48rem;
+            height: .48rem;
+            border-radius: 50%;
+            background: #78C814;
+        }
+
+        /* Prevent toast overlays from covering the application. */
+        [data-testid="stToastContainer"],
+        [data-testid="stToast"] {
+            display: none !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -3293,6 +3333,35 @@ def get_supabase() -> Client:
         st.session_state.supabase_client = create_client(url, key)
 
     return st.session_state.supabase_client
+
+
+def quiet_success(
+    message: Any,
+    *,
+    key: str | None = None,
+) -> None:
+    """
+    Show a compact inline confirmation instead of a large alert or toast.
+
+    Errors and warnings continue using Streamlit alerts so failed operations
+    remain prominent. Successful actions stay visible without appearing as a
+    pop-up.
+    """
+    safe_message = html.escape(str(message))
+    key_attribute = (
+        f' data-confirmation-key="{html.escape(key)}"'
+        if key
+        else ""
+    )
+    st.markdown(
+        (
+            f'<div class="quiet-action-confirmation"{key_attribute}>'
+            f'<span class="quiet-action-indicator" aria-hidden="true"></span>'
+            f'<span>{safe_message}</span>'
+            f'</div>'
+        ),
+        unsafe_allow_html=True,
+    )
 
 
 def auth_screen_top_spacer() -> None:
@@ -3787,7 +3856,7 @@ def profile_page(
                 ):
                     try:
                         upload_profile_avatar(client, avatar_file)
-                        st.success("Profile picture updated.")
+                        quiet_success("Profile picture updated.")
                         st.rerun()
                     except Exception as exc:
                         st.error(
@@ -3804,7 +3873,7 @@ def profile_page(
                 ):
                     try:
                         remove_profile_avatar(client)
-                        st.success("Profile picture removed.")
+                        quiet_success("Profile picture removed.")
                         st.rerun()
                     except Exception as exc:
                         st.error(
@@ -3853,7 +3922,7 @@ def profile_page(
                                 "bio": new_bio.strip(),
                             },
                         )
-                        st.success("Profile details updated.")
+                        quiet_success("Profile details updated.")
                         st.rerun()
                     except Exception as exc:
                         st.error(
@@ -3892,7 +3961,7 @@ def profile_page(
                             client.auth.update_user(
                                 {"email": new_email.strip()}
                             )
-                            st.success(
+                            quiet_success(
                                 "Email-change request submitted. Check the "
                                 "confirmation messages sent by Supabase."
                             )
@@ -3922,7 +3991,7 @@ def profile_page(
                 ):
                     try:
                         client.auth.reauthenticate()
-                        st.success(
+                        quiet_success(
                             "Security code sent to your account email."
                         )
                     except Exception as exc:
@@ -3965,7 +4034,7 @@ def profile_page(
                             attributes["nonce"] = password_nonce.strip()
                         try:
                             client.auth.update_user(attributes)
-                            st.success(
+                            quiet_success(
                                 "Password updated successfully. Your current "
                                 "session remains active."
                             )
@@ -4036,7 +4105,7 @@ def profile_page(
                         {"timezone": profile_timezone},
                     )
                     st.session_state.selected_timezone = profile_timezone
-                    st.success("Timezone preference saved.")
+                    quiet_success("Timezone preference saved.")
                     st.rerun()
                 except Exception as exc:
                     st.error(
@@ -4244,7 +4313,7 @@ def password_update_screen(
                 client.auth.update_user({"password": new_password})
                 st.session_state.pop("password_recovery_active", None)
                 st.session_state.pop("recovery_error", None)
-                st.success("Password updated. You are signed in.")
+                quiet_success("Password updated. You are signed in.")
                 time.sleep(0.5)
                 st.rerun()
             except Exception as exc:
@@ -4358,7 +4427,7 @@ def login_screen(
                         recovery_email.strip(),
                         {"redirect_to": redirect_url},
                     )
-                    st.success(
+                    quiet_success(
                         "Recovery email sent. Open the link in that email, "
                         "then return here to choose a new password."
                     )
@@ -4413,7 +4482,7 @@ def login_screen(
                 if response.user is None:
                     st.error("The account could not be created.")
                 elif response.session is None:
-                    st.success(
+                    quiet_success(
                         "Account created. Check your email if Supabase email "
                         "confirmation is enabled, then sign in."
                     )
@@ -5535,14 +5604,14 @@ def commodity_trade_tracker(
         None,
     )
     if prefill_notice:
-        st.success(prefill_notice)
+        quiet_success(prefill_notice)
 
     save_receipt = st.session_state.pop(
         "commodity_save_receipt",
         None,
     )
     if save_receipt:
-        st.success(save_receipt)
+        quiet_success(save_receipt)
 
     trades = load_commodity_transactions()
     totals = commodity_summary_values(trades)
@@ -7534,7 +7603,7 @@ def contract_page() -> None:
 
         try:
             insert_contract(payload)
-            st.success("Contract saved.")
+            quiet_success("Contract saved.")
             summary_columns = st.columns(3)
             summary_columns[0].metric("Net payout", format_money(net_payout))
             summary_columns[1].metric(
@@ -7562,7 +7631,7 @@ def ore_page() -> None:
 
     receipt = st.session_state.pop("ore_save_receipt", None)
     if receipt:
-        st.success(receipt)
+        quiet_success(receipt)
 
     st.markdown("### Add Ore or Gem Activity")
     with st.form("ore_form", clear_on_submit=True):
@@ -8708,7 +8777,7 @@ def manage_records_section(
                         selected_id,
                         payload,
                     )
-                    st.success("Contract updated.")
+                    quiet_success("Contract updated.")
                     st.rerun()
                 except Exception as exc:
                     st.error(
@@ -8728,7 +8797,7 @@ def manage_records_section(
         ):
             try:
                 delete_record("contracts", selected_id)
-                st.success("Contract deleted.")
+                quiet_success("Contract deleted.")
                 st.rerun()
             except Exception as exc:
                 st.error(
@@ -8862,7 +8931,7 @@ def manage_records_section(
                         selected_id,
                         payload,
                     )
-                    st.success("Ore entry updated.")
+                    quiet_success("Ore entry updated.")
                     st.rerun()
                 except Exception as exc:
                     st.error(
@@ -8885,7 +8954,7 @@ def manage_records_section(
                     "ore_transactions",
                     selected_id,
                 )
-                st.success("Ore entry deleted.")
+                quiet_success("Ore entry deleted.")
                 st.rerun()
             except Exception as exc:
                 st.error(
@@ -9043,7 +9112,7 @@ def manage_records_section(
                         selected_id,
                         payload,
                     )
-                    st.success(
+                    quiet_success(
                         "Commodity entry updated."
                     )
                     st.rerun()
@@ -9072,7 +9141,7 @@ def manage_records_section(
                     "commodity_transactions",
                     selected_id,
                 )
-                st.success(
+                quiet_success(
                     "Commodity entry deleted."
                 )
                 st.rerun()
@@ -10299,7 +10368,7 @@ def commodities_page() -> None:
                         unit_price=float(selected_buy["Player Pays"]),
                         origin=selected_buy_location,
                     )
-                    st.success(
+                    quiet_success(
                         "Buy terminal copied to My Trade Tracker. "
                         "Open that tab to review and save the entry."
                     )
@@ -10371,7 +10440,7 @@ def commodities_page() -> None:
                         ),
                         destination=selected_sell_location,
                     )
-                    st.success(
+                    quiet_success(
                         "Sale terminal copied to My Trade Tracker. "
                         "Open that tab to review and save the entry."
                     )
@@ -11355,7 +11424,7 @@ def mining_locations_page() -> None:
 
     with control_col2:
         if uex_status.get("is_live"):
-            st.success(uex_status.get("message", "Live UEX data loaded."))
+            quiet_success(uex_status.get("message", "Live UEX data loaded."))
         else:
             st.warning(
                 uex_status.get(
@@ -11736,7 +11805,7 @@ def blueprints_page() -> None:
                 }
                 try:
                     insert_blueprint(payload)
-                    st.success("Blueprint saved to your tracker.")
+                    quiet_success("Blueprint saved to your tracker.")
                     st.rerun()
                 except Exception as exc:
                     st.error(
@@ -11994,7 +12063,7 @@ def blueprints_page() -> None:
                         selected_blueprint_id,
                         payload,
                     )
-                    st.success("Blueprint updated.")
+                    quiet_success("Blueprint updated.")
                     st.rerun()
                 except Exception as exc:
                     st.error(f"The blueprint could not be updated: {exc}")
@@ -12015,7 +12084,7 @@ def blueprints_page() -> None:
                         "blueprint_tracker",
                         selected_blueprint_id,
                     )
-                    st.success("Blueprint deleted.")
+                    quiet_success("Blueprint deleted.")
                     st.rerun()
                 except Exception as exc:
                     st.error(f"The blueprint could not be deleted: {exc}")
@@ -12089,7 +12158,7 @@ def export_page() -> None:
                         commodity_trades,
                     )
                 st.session_state.created_google_sheet_url = sheet_url
-                st.success("Google Sheet created and filled with your current data.")
+                quiet_success("Google Sheet created and filled with your current data.")
             except Exception as exc:
                 st.error(f"The Google Sheet could not be created: {exc}")
         created_url = st.session_state.get("created_google_sheet_url")
