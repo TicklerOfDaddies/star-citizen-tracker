@@ -93,6 +93,8 @@ ORE_TYPES = [
 ]
 
 ASSETS_DIR = Path(__file__).parent / "assets"
+DATA_DIR = Path(__file__).parent / "data"
+MINING_LOCATIONS_FILE = DATA_DIR / "mining_locations.csv"
 
 STAR_CITIZEN_COLORS = [
     "#00C8FF",
@@ -1066,10 +1068,10 @@ def feature_dashboard_cards() -> None:
         },
         {
             "image": "fleet_feature.jpg",
-            "title": "Fleet Overview",
-            "copy": "Review vehicle readiness and keep your operational picture organized.",
-            "button": "View Fleet",
-            "target": "Fleet Overview",
+            "title": "Mining Locations",
+            "copy": "Search ore and gem spawn locations by resource, system, and mining method.",
+            "button": "View Mining Locations",
+            "target": "Mining Locations",
         },
     ]
 
@@ -2083,45 +2085,168 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 st.error(f"The ore entry could not be deleted: {exc}")
 
 
-def fleet_overview_page() -> None:
-    page_banner(
-        "fleet_feature.jpg",
-        "Fleet Overview",
-        "Organize your ships, track operational readiness, and keep important fleet notes together.",
-        "Vehicle Readiness",
-    )
-
-    st.markdown(
-        """
-        <div class="section-heading">
-            <div>
-                <div class="section-title">Fleet command center</div>
-                <div class="section-copy">This area is ready for a future fleet table, ship loadouts, component notes, and readiness tracking.</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    metric_1, metric_2, metric_3, metric_4 = st.columns(4)
-    metric_1.metric("Ships Logged", "0")
-    metric_2.metric("Mission Ready", "0")
-    metric_3.metric("Needs Service", "0")
-    metric_4.metric("Loadouts Saved", "0")
-
-    with st.container(border=True):
-        st.markdown("### No fleet records yet")
-        st.caption(
-            "Fleet tracking has been added as a working destination. "
-            "Ship-entry fields and loadout storage can be added without changing the existing contract and ore data."
+def load_mining_locations() -> pd.DataFrame:
+    """Load the packaged ore and gem location reference."""
+    if not MINING_LOCATIONS_FILE.exists():
+        return pd.DataFrame(
+            columns=[
+                "Resource",
+                "Category",
+                "System",
+                "Location",
+                "Site Type",
+                "Spawn Rate",
+                "Mining Method",
+                "Notes",
+            ]
         )
-        if st.button(
-            "Return to Dashboard",
-            key="fleet_return_dashboard",
+    return pd.read_csv(MINING_LOCATIONS_FILE)
+
+
+def mining_locations_page() -> None:
+    page_banner(
+        "ore_banner.jpg",
+        "Ore and Gem Locations",
+        "Search reported mining locations, compare spawn rates, and filter resources by category and star system.",
+        "Mining Intelligence",
+    )
+
+    locations = load_mining_locations()
+
+    st.caption(
+        "Spawn information is a community-maintained reference and can change after Star Citizen patches. "
+        "Use it as a planning guide and verify unusually rare resources in the current live build."
+    )
+
+    search_text = st.text_input(
+        "Search locations and resources",
+        placeholder="Search for Gold, Aberdeen, Pyro, cave, asteroid, ROC...",
+        key="mining_location_search",
+    )
+
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
+
+    with filter_col1:
+        category_choices = sorted(locations["Category"].dropna().unique().tolist())
+        selected_categories = st.multiselect(
+            "Resource category",
+            category_choices,
+            default=category_choices,
+            key="mining_category_filter",
+        )
+
+    with filter_col2:
+        system_choices = sorted(locations["System"].dropna().unique().tolist())
+        selected_systems = st.multiselect(
+            "System",
+            system_choices,
+            default=system_choices,
+            key="mining_system_filter",
+        )
+
+    with filter_col3:
+        resource_choices = sorted(locations["Resource"].dropna().unique().tolist())
+        selected_resources = st.multiselect(
+            "Specific resources",
+            resource_choices,
+            key="mining_resource_filter",
+            placeholder="All resources",
+        )
+
+    filtered = locations.copy()
+
+    if selected_categories:
+        filtered = filtered[filtered["Category"].isin(selected_categories)]
+    else:
+        filtered = filtered.iloc[0:0]
+
+    if selected_systems:
+        filtered = filtered[filtered["System"].isin(selected_systems)]
+    else:
+        filtered = filtered.iloc[0:0]
+
+    if selected_resources:
+        filtered = filtered[filtered["Resource"].isin(selected_resources)]
+
+    if search_text.strip():
+        query = search_text.strip()
+        search_mask = filtered.astype(str).apply(
+            lambda column: column.str.contains(
+                query,
+                case=False,
+                na=False,
+                regex=False,
+            )
+        ).any(axis=1)
+        filtered = filtered[search_mask]
+
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    metric_col1.metric("Matching Locations", f"{len(filtered):,}")
+    metric_col2.metric(
+        "Resources",
+        f"{filtered['Resource'].nunique():,}" if not filtered.empty else "0",
+    )
+    metric_col3.metric(
+        "Systems",
+        f"{filtered['System'].nunique():,}" if not filtered.empty else "0",
+    )
+    metric_col4.metric(
+        "Gem Entries",
+        f"{(filtered['Category'] == 'Gem').sum():,}" if not filtered.empty else "0",
+    )
+
+    st.markdown("### Location Reference")
+
+    if filtered.empty:
+        st.info("No locations match the current search and filters.")
+    else:
+        display_columns = [
+            "Resource",
+            "Category",
+            "System",
+            "Location",
+            "Site Type",
+            "Spawn Rate",
+            "Mining Method",
+            "Notes",
+        ]
+        st.dataframe(
+            filtered[display_columns].sort_values(
+                ["Category", "Resource", "System", "Location"]
+            ),
             width="stretch",
-        ):
-            st.session_state.nav_page = "Dashboard"
-            st.rerun()
+            hide_index=True,
+            column_config={
+                "Resource": st.column_config.TextColumn("Resource", width="medium"),
+                "Category": st.column_config.TextColumn("Type", width="small"),
+                "System": st.column_config.TextColumn("System", width="small"),
+                "Location": st.column_config.TextColumn("Location", width="large"),
+                "Site Type": st.column_config.TextColumn("Spawn Area", width="medium"),
+                "Spawn Rate": st.column_config.TextColumn("Spawn Rate", width="medium"),
+                "Mining Method": st.column_config.TextColumn("Method", width="small"),
+                "Notes": st.column_config.TextColumn("Notes", width="large"),
+            },
+        )
+
+    st.download_button(
+        "Download Filtered Mining Locations CSV",
+        data=filtered.to_csv(index=False).encode("utf-8"),
+        file_name="star_citizen_mining_locations.csv",
+        mime="text/csv",
+        width="stretch",
+    )
+
+    with st.expander("How to use spawn-rate information"):
+        st.markdown(
+            """
+            Numeric percentages are reported rates for the listed body or deposit type.
+            Labels such as **Common**, **Uncommon**, **Rare**, and **Extremely rare**
+            are used where a stable numeric rate was not available. Spawn distributions
+            can change between live patches, so the page is designed to be updated by
+            replacing `data/mining_locations.csv`.
+            """
+        )
+
 
 def export_page() -> None:
     page_banner(
@@ -2187,8 +2312,8 @@ def main() -> None:
             "Dashboard",
             "Contract Calculator",
             "Ore Ledger",
+            "Mining Locations",
             "Saved Records",
-            "Fleet Overview",
             "Export Data",
         ]
         if "nav_page" not in st.session_state:
@@ -2225,10 +2350,10 @@ def main() -> None:
         contract_page()
     elif page == "Ore Ledger":
         ore_page()
+    elif page == "Mining Locations":
+        mining_locations_page()
     elif page == "Saved Records":
         saved_records_page()
-    elif page == "Fleet Overview":
-        fleet_overview_page()
     elif page == "Export Data":
         export_page()
 
