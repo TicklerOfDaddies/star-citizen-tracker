@@ -2729,6 +2729,41 @@ def apply_custom_theme() -> None:
         [data-testid="stTabs"] [role="tablist"] > div:last-child {
             display: initial;
         }
+
+        /* Five-card dashboard shortcut row */
+        [class*="st-key-dashboard_feature_card_"] {
+            min-width: 0;
+        }
+
+        [class*="st-key-dashboard_feature_card_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            height: 100%;
+        }
+
+        [class*="st-key-dashboard_feature_card_"]
+        .feature-card-title {
+            min-height: 2.35rem;
+        }
+
+        [class*="st-key-dashboard_feature_card_"]
+        .feature-card-copy {
+            min-height: 4.2rem;
+        }
+
+        [class*="st-key-dashboard_feature_card_"]
+        .dashboard-feature-image {
+            width: 100%;
+            height: 112px;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        @media (max-width: 1150px) {
+            [class*="st-key-dashboard_feature_card_"]
+            .feature-card-copy {
+                min-height: 5.2rem;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -4063,29 +4098,403 @@ def fetch_table(table_name: str) -> pd.DataFrame:
     return pd.DataFrame(response.data or [])
 
 
-def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
-    contracts = fetch_table("contracts")
-    ores = fetch_table("ore_transactions")
+def empty_ore_transaction_frame() -> pd.DataFrame:
+    """Return the complete normalized ore-ledger structure."""
+    return pd.DataFrame(
+        columns=[
+            "id",
+            "user_id",
+            "date_saved",
+            "action",
+            "ore_name",
+            "quantity_scu",
+            "unit_price",
+            "recorded_total_value",
+            "calculated_total_value",
+            "total_value",
+            "cash_effect",
+            "inventory_effect_scu",
+            "calculation_status",
+            "location",
+            "notes",
+        ]
+    )
 
-    for frame in (contracts, ores):
-        if not frame.empty and "date_saved" in frame.columns:
-            frame["date_saved"] = pd.to_datetime(
-                frame["date_saved"],
-                errors="coerce",
-                utc=True,
-            ).dt.tz_convert(APP_TIMEZONE)
 
-    # Existing deployments may not have the inventory quantity migration yet.
-    # Keep the app readable until the supplied SQL migration is run.
-    if "quantity_scu" not in ores.columns:
-        ores["quantity_scu"] = 0.0
-    ores["quantity_scu"] = pd.to_numeric(
-        ores["quantity_scu"],
+def normalize_ore_action(value: Any) -> str:
+    """Map current and legacy ore activity names."""
+    normalized = re.sub(
+        r"[^a-z]+",
+        " ",
+        str(value or "").strip().casefold(),
+    ).strip()
+
+    if (
+        normalized in {"mine", "mined", "mining", "extracted"}
+        or "mine" in normalized
+        or "extract" in normalized
+    ):
+        return "Mined"
+
+    if (
+        normalized
+        in {"buy", "bought", "purchase", "purchased"}
+        or "buy" in normalized
+        or "bought" in normalized
+        or "purchas" in normalized
+    ):
+        return "Bought"
+
+    if (
+        normalized in {"sell", "sold", "sale"}
+        or "sell" in normalized
+        or "sold" in normalized
+        or "sale" in normalized
+    ):
+        return "Sold"
+
+    return str(value or "Unknown").strip() or "Unknown"
+
+
+def _ore_alias_series(
+    frame: pd.DataFrame,
+    canonical: str,
+    aliases: tuple[str, ...],
+    default: Any,
+) -> pd.Series:
+    """Return the first available ore column from current or legacy schemas."""
+    for column in (canonical, *aliases):
+        if column in frame.columns:
+            return frame[column].copy()
+    return pd.Series(
+        [default] * len(frame),
+        index=frame.index,
+    )
+
+
+def normalize_ore_transactions(
+    ores: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Normalize ore records and calculate quantity, unit value, totals, and cash.
+
+    Existing records that contain quantity and total value automatically gain
+    an inferred unit price. Records that contain value but no quantity remain
+    visible, but are explicitly marked as incomplete because SCU inventory
+    cannot be inferred safely from money alone.
+    """
+    if ores is None or ores.empty:
+        return empty_ore_transaction_frame()
+
+    source = ores.copy()
+    normalized = pd.DataFrame(index=source.index)
+
+    normalized["id"] = _ore_alias_series(
+        source,
+        "id",
+        ("transaction_id",),
+        0,
+    )
+    normalized["user_id"] = _ore_alias_series(
+        source,
+        "user_id",
+        ("owner_id",),
+        "",
+    )
+    normalized["date_saved"] = _ore_alias_series(
+        source,
+        "date_saved",
+        ("created_at", "transaction_date", "date"),
+        pd.NaT,
+    )
+    normalized["action"] = _ore_alias_series(
+        source,
+        "action",
+        ("activity", "entry_type", "transaction_type", "type"),
+        "Unknown",
+    )
+    normalized["ore_name"] = _ore_alias_series(
+        source,
+        "ore_name",
+        ("ore", "mineral", "resource_name", "item_name", "name"),
+        "Unknown Resource",
+    )
+    normalized["quantity_scu"] = _ore_alias_series(
+        source,
+        "quantity_scu",
+        ("quantity", "scu", "amount_scu"),
+        0.0,
+    )
+    normalized["unit_price"] = _ore_alias_series(
+        source,
+        "unit_price",
+        ("price_per_scu", "unit_value", "price"),
+        0.0,
+    )
+    normalized["recorded_total_value"] = _ore_alias_series(
+        source,
+        "total_value",
+        ("value", "cargo_value", "transaction_value"),
+        0.0,
+    )
+    normalized["location"] = _ore_alias_series(
+        source,
+        "location",
+        ("mining_location", "sale_location", "purchase_location"),
+        "",
+    )
+    normalized["notes"] = _ore_alias_series(
+        source,
+        "notes",
+        ("details", "description"),
+        "",
+    )
+
+    normalized["action"] = normalized["action"].map(
+        normalize_ore_action
+    )
+    normalized["ore_name"] = (
+        normalized["ore_name"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .replace("", "Unknown Resource")
+    )
+
+    for column in (
+        "quantity_scu",
+        "unit_price",
+        "recorded_total_value",
+    ):
+        normalized[column] = pd.to_numeric(
+            normalized[column],
+            errors="coerce",
+        ).fillna(0.0)
+        normalized[column] = normalized[column].clip(lower=0.0)
+
+    # Older rows commonly saved quantity plus total value, but no unit price.
+    infer_unit_price = (
+        (normalized["unit_price"] <= 0)
+        & (normalized["quantity_scu"] > 0)
+        & (normalized["recorded_total_value"] > 0)
+    )
+    normalized.loc[
+        infer_unit_price,
+        "unit_price",
+    ] = (
+        normalized.loc[
+            infer_unit_price,
+            "recorded_total_value",
+        ]
+        / normalized.loc[
+            infer_unit_price,
+            "quantity_scu",
+        ]
+    )
+
+    normalized["calculated_total_value"] = (
+        normalized["quantity_scu"]
+        * normalized["unit_price"]
+    )
+
+    has_calculated_value = (
+        normalized["quantity_scu"] > 0
+    ) & (
+        normalized["unit_price"] > 0
+    )
+    has_recorded_value = normalized["recorded_total_value"] > 0
+
+    normalized["total_value"] = normalized[
+        "recorded_total_value"
+    ]
+    normalized.loc[
+        has_calculated_value,
+        "total_value",
+    ] = normalized.loc[
+        has_calculated_value,
+        "calculated_total_value",
+    ]
+
+    variance = (
+        normalized["recorded_total_value"]
+        - normalized["calculated_total_value"]
+    ).abs()
+    mismatch = (
+        has_calculated_value
+        & has_recorded_value
+        & (variance > 0.01)
+    )
+
+    normalized["calculation_status"] = "Quantity and value missing"
+    normalized.loc[
+        (normalized["quantity_scu"] > 0)
+        & (normalized["total_value"] <= 0),
+        "calculation_status",
+    ] = "Quantity tracked; no monetary value entered"
+    normalized.loc[
+        (normalized["quantity_scu"] <= 0)
+        & has_recorded_value,
+        "calculation_status",
+    ] = "SCU quantity missing; value retained"
+    normalized.loc[
+        has_calculated_value,
+        "calculation_status",
+    ] = "Verified: quantity × unit price"
+    normalized.loc[
+        infer_unit_price,
+        "calculation_status",
+    ] = "Unit price inferred from quantity and total value"
+    normalized.loc[
+        mismatch,
+        "calculation_status",
+    ] = "Corrected mismatch using quantity × unit price"
+
+    normalized["cash_effect"] = 0.0
+    normalized["inventory_effect_scu"] = 0.0
+
+    mined_mask = normalized["action"] == "Mined"
+    bought_mask = normalized["action"] == "Bought"
+    sold_mask = normalized["action"] == "Sold"
+
+    normalized.loc[
+        bought_mask,
+        "cash_effect",
+    ] = -normalized.loc[bought_mask, "total_value"]
+    normalized.loc[
+        sold_mask,
+        "cash_effect",
+    ] = normalized.loc[sold_mask, "total_value"]
+
+    normalized.loc[
+        mined_mask | bought_mask,
+        "inventory_effect_scu",
+    ] = normalized.loc[
+        mined_mask | bought_mask,
+        "quantity_scu",
+    ]
+    normalized.loc[
+        sold_mask,
+        "inventory_effect_scu",
+    ] = -normalized.loc[
+        sold_mask,
+        "quantity_scu",
+    ]
+
+    normalized["date_saved"] = pd.to_datetime(
+        normalized["date_saved"],
         errors="coerce",
-    ).fillna(0.0)
+        utc=True,
+    )
+    try:
+        normalized["date_saved"] = normalized[
+            "date_saved"
+        ].dt.tz_convert(APP_TIMEZONE)
+    except (TypeError, AttributeError):
+        pass
 
+    for column in ("location", "notes"):
+        normalized[column] = (
+            normalized[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+    return normalized[
+        [
+            "id",
+            "user_id",
+            "date_saved",
+            "action",
+            "ore_name",
+            "quantity_scu",
+            "unit_price",
+            "recorded_total_value",
+            "calculated_total_value",
+            "total_value",
+            "cash_effect",
+            "inventory_effect_scu",
+            "calculation_status",
+            "location",
+            "notes",
+        ]
+    ]
+
+
+def ore_summary_values(
+    ores: pd.DataFrame,
+) -> dict[str, float]:
+    """Return authoritative ore totals used across the app."""
+    normalized = normalize_ore_transactions(ores)
+
+    empty = {
+        "records": 0.0,
+        "mined_records": 0.0,
+        "bought_records": 0.0,
+        "sold_records": 0.0,
+        "incomplete_quantity_records": 0.0,
+        "mined_scu": 0.0,
+        "bought_scu": 0.0,
+        "sold_scu": 0.0,
+        "on_hand_scu": 0.0,
+        "mined_estimated_value": 0.0,
+        "purchase_cost": 0.0,
+        "sales_revenue": 0.0,
+        "net_cash_flow": 0.0,
+    }
+    if normalized.empty:
+        return empty
+
+    mined = normalized[normalized["action"] == "Mined"]
+    bought = normalized[normalized["action"] == "Bought"]
+    sold = normalized[normalized["action"] == "Sold"]
+
+    return {
+        "records": float(len(normalized)),
+        "mined_records": float(len(mined)),
+        "bought_records": float(len(bought)),
+        "sold_records": float(len(sold)),
+        "incomplete_quantity_records": float(
+            (
+                (normalized["quantity_scu"] <= 0)
+                & (normalized["total_value"] > 0)
+            ).sum()
+        ),
+        "mined_scu": float(mined["quantity_scu"].sum()),
+        "bought_scu": float(bought["quantity_scu"].sum()),
+        "sold_scu": float(sold["quantity_scu"].sum()),
+        "on_hand_scu": float(
+            normalized["inventory_effect_scu"].sum()
+        ),
+        "mined_estimated_value": float(
+            mined["total_value"].sum()
+        ),
+        "purchase_cost": -float(
+            bought["cash_effect"].sum()
+        ),
+        "sales_revenue": float(
+            sold["cash_effect"].sum()
+        ),
+        "net_cash_flow": float(
+            normalized["cash_effect"].sum()
+        ),
+    }
+
+
+def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load and normalize contracts and ore activity."""
+    contracts = fetch_table("contracts")
+    raw_ores = fetch_table("ore_transactions")
+
+    if not contracts.empty and "date_saved" in contracts.columns:
+        contracts["date_saved"] = pd.to_datetime(
+            contracts["date_saved"],
+            errors="coerce",
+            utc=True,
+        ).dt.tz_convert(APP_TIMEZONE)
+
+    ores = normalize_ore_transactions(raw_ores)
     return contracts, ores
-
 
 def empty_commodity_transaction_frame() -> pd.DataFrame:
     """Return the complete normalized commodity-ledger structure."""
@@ -5364,77 +5773,152 @@ def format_money(value: float | int) -> str:
 
 
 def build_ore_inventory(ores: pd.DataFrame) -> pd.DataFrame:
-    """Calculate mined, bought, sold, and on-hand SCU by resource."""
+    """Calculate verified ore quantities and values by resource."""
     columns = [
         "Ore / Mineral",
         "Mined (SCU)",
         "Bought (SCU)",
         "Sold (SCU)",
         "On Hand (SCU)",
-        "Sales Value",
+        "Mined Estimated Value",
         "Purchase Value",
+        "Sales Value",
+        "Trade Net",
+        "Records",
+        "Incomplete Quantity Records",
     ]
-    if ores.empty:
+    normalized = normalize_ore_transactions(ores)
+    if normalized.empty:
         return pd.DataFrame(columns=columns)
 
-    working = ores.copy()
-    working["quantity_scu"] = pd.to_numeric(
-        working.get("quantity_scu", 0),
-        errors="coerce",
-    ).fillna(0.0)
-    working["total_value"] = pd.to_numeric(
-        working.get("total_value", 0),
-        errors="coerce",
-    ).fillna(0.0)
+    rows: list[dict[str, Any]] = []
+    for ore_name, group in normalized.groupby(
+        "ore_name",
+        dropna=False,
+    ):
+        totals = ore_summary_values(group)
+        rows.append(
+            {
+                "Ore / Mineral": ore_name,
+                "Mined (SCU)": totals["mined_scu"],
+                "Bought (SCU)": totals["bought_scu"],
+                "Sold (SCU)": totals["sold_scu"],
+                "On Hand (SCU)": totals["on_hand_scu"],
+                "Mined Estimated Value": totals[
+                    "mined_estimated_value"
+                ],
+                "Purchase Value": totals["purchase_cost"],
+                "Sales Value": totals["sales_revenue"],
+                "Trade Net": totals["net_cash_flow"],
+                "Records": int(totals["records"]),
+                "Incomplete Quantity Records": int(
+                    totals["incomplete_quantity_records"]
+                ),
+            }
+        )
 
-    quantity_pivot = working.pivot_table(
-        index="ore_name",
-        columns="action",
-        values="quantity_scu",
-        aggfunc="sum",
-        fill_value=0.0,
+    return (
+        pd.DataFrame(rows, columns=columns)
+        .sort_values("Ore / Mineral")
+        .reset_index(drop=True)
     )
-
-    for action in ("Mined", "Bought", "Sold"):
-        if action not in quantity_pivot.columns:
-            quantity_pivot[action] = 0.0
-
-    inventory = quantity_pivot[["Mined", "Bought", "Sold"]].copy()
-    inventory["On Hand"] = (
-        inventory["Mined"] + inventory["Bought"] - inventory["Sold"]
-    )
-
-    value_pivot = working.pivot_table(
-        index="ore_name",
-        columns="action",
-        values="total_value",
-        aggfunc="sum",
-        fill_value=0.0,
-    )
-    for action in ("Bought", "Sold"):
-        if action not in value_pivot.columns:
-            value_pivot[action] = 0.0
-
-    inventory["Sales Value"] = value_pivot["Sold"]
-    inventory["Purchase Value"] = value_pivot["Bought"]
-    inventory = inventory.reset_index().rename(
-        columns={
-            "ore_name": "Ore / Mineral",
-            "Mined": "Mined (SCU)",
-            "Bought": "Bought (SCU)",
-            "Sold": "Sold (SCU)",
-            "On Hand": "On Hand (SCU)",
-        }
-    )
-    return inventory[columns].sort_values("Ore / Mineral")
-
 
 def insert_contract(payload: dict[str, Any]) -> None:
     get_supabase().table("contracts").insert(payload).execute()
 
 
-def insert_ore(payload: dict[str, Any]) -> None:
-    get_supabase().table("ore_transactions").insert(payload).execute()
+def insert_ore(payload: dict[str, Any]) -> dict[str, Any]:
+    """Insert an ore record and verify it can be read back from Supabase."""
+    action = normalize_ore_action(payload.get("action"))
+    ore_name = str(payload.get("ore_name", "")).strip()
+    user_id = str(payload.get("user_id", "")).strip()
+    quantity = max(safe_float(payload.get("quantity_scu")), 0.0)
+    unit_price = max(safe_float(payload.get("unit_price")), 0.0)
+    total_value = (
+        quantity * unit_price
+        if quantity > 0 and unit_price > 0
+        else max(safe_float(payload.get("total_value")), 0.0)
+    )
+
+    if action not in {"Mined", "Bought", "Sold"}:
+        raise ValueError("Choose Mined, Bought, or Sold.")
+    if not ore_name:
+        raise ValueError("Ore or mineral name is required.")
+    if not user_id:
+        raise ValueError("The signed-in user ID is missing.")
+    if quantity <= 0:
+        raise ValueError(
+            "Enter an SCU quantity greater than zero so inventory can be tracked."
+        )
+    if action in {"Bought", "Sold"} and total_value <= 0:
+        raise ValueError(
+            "Bought and Sold entries require a positive monetary value."
+        )
+
+    cleaned_payload = {
+        **payload,
+        "user_id": user_id,
+        "action": action,
+        "ore_name": ore_name,
+        "quantity_scu": quantity,
+        "unit_price": unit_price,
+        "total_value": total_value,
+    }
+
+    table = get_supabase().table("ore_transactions")
+    response = table.insert(cleaned_payload).execute()
+    returned_rows = list(response.data or [])
+
+    if not returned_rows:
+        verification = (
+            get_supabase()
+            .table("ore_transactions")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("id", desc=True)
+            .limit(20)
+            .execute()
+        )
+        returned_rows = list(verification.data or [])
+
+    normalized = normalize_ore_transactions(
+        pd.DataFrame(returned_rows)
+    )
+    matches = normalized[
+        (normalized["ore_name"] == ore_name)
+        & (normalized["action"] == action)
+        & (
+            (normalized["quantity_scu"] - quantity).abs()
+            <= 0.0001
+        )
+        & (
+            (normalized["total_value"] - total_value).abs()
+            <= 0.01
+        )
+    ]
+
+    if matches.empty:
+        raise RuntimeError(
+            "The ore entry was not returned by Supabase after saving. "
+            "Check the Version 7 ore migration and RLS policies."
+        )
+
+    row = matches.iloc[0]
+    raw_id = row.get("id", 0)
+    verified_id = (
+        int(raw_id)
+        if pd.notna(raw_id) and safe_float(raw_id) > 0
+        else None
+    )
+    return {
+        "id": verified_id,
+        "action": str(row["action"]),
+        "ore_name": str(row["ore_name"]),
+        "quantity_scu": float(row["quantity_scu"]),
+        "unit_price": float(row["unit_price"]),
+        "total_value": float(row["total_value"]),
+        "cash_effect": float(row["cash_effect"]),
+    }
 
 
 def delete_record(table_name: str, record_id: int) -> None:
@@ -5556,9 +6040,21 @@ def display_contract_table(contracts: pd.DataFrame) -> None:
 
 
 def display_ore_table(ores: pd.DataFrame) -> None:
+    """Display verified ore values and clearly flag legacy quantity gaps."""
+    ores = normalize_ore_transactions(ores)
     if ores.empty:
         st.info("No ore records match the current filters.")
         return
+
+    totals = ore_summary_values(ores)
+    incomplete = int(totals["incomplete_quantity_records"])
+    if incomplete:
+        st.warning(
+            f"{incomplete} older ore record(s) contain a value but no SCU "
+            "quantity. Their money values remain available, but they cannot "
+            "affect on-hand inventory until quantity is added under "
+            "Saved Records → Manage Records."
+        )
 
     table = ores.rename(
         columns={
@@ -5567,18 +6063,25 @@ def display_ore_table(ores: pd.DataFrame) -> None:
             "action": "Action",
             "ore_name": "Ore",
             "quantity_scu": "Quantity (SCU)",
-            "total_value": "Value",
+            "unit_price": "Unit Price",
+            "recorded_total_value": "Recorded Value",
+            "calculated_total_value": "Calculated Value",
+            "total_value": "Verified Value",
+            "cash_effect": "Net Cash Effect",
+            "calculation_status": "Calculation",
             "location": "Location",
             "notes": "Notes",
         }
     ).copy()
 
-    quantity = pd.to_numeric(
-        table.get("Quantity (SCU)", 0),
-        errors="coerce",
-    ).fillna(0.0)
-    value = pd.to_numeric(table.get("Value", 0), errors="coerce").fillna(0.0)
-    table["Unit Value"] = value.where(quantity <= 0, value / quantity)
+    table.loc[
+        table["Quantity (SCU)"] <= 0,
+        "Quantity (SCU)",
+    ] = float("nan")
+    table.loc[
+        table["Unit Price"] <= 0,
+        "Unit Price",
+    ] = float("nan")
 
     ordered_columns = [
         "ID",
@@ -5586,32 +6089,41 @@ def display_ore_table(ores: pd.DataFrame) -> None:
         "Action",
         "Ore",
         "Quantity (SCU)",
-        "Value",
-        "Unit Value",
+        "Unit Price",
+        "Verified Value",
+        "Net Cash Effect",
+        "Calculation",
         "Location",
         "Notes",
     ]
-    table = table[[column for column in ordered_columns if column in table.columns]]
-
-    if "Date" in table.columns:
-        table["Date"] = table["Date"].dt.strftime("%Y-%m-%d %I:%M %p")
 
     st.dataframe(
-        table,
+        table[ordered_columns],
         width="stretch",
         hide_index=True,
         column_config={
-            "Quantity (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
-            "Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
-            "Unit Value": st.column_config.NumberColumn(format="%,.0f aUEC/SCU"),
+            "ID": st.column_config.NumberColumn(
+                format="%d",
+                width="small",
+            ),
+            "Date": st.column_config.DatetimeColumn(
+                format="YYYY-MM-DD hh:mm A",
+                width="medium",
+            ),
+            "Quantity (SCU)": st.column_config.NumberColumn(
+                format="%,.2f SCU",
+            ),
+            "Unit Price": st.column_config.NumberColumn(
+                format="%,.2f aUEC/SCU",
+            ),
+            "Verified Value": st.column_config.NumberColumn(
+                format="%,.0f aUEC",
+            ),
+            "Net Cash Effect": st.column_config.NumberColumn(
+                format="%,.0f aUEC",
+            ),
         },
     )
-
-
-def selected_timezone() -> str:
-    """Return the user's chosen IANA timezone, falling back safely."""
-    return st.session_state.get("selected_timezone", DEFAULT_TIMEZONE)
-
 
 def timezone_settings() -> None:
     """Render timezone controls in the sidebar settings section."""
@@ -5675,39 +6187,61 @@ def dashboard_hero() -> None:
 
 
 def feature_dashboard_cards() -> None:
-    """Render equal-height dashboard shortcuts with working Streamlit buttons."""
+    """Render dashboard shortcuts, including the commodity workspace."""
     cards = [
         {
             "image": "contracts_feature.jpg",
             "title": "Contracts Snapshot",
-            "copy": "Track active contracts, completions, reputation, and earnings.",
+            "copy": (
+                "Track active contracts, completions, reputation, "
+                "expenses, and earnings."
+            ),
             "button": "View Contracts",
             "target": "Contract Calculator",
         },
         {
             "image": "ore_feature.jpg",
             "title": "Ore Trends",
-            "copy": "Monitor mining output, refinery yields, and resource trends.",
+            "copy": (
+                "Monitor mining output, purchases, sales, inventory, "
+                "and resource values."
+            ),
             "button": "View Ore Ledger",
             "target": "Ore Ledger",
         },
         {
+            "image": "commodity_feature.jpg",
+            "title": "Commodity Trading",
+            "copy": (
+                "Review live market data, plan routes, and record cargo "
+                "purchases, sales, and losses."
+            ),
+            "button": "View Commodities",
+            "target": "Commodities",
+        },
+        {
             "image": "records_feature.jpg",
             "title": "Saved Records",
-            "copy": "Access saved routes, cargo logs, and complete operation history.",
+            "copy": (
+                "Access contracts, ore activity, commodity transactions, "
+                "and complete operation history."
+            ),
             "button": "View Records",
             "target": "Saved Records",
         },
         {
             "image": "fleet_feature.jpg",
             "title": "Mining Locations",
-            "copy": "Search ore and gem spawn locations by resource, system, and mining method.",
+            "copy": (
+                "Search ore and gem spawn locations by resource, system, "
+                "environment, and mining method."
+            ),
             "button": "View Mining Locations",
             "target": "Mining Locations",
         },
     ]
 
-    columns = st.columns(4, gap="small")
+    columns = st.columns(len(cards), gap="small")
 
     for index, (column, card) in enumerate(zip(columns, cards)):
         with column:
@@ -5721,17 +6255,24 @@ def feature_dashboard_cards() -> None:
                     <img
                         class="dashboard-feature-image"
                         src="{image_uri}"
-                        alt="{card["title"]}"
+                        alt="{html.escape(card["title"])}"
                     />
-                    <div class="feature-card-title">{card["title"]}</div>
-                    <div class="feature-card-copy">{card["copy"]}</div>
+                    <div class="feature-card-title">
+                        {html.escape(card["title"])}
+                    </div>
+                    <div class="feature-card-copy">
+                        {html.escape(card["copy"])}
+                    </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
                 if st.button(
                     card["button"],
-                    key=f'dashboard_shortcut_{card["target"].lower().replace(" ", "_")}',
+                    key=(
+                        "dashboard_shortcut_"
+                        + card["target"].lower().replace(" ", "_")
+                    ),
                     width="stretch",
                 ):
                     st.session_state.nav_page = card["target"]
@@ -5828,24 +6369,13 @@ def dashboard_page() -> None:
         else 0.0
     )
 
-    ore_sales_rows = ores[ores["action"] == "Sold"] if not ores.empty else ores
-    ore_purchase_rows = ores[ores["action"] == "Bought"] if not ores.empty else ores
-    ore_sales = (
-        float(ore_sales_rows["total_value"].sum())
-        if not ore_sales_rows.empty
-        else 0.0
-    )
-    ore_purchases = (
-        float(ore_purchase_rows["total_value"].sum())
-        if not ore_purchase_rows.empty
-        else 0.0
-    )
-    ore_inventory = build_ore_inventory(ores)
-    ore_on_hand_scu = (
-        float(ore_inventory["On Hand (SCU)"].sum())
-        if not ore_inventory.empty
-        else 0.0
-    )
+    ores = normalize_ore_transactions(ores)
+    ore_totals = ore_summary_values(ores)
+    ore_sales_rows = ores[ores["action"] == "Sold"]
+    ore_purchase_rows = ores[ores["action"] == "Bought"]
+    ore_sales = ore_totals["sales_revenue"]
+    ore_purchases = ore_totals["purchase_cost"]
+    ore_on_hand_scu = ore_totals["on_hand_scu"]
 
     commodity_trades = normalize_commodity_transactions(
         commodity_trades
@@ -5903,7 +6433,12 @@ def dashboard_page() -> None:
                 "label": "Ore On Hand",
                 "value": f"{ore_on_hand_scu:,.2f} SCU",
                 "tone": "positive" if ore_on_hand_scu > 0 else "",
-                "detail": "Mined + bought − sold",
+                "detail": (
+                    f"{int(ore_totals['incomplete_quantity_records'])} "
+                    "record(s) need SCU quantity"
+                    if ore_totals["incomplete_quantity_records"] > 0
+                    else "Mined + bought − sold"
+                ),
             },
             {
                 "label": "Commodity On Hand",
@@ -6672,39 +7207,82 @@ def ore_page() -> None:
     page_banner(
         "ore_banner.jpg",
         "Mining and Ore Ledger",
-        "Track mined, purchased, and sold resources across Stanton, Pyro, Nyx, and future systems.",
+        (
+            "Track mined, purchased, and sold resources with verified SCU, "
+            "unit-price, inventory, and trade calculations."
+        ),
         "Industrial Operations",
     )
 
+    receipt = st.session_state.pop("ore_save_receipt", None)
+    if receipt:
+        st.success(receipt)
+
     st.markdown("### Add Ore or Gem Activity")
     with st.form("ore_form", clear_on_submit=True):
-        action = st.selectbox("Entry type", ["Mined", "Bought", "Sold"])
-        selected_ore = st.selectbox("Ore or mineral", ORE_TYPES)
+        action = st.selectbox(
+            "Entry type",
+            ["Mined", "Bought", "Sold"],
+        )
+        selected_ore = st.selectbox(
+            "Ore or mineral",
+            ORE_TYPES,
+        )
         custom_ore = ""
         if selected_ore == "Other / Custom":
-            custom_ore = st.text_input("Custom ore or mineral")
+            custom_ore = st.text_input(
+                "Custom ore or mineral",
+            )
+
+        price_method = st.radio(
+            "How are you entering the value?",
+            ["Price per SCU", "Total cargo value"],
+            horizontal=True,
+            help=(
+                "The app always verifies Total Value as Quantity × Unit Price. "
+                "For mined material, a value may be left at zero."
+            ),
+        )
 
         amount_col1, amount_col2 = st.columns(2)
         with amount_col1:
             quantity_scu = st.number_input(
                 "Quantity (SCU)",
-                min_value=0.0,
+                min_value=0.01,
                 step=0.1,
                 format="%.2f",
                 help=(
-                    "Enter the amount mined, bought, or sold. On-hand inventory "
-                    "is calculated as mined plus bought minus sold."
+                    "SCU is required so mined, bought, sold, and on-hand "
+                    "quantities can calculate correctly."
                 ),
             )
-        with amount_col2:
-            total_value = st.number_input(
-                "Total value (aUEC)",
-                min_value=0.0,
-                step=1000.0,
-                help=(
-                    "For Sold entries, enter the sale proceeds. For Bought entries, "
-                    "enter the purchase cost. Mined entries may use an estimated value."
-                ),
+
+        if price_method == "Price per SCU":
+            with amount_col2:
+                entered_unit_price = st.number_input(
+                    "Unit price or estimated value (aUEC/SCU)",
+                    min_value=0.0,
+                    step=100.0,
+                )
+            verified_unit_price = float(
+                entered_unit_price
+            )
+            verified_total = (
+                float(quantity_scu)
+                * verified_unit_price
+            )
+        else:
+            with amount_col2:
+                entered_total = st.number_input(
+                    "Total cargo value (aUEC)",
+                    min_value=0.0,
+                    step=1000.0,
+                )
+            verified_total = float(entered_total)
+            verified_unit_price = (
+                verified_total / float(quantity_scu)
+                if quantity_scu > 0
+                else 0.0
             )
 
         location = st.text_input(
@@ -6713,8 +7291,27 @@ def ore_page() -> None:
         )
         notes = st.text_area(
             "Notes",
-            placeholder="Raw, refined, ship used, buyer, seller, or other details",
+            placeholder=(
+                "Raw, refined, ship used, buyer, seller, refinery, "
+                "or other details"
+            ),
+            height=110,
         )
+
+        cash_effect = (
+            verified_total
+            if action == "Sold"
+            else -verified_total
+            if action == "Bought"
+            else 0.0
+        )
+        st.info(
+            f"Verified math: {quantity_scu:,.2f} SCU × "
+            f"{verified_unit_price:,.2f} aUEC/SCU = "
+            f"{verified_total:,.0f} aUEC. "
+            f"Cash effect: {cash_effect:+,.0f} aUEC."
+        )
+
         submitted = st.form_submit_button(
             "Save Ore Entry",
             width="stretch",
@@ -6729,68 +7326,116 @@ def ore_page() -> None:
 
         if not ore_name:
             st.error("Enter a custom ore or mineral.")
-        elif quantity_scu <= 0 and total_value <= 0:
-            st.error("Enter a quantity, a value, or both.")
+        elif action in {"Bought", "Sold"} and verified_total <= 0:
+            st.error(
+                "Bought and Sold entries require a positive value."
+            )
         else:
             payload = {
                 "user_id": st.session_state.user_id,
                 "action": action,
                 "ore_name": ore_name,
-                "quantity_scu": quantity_scu,
-                "total_value": total_value,
+                "quantity_scu": float(quantity_scu),
+                "unit_price": float(verified_unit_price),
+                "total_value": float(verified_total),
                 "location": location.strip(),
                 "notes": notes.strip(),
             }
 
             try:
-                insert_ore(payload)
-                st.success(
-                    f"{action} entry saved: {ore_name} | "
-                    f"{quantity_scu:,.2f} SCU | {format_money(total_value)}"
+                saved = insert_ore(payload)
+                saved_id = (
+                    f"ID {saved['id']} · "
+                    if saved.get("id") is not None
+                    else ""
+                )
+                st.session_state["ore_save_receipt"] = (
+                    f"{saved_id}{saved['action']} saved and verified in "
+                    f"Supabase: {saved['quantity_scu']:,.2f} SCU × "
+                    f"{saved['unit_price']:,.2f} aUEC/SCU = "
+                    f"{saved['total_value']:,.0f} aUEC."
                 )
                 st.rerun()
             except Exception as exc:
-                error_text = str(exc)
-                if "quantity_scu" in error_text:
-                    st.error(
-                        "The quantity column is not installed yet. Run "
-                        "schema_migration_v2.sql in Supabase, then try again."
-                    )
-                else:
-                    st.error(f"The ore entry could not be saved: {exc}")
+                st.error(
+                    "The ore entry could not be saved. Run "
+                    "`schema_migration_v7_ore_math_repair.sql` once in "
+                    f"Supabase, then try again. Details: {exc}"
+                )
 
     _, ores = load_data()
+    totals = ore_summary_values(ores)
     inventory = build_ore_inventory(ores)
 
     st.markdown("### On-Hand Ore and Gem Inventory")
-    if inventory.empty:
-        st.info("Add mined, bought, or sold quantities to begin tracking on-hand inventory.")
-    else:
-        total_on_hand = float(inventory["On Hand (SCU)"].sum())
-        total_sales = float(inventory["Sales Value"].sum())
-        total_purchases = float(inventory["Purchase Value"].sum())
-        inv_col1, inv_col2, inv_col3 = st.columns(3)
-        inv_col1.metric("Total On Hand", f"{total_on_hand:,.2f} SCU")
-        inv_col2.metric("Recorded Sales", format_money(total_sales))
-        inv_col3.metric("Trade Net", format_money(total_sales - total_purchases))
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    metric_col1.metric(
+        "Total On Hand",
+        f"{totals['on_hand_scu']:,.2f} SCU",
+    )
+    metric_col2.metric(
+        "Recorded Sales",
+        format_money(totals["sales_revenue"]),
+    )
+    metric_col3.metric(
+        "Purchase Cost",
+        format_money(totals["purchase_cost"]),
+    )
+    metric_col4.metric(
+        "Trade Net",
+        format_money(totals["net_cash_flow"]),
+    )
 
+    incomplete = int(totals["incomplete_quantity_records"])
+    if incomplete:
+        st.warning(
+            f"{incomplete} existing ore record(s) have value but no SCU "
+            "quantity. Edit those records under Saved Records so inventory "
+            "can include them."
+        )
+
+    if inventory.empty:
+        st.info(
+            "Add mined, bought, or sold quantities to begin tracking "
+            "on-hand inventory."
+        )
+    else:
         st.dataframe(
             inventory,
             width="stretch",
             hide_index=True,
             column_config={
-                "Mined (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
-                "Bought (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
-                "Sold (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
-                "On Hand (SCU)": st.column_config.NumberColumn(format="%,.2f SCU"),
-                "Sales Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
-                "Purchase Value": st.column_config.NumberColumn(format="%,.0f aUEC"),
+                "Mined (SCU)": st.column_config.NumberColumn(
+                    format="%,.2f SCU"
+                ),
+                "Bought (SCU)": st.column_config.NumberColumn(
+                    format="%,.2f SCU"
+                ),
+                "Sold (SCU)": st.column_config.NumberColumn(
+                    format="%,.2f SCU"
+                ),
+                "On Hand (SCU)": st.column_config.NumberColumn(
+                    format="%,.2f SCU"
+                ),
+                "Mined Estimated Value": (
+                    st.column_config.NumberColumn(
+                        format="%,.0f aUEC"
+                    )
+                ),
+                "Purchase Value": st.column_config.NumberColumn(
+                    format="%,.0f aUEC"
+                ),
+                "Sales Value": st.column_config.NumberColumn(
+                    format="%,.0f aUEC"
+                ),
+                "Trade Net": st.column_config.NumberColumn(
+                    format="%,.0f aUEC"
+                ),
             },
         )
 
     st.markdown("### Recent Ore Activity")
     display_ore_table(ores)
-
 
 def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
     columns = {
@@ -6829,32 +7474,52 @@ def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
 
 
 def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
-    columns = {
-        "date_saved": "Date",
-        "action": "Action",
-        "ore_name": "Ore / Mineral",
-        "quantity_scu": "Quantity (SCU)",
-        "total_value": "Total Value (aUEC)",
-        "location": "Location",
-        "notes": "Notes",
-    }
-    export = ores.rename(columns=columns).copy()
+    """Prepare verified ore records for Excel, CSV, and Google Sheets."""
+    normalized = normalize_ore_transactions(ores)
+    export = normalized.rename(
+        columns={
+            "date_saved": "Date",
+            "action": "Action",
+            "ore_name": "Ore / Mineral",
+            "quantity_scu": "Quantity (SCU)",
+            "unit_price": "Unit Price (aUEC/SCU)",
+            "recorded_total_value": "Recorded Value (aUEC)",
+            "calculated_total_value": "Calculated Value (aUEC)",
+            "total_value": "Verified Value (aUEC)",
+            "cash_effect": "Net Cash Effect (aUEC)",
+            "calculation_status": "Calculation",
+            "location": "Location",
+            "notes": "Notes",
+        }
+    ).copy()
+
     ordered = [
         "Date",
         "Action",
         "Ore / Mineral",
         "Quantity (SCU)",
-        "Total Value (aUEC)",
+        "Unit Price (aUEC/SCU)",
+        "Recorded Value (aUEC)",
+        "Calculated Value (aUEC)",
+        "Verified Value (aUEC)",
+        "Net Cash Effect (aUEC)",
+        "Calculation",
         "Location",
         "Notes",
     ]
-    export = export[[column for column in ordered if column in export.columns]]
+    export = export[
+        [column for column in ordered if column in export.columns]
+    ]
+
     if "Date" in export.columns:
-        export["Date"] = pd.to_datetime(export["Date"], errors="coerce")
+        export["Date"] = pd.to_datetime(
+            export["Date"],
+            errors="coerce",
+        )
         if getattr(export["Date"].dt, "tz", None) is not None:
             export["Date"] = export["Date"].dt.tz_localize(None)
-    return export
 
+    return export
 
 def prepare_commodity_export(
     commodity_trades: pd.DataFrame,
@@ -6937,22 +7602,10 @@ def export_summary_values(
         if not contracts.empty and "individual_share" in contracts.columns
         else 0.0
     )
-    ore_sales = (
-        float(ores.loc[ores["action"] == "Sold", "total_value"].sum())
-        if not ores.empty
-        else 0.0
-    )
-    ore_purchases = (
-        float(ores.loc[ores["action"] == "Bought", "total_value"].sum())
-        if not ores.empty
-        else 0.0
-    )
-    inventory = build_ore_inventory(ores)
-    on_hand = (
-        float(inventory["On Hand (SCU)"].sum())
-        if not inventory.empty
-        else 0.0
-    )
+    ore_totals = ore_summary_values(ores)
+    ore_sales = ore_totals["sales_revenue"]
+    ore_purchases = ore_totals["purchase_cost"]
+    on_hand = ore_totals["on_hand_scu"]
     commodity_totals = commodity_summary_values(
         commodity_trades
     )
@@ -6974,6 +7627,10 @@ def export_summary_values(
         ["Ore Purchases", ore_purchases],
         ["Ore Trade Net", ore_sales - ore_purchases],
         ["Ore On Hand (SCU)", on_hand],
+        [
+            "Ore Records Missing SCU Quantity",
+            int(ore_totals["incomplete_quantity_records"]),
+        ],
         ["Commodity Records", int(commodity_totals["records"])],
         ["Commodity Purchases", commodity_totals["purchase_cost"]],
         ["Commodity Sales", commodity_totals["sales_revenue"]],
@@ -7099,7 +7756,11 @@ def build_excel_export(
             ("Ore Ledger", ore_export, {
                 "Date": date_format,
                 "Quantity (SCU)": quantity_format,
-                "Total Value (aUEC)": money_format,
+                "Unit Price (aUEC/SCU)": money_format,
+                "Recorded Value (aUEC)": money_format,
+                "Calculated Value (aUEC)": money_format,
+                "Verified Value (aUEC)": money_format,
+                "Net Cash Effect (aUEC)": money_format,
             }),
             ("Ore Inventory", inventory_export, {
                 "Mined (SCU)": quantity_format,
@@ -7729,6 +8390,7 @@ def manage_records_section(
                 )
 
     elif record_type == "Ore Entry":
+        ores = normalize_ore_transactions(ores)
         if ores.empty:
             st.info("No ore entries are available to edit.")
             return
@@ -7737,8 +8399,12 @@ def manage_records_section(
             int(row["id"]): (
                 f'ID {int(row["id"])} | {row["action"]} | '
                 f'{row["ore_name"]} | '
-                f'{float(row.get("quantity_scu", 0) or 0):,.2f} SCU | '
-                f'{format_money(row["total_value"])}'
+                + (
+                    f'{float(row["quantity_scu"]):,.2f} SCU | '
+                    if float(row["quantity_scu"]) > 0
+                    else "SCU quantity missing | "
+                )
+                + f'{format_money(row["total_value"])}'
             )
             for _, row in ores.iterrows()
         }
@@ -7751,6 +8417,13 @@ def manage_records_section(
         record = ores.loc[
             ores["id"] == selected_id
         ].iloc[0]
+
+        if float(record["quantity_scu"]) <= 0:
+            st.warning(
+                "This older record is missing SCU quantity. Enter the "
+                "quantity below so inventory and unit-price math can be "
+                "repaired."
+            )
 
         with st.form("edit_ore_form"):
             actions = ["Mined", "Bought", "Sold"]
@@ -7765,32 +8438,55 @@ def manage_records_section(
             )
             ore_name = st.text_input(
                 "Ore or mineral",
-                value=record["ore_name"],
+                value=str(record["ore_name"]),
             )
-            edit_amount_col1, edit_amount_col2 = st.columns(2)
-            with edit_amount_col1:
+
+            edit_col1, edit_col2 = st.columns(2)
+            with edit_col1:
                 quantity_scu = st.number_input(
                     "Quantity (SCU)",
-                    min_value=0.0,
-                    value=float(
-                        record.get("quantity_scu", 0) or 0
+                    min_value=0.01,
+                    value=max(
+                        float(record["quantity_scu"]),
+                        0.01,
                     ),
                     step=0.1,
                     format="%.2f",
                 )
-            with edit_amount_col2:
-                value = st.number_input(
-                    "Total value (aUEC)",
+            with edit_col2:
+                unit_price = st.number_input(
+                    "Unit price or estimated value (aUEC/SCU)",
                     min_value=0.0,
-                    value=float(record["total_value"]),
+                    value=float(record["unit_price"]),
+                    step=100.0,
                 )
+
+            total_override = st.number_input(
+                "Total cargo value override (aUEC)",
+                min_value=0.0,
+                value=float(record["total_value"]),
+                help=(
+                    "When unit price is greater than zero, verified value is "
+                    "Quantity × Unit Price. Otherwise this total is retained."
+                ),
+            )
+            verified_value = (
+                float(quantity_scu) * float(unit_price)
+                if unit_price > 0
+                else float(total_override)
+            )
+            st.info(
+                f"Verified value after update: {verified_value:,.0f} aUEC."
+            )
+
             location = st.text_input(
                 "Location",
-                value=record.get("location", "") or "",
+                value=str(record.get("location", "") or ""),
             )
             notes = st.text_area(
                 "Notes",
-                value=record.get("notes", "") or "",
+                value=str(record.get("notes", "") or ""),
+                height=105,
             )
             update_submitted = st.form_submit_button(
                 "Update Ore Entry",
@@ -7800,14 +8496,17 @@ def manage_records_section(
         if update_submitted:
             if not ore_name.strip():
                 st.error("Ore name is required.")
-            elif quantity_scu <= 0 and value <= 0:
-                st.error("Enter a quantity, a value, or both.")
+            elif action in {"Bought", "Sold"} and verified_value <= 0:
+                st.error(
+                    "Bought and Sold entries require a positive value."
+                )
             else:
                 payload = {
                     "action": action,
                     "ore_name": ore_name.strip(),
-                    "quantity_scu": quantity_scu,
-                    "total_value": value,
+                    "quantity_scu": float(quantity_scu),
+                    "unit_price": float(unit_price),
+                    "total_value": float(verified_value),
                     "location": location.strip(),
                     "notes": notes.strip(),
                 }
