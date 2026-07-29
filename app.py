@@ -11,6 +11,7 @@ import html
 import re
 
 import pandas as pd
+import requests
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -97,6 +98,8 @@ ORE_TYPES = [
 ASSETS_DIR = Path(__file__).parent / "assets"
 DATA_DIR = Path(__file__).parent / "data"
 MINING_LOCATIONS_FILE = DATA_DIR / "mining_locations.csv"
+UEX_API_BASE = "https://api.uexcorp.uk/2.0"
+UEX_CACHE_SECONDS = 3600
 
 STAR_CITIZEN_COLORS = [
     "#00C8FF",
@@ -1285,36 +1288,73 @@ def dashboard_page() -> None:
             .sort_values("Day")
         )
         contract_time_data["plot_value"] = contract_time_data["net_payout"].abs()
+        contract_time_data["Day Label"] = contract_time_data["Day"].dt.strftime(
+            "%b %d, %Y"
+        )
         contract_time_data["value_label"] = contract_time_data["net_payout"].map(
             lambda value: f"{value:,.0f} aUEC"
         )
+        time_point_colors = [
+            "#20A36A" if value >= 0 else "#E5484D"
+            for value in contract_time_data["net_payout"]
+        ]
 
         contract_time_figure = px.area(
             contract_time_data,
-            x="Day",
+            x="Day Label",
             y="plot_value",
             markers=True,
             custom_data=["net_payout", "contract_count", "value_label"],
             labels={
+                "Day Label": "Day",
                 "plot_value": "Payout magnitude in aUEC",
                 "contract_count": "Contracts",
             },
         )
         contract_time_figure.update_traces(
-            line={"width": 2.5},
-            fillcolor="rgba(42,224,199,0.12)",
+            line={"width": 2.5, "color": "#1378E5"},
+            marker={
+                "color": time_point_colors,
+                "size": 10,
+                "line": {"color": "#ffffff", "width": 1.5},
+            },
+            fillcolor="rgba(19,120,229,0.10)",
             mode="lines+markers+text",
             text=contract_time_data["value_label"],
             textposition="top center",
             cliponaxis=False,
             hovertemplate=(
-                "<b>%{x|%b %d, %Y}</b><br>"
+                "<b>%{x}</b><br>"
                 "Net payout: %{customdata[0]:,.0f} aUEC<br>"
                 "Contracts: %{customdata[1]}<extra></extra>"
             ),
         )
+        contract_time_figure.update_xaxes(
+            type="category",
+            categoryorder="array",
+            categoryarray=contract_time_data["Day Label"].tolist(),
+            tickmode="array",
+            tickvals=contract_time_data["Day Label"].tolist(),
+            ticktext=contract_time_data["Day Label"].tolist(),
+            title_text="Day",
+        )
         contract_time_figure.update_yaxes(rangemode="tozero")
         style_plotly_figure(contract_time_figure, height=430)
+        contract_time_figure.update_layout(
+            margin={"l": 38, "r": 28, "t": 54, "b": 60},
+            showlegend=False,
+        )
+        contract_time_figure.add_annotation(
+            x=0,
+            y=1.08,
+            xref="paper",
+            yref="paper",
+            text="<span style='color:#20A36A'>● Positive</span>&nbsp;&nbsp;&nbsp;"
+                 "<span style='color:#E5484D'>● Negative</span>",
+            showarrow=False,
+            xanchor="left",
+            font={"size": 12},
+        )
 
         contract_type_data = (
             contracts.groupby("contract_type", as_index=False)
@@ -2274,7 +2314,320 @@ def manage_records_section(contracts: pd.DataFrame, ores: pd.DataFrame) -> None:
                 st.error(f"The ore entry could not be deleted: {exc}")
 
 
-def load_mining_locations() -> pd.DataFrame:
+def optional_secret(name: str) -> str:
+    """Read an optional Streamlit secret without interrupting the app."""
+    try:
+        return str(st.secrets[name]).strip()
+    except (KeyError, FileNotFoundError):
+        return ""
+
+
+def parse_uex_ids(value: Any) -> list[int]:
+    """Convert UEX comma-separated ID fields into integer lists."""
+    if value is None or value == "":
+        return []
+
+    if isinstance(value, (list, tuple, set)):
+        raw_values = value
+    else:
+        raw_values = str(value).split(",")
+
+    parsed: list[int] = []
+    for raw_value in raw_values:
+        try:
+            parsed.append(int(str(raw_value).strip()))
+        except (TypeError, ValueError):
+            continue
+    return parsed
+
+
+def uex_flag(value: Any) -> bool:
+    """Interpret UEX integer and string flag fields."""
+    return str(value).strip().lower() in {"1", "true", "yes"}
+
+
+def unix_timestamp_label(value: Any) -> str:
+    """Format a UEX Unix timestamp for display."""
+    try:
+        return datetime.fromtimestamp(
+            int(value),
+            tz=ZoneInfo("UTC"),
+        ).strftime("%Y-%m-%d")
+    except (TypeError, ValueError, OSError):
+        return ""
+
+
+@st.cache_data(ttl=UEX_CACHE_SECONDS, show_spinner=False)
+def fetch_uex_resource(resource: str) -> list[dict[str, Any]]:
+    """Fetch one UEX API resource and return its data array."""
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "Star-Citizen-Tracker/1.0",
+    }
+
+    token = optional_secret("UEX_API_TOKEN")
+    client_version = optional_secret("UEX_CLIENT_VERSION")
+
+    if token:
+        # UEX documents Bearer authentication globally and a secret-key
+        # header for some user endpoints. Sending both keeps this compatible
+        # with either configuration while public endpoints remain usable.
+        headers["Authorization"] = f"Bearer {token}"
+        headers["secret-key"] = token
+
+    if client_version:
+        headers["X-Client-Version"] = client_version
+
+    url = f"{UEX_API_BASE}/{resource}"
+    response = requests.get(url, headers=headers, timeout=25)
+
+    # Public location endpoints do not require authorization. If a rotated or
+    # restricted token is rejected, retry the public request without it.
+    if response.status_code in {401, 403} and token:
+        public_headers = {
+            "Accept": "application/json",
+            "User-Agent": "Star-Citizen-Tracker/1.0",
+        }
+        response = requests.get(url, headers=public_headers, timeout=25)
+
+    response.raise_for_status()
+    payload = response.json()
+
+    if isinstance(payload, list):
+        return payload
+
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Unexpected UEX response for {resource}.")
+
+    status = payload.get("status")
+    if status not in {None, "ok"}:
+        message = payload.get("message") or status
+        raise RuntimeError(f"UEX returned {message} for {resource}.")
+
+    data = payload.get("data", [])
+    if isinstance(data, dict):
+        return list(data.values())
+    if not isinstance(data, list):
+        raise RuntimeError(f"UEX returned an invalid data array for {resource}.")
+    return data
+
+
+def indexed_uex_rows(rows: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    """Index UEX records by integer ID."""
+    indexed: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        try:
+            indexed[int(row["id"])] = row
+        except (KeyError, TypeError, ValueError):
+            continue
+    return indexed
+
+
+def enrich_uex_spawn_rates(
+    live_rows: pd.DataFrame,
+    local_rows: pd.DataFrame,
+) -> pd.DataFrame:
+    """Add locally maintained spawn-rate notes to matching live UEX rows."""
+    if live_rows.empty or local_rows.empty:
+        return live_rows
+
+    local = local_rows.copy()
+    local["_resource"] = local["Resource"].astype(str).str.casefold()
+    local["_system"] = local["System"].astype(str).str.casefold()
+    local["_location"] = local["Location"].astype(str).str.casefold()
+
+    def find_spawn_rate(row: pd.Series) -> str:
+        resource = str(row["Resource"]).casefold()
+        system = str(row["System"]).casefold()
+        location = str(row["Location"]).casefold()
+
+        matches = local[
+            (local["_resource"] == resource)
+            & (local["_system"] == system)
+        ]
+
+        exact = matches[
+            matches["_location"].apply(
+                lambda candidate: candidate in location or location in candidate
+            )
+        ]
+        if not exact.empty:
+            return str(exact.iloc[0]["Spawn Rate"])
+
+        unique_rates = matches["Spawn Rate"].dropna().astype(str).unique()
+        if len(unique_rates) == 1:
+            return unique_rates[0]
+
+        return "Not published by UEX"
+
+    live_rows["Spawn Rate"] = live_rows.apply(find_spawn_rate, axis=1)
+    return live_rows
+
+
+@st.cache_data(ttl=UEX_CACHE_SECONDS, show_spinner=False)
+def fetch_live_uex_mining_locations() -> tuple[pd.DataFrame, str]:
+    """Build a live mining-location table from UEX commodity relationships."""
+    commodities = fetch_uex_resource("commodities")
+    star_systems = indexed_uex_rows(fetch_uex_resource("star_systems"))
+    planets = indexed_uex_rows(fetch_uex_resource("planets"))
+    moons = indexed_uex_rows(fetch_uex_resource("moons"))
+    orbits = indexed_uex_rows(fetch_uex_resource("orbits"))
+    points_of_interest = indexed_uex_rows(fetch_uex_resource("poi"))
+
+    local_reference = load_mining_locations_local()
+    output_rows: list[dict[str, Any]] = []
+
+    def append_location(
+        commodity: dict[str, Any],
+        category: str,
+        location_record: dict[str, Any],
+        site_type: str,
+    ) -> None:
+        name = (
+            location_record.get("name")
+            or location_record.get("nickname")
+            or "Unknown location"
+        )
+        system_name = (
+            location_record.get("star_system_name")
+            or star_systems.get(
+                int(location_record.get("id_star_system") or 0),
+                {},
+            ).get("name")
+            or "Unknown"
+        )
+        method = "Hand / ROC" if category == "Gem" else "Ship"
+        price_sell = commodity.get("price_sell")
+        price_note = ""
+        try:
+            if float(price_sell) > 0:
+                price_note = f" UEX average sell value: {float(price_sell):,.0f} aUEC/SCU."
+        except (TypeError, ValueError):
+            pass
+
+        output_rows.append(
+            {
+                "Resource": commodity.get("name", "Unknown"),
+                "Category": category,
+                "System": system_name,
+                "Location": name,
+                "Site Type": site_type,
+                "Spawn Rate": "Not published by UEX",
+                "Mining Method": method,
+                "Notes": (
+                    "Live UEX resource-to-location mapping."
+                    f"{price_note}"
+                ).strip(),
+                "Source": "UEX API",
+                "UEX Updated": unix_timestamp_label(
+                    commodity.get("date_modified")
+                ),
+            }
+        )
+
+    for commodity in commodities:
+        if not any(
+            uex_flag(commodity.get(flag))
+            for flag in ("is_extractable", "is_mineral", "is_harvestable")
+        ):
+            continue
+
+        if commodity.get("is_available_live") is not None and not uex_flag(
+            commodity.get("is_available_live")
+        ):
+            continue
+
+        if commodity.get("is_visible") is not None and not uex_flag(
+            commodity.get("is_visible")
+        ):
+            continue
+
+        category = (
+            "Gem"
+            if uex_flag(commodity.get("is_harvestable"))
+            else "Ore"
+        )
+
+        before_count = len(output_rows)
+
+        for location_id in parse_uex_ids(commodity.get("ids_planets")):
+            if location_id in planets:
+                append_location(
+                    commodity,
+                    category,
+                    planets[location_id],
+                    "Planet",
+                )
+
+        for location_id in parse_uex_ids(commodity.get("ids_moons")):
+            if location_id in moons:
+                append_location(
+                    commodity,
+                    category,
+                    moons[location_id],
+                    "Moon",
+                )
+
+        for location_id in parse_uex_ids(commodity.get("ids_orbits")):
+            if location_id in orbits:
+                orbit = orbits[location_id]
+                site_type = (
+                    "Lagrange / Asteroid"
+                    if uex_flag(orbit.get("is_lagrange"))
+                    or uex_flag(orbit.get("is_asteroid"))
+                    else "Orbit"
+                )
+                append_location(
+                    commodity,
+                    category,
+                    orbit,
+                    site_type,
+                )
+
+        for location_id in parse_uex_ids(commodity.get("ids_poi")):
+            if location_id in points_of_interest:
+                poi = points_of_interest[location_id]
+                site_type = (
+                    "Mining POI"
+                    if uex_flag(poi.get("is_mining_related"))
+                    else "Point of Interest"
+                )
+                append_location(
+                    commodity,
+                    category,
+                    poi,
+                    site_type,
+                )
+
+        # Use system-only rows when UEX does not provide a more precise body.
+        if len(output_rows) == before_count:
+            for location_id in parse_uex_ids(
+                commodity.get("ids_star_systems")
+            ):
+                if location_id in star_systems:
+                    append_location(
+                        commodity,
+                        category,
+                        star_systems[location_id],
+                        "System",
+                    )
+
+    live = pd.DataFrame(output_rows)
+    if live.empty:
+        raise RuntimeError("UEX returned no extractable mineral locations.")
+
+    live = live.drop_duplicates(
+        subset=["Resource", "Category", "System", "Location", "Site Type"]
+    )
+    live = enrich_uex_spawn_rates(live, local_reference)
+
+    fetched_at = datetime.now(ZoneInfo("UTC")).strftime(
+        "%Y-%m-%d %H:%M UTC"
+    )
+    return live, fetched_at
+
+
+def load_mining_locations_local() -> pd.DataFrame:
     """Load the packaged ore and gem location reference."""
     if not MINING_LOCATIONS_FILE.exists():
         return pd.DataFrame(
@@ -2287,9 +2640,35 @@ def load_mining_locations() -> pd.DataFrame:
                 "Spawn Rate",
                 "Mining Method",
                 "Notes",
+                "Source",
+                "UEX Updated",
             ]
         )
-    return pd.read_csv(MINING_LOCATIONS_FILE)
+
+    local = pd.read_csv(MINING_LOCATIONS_FILE)
+    local["Source"] = "Packaged reference"
+    local["UEX Updated"] = ""
+    return local
+
+
+def load_mining_locations() -> pd.DataFrame:
+    """Load live UEX mining locations with a packaged fallback."""
+    try:
+        live, fetched_at = fetch_live_uex_mining_locations()
+        st.session_state.uex_mining_status = {
+            "is_live": True,
+            "message": f"Live UEX data loaded at {fetched_at}.",
+        }
+        return live
+    except Exception as exc:
+        st.session_state.uex_mining_status = {
+            "is_live": False,
+            "message": (
+                "UEX could not be reached, so the packaged reference is "
+                f"being used. Details: {exc}"
+            ),
+        }
+        return load_mining_locations_local()
 
 
 def mining_locations_page() -> None:
@@ -2300,11 +2679,35 @@ def mining_locations_page() -> None:
         "Mining Intelligence",
     )
 
+    control_col1, control_col2 = st.columns([1, 4])
+    with control_col1:
+        if st.button(
+            "Refresh Live Data",
+            key="refresh_uex_mining_data",
+            width="stretch",
+        ):
+            fetch_uex_resource.clear()
+            fetch_live_uex_mining_locations.clear()
+            st.rerun()
+
     locations = load_mining_locations()
+    uex_status = st.session_state.get("uex_mining_status", {})
+
+    with control_col2:
+        if uex_status.get("is_live"):
+            st.success(uex_status.get("message", "Live UEX data loaded."))
+        else:
+            st.warning(
+                uex_status.get(
+                    "message",
+                    "Using the packaged mining reference.",
+                )
+            )
 
     st.caption(
-        "Spawn information is a community-maintained reference and can change after Star Citizen patches. "
-        "Use it as a planning guide and verify unusually rare resources in the current live build."
+        "UEX location relationships are refreshed from its API and cached for one hour. "
+        "UEX does not publish a probability for every resource, so packaged community "
+        "spawn-rate notes are merged where a match is available."
     )
 
     search_text = st.text_input(
@@ -2397,6 +2800,8 @@ def mining_locations_page() -> None:
             "Site Type",
             "Spawn Rate",
             "Mining Method",
+            "Source",
+            "UEX Updated",
             "Notes",
         ]
         st.dataframe(
@@ -2413,6 +2818,8 @@ def mining_locations_page() -> None:
                 "Site Type": st.column_config.TextColumn("Spawn Area", width="medium"),
                 "Spawn Rate": st.column_config.TextColumn("Spawn Rate", width="medium"),
                 "Mining Method": st.column_config.TextColumn("Method", width="small"),
+                "Source": st.column_config.TextColumn("Source", width="medium"),
+                "UEX Updated": st.column_config.TextColumn("UEX Updated", width="medium"),
                 "Notes": st.column_config.TextColumn("Notes", width="large"),
             },
         )
@@ -2428,11 +2835,12 @@ def mining_locations_page() -> None:
     with st.expander("How to use spawn-rate information"):
         st.markdown(
             """
-            Numeric percentages are reported rates for the listed body or deposit type.
-            Labels such as **Common**, **Uncommon**, **Rare**, and **Extremely rare**
-            are used where a stable numeric rate was not available. Spawn distributions
-            can change between live patches, so the page is designed to be updated by
-            replacing `data/mining_locations.csv`.
+            The resource and location relationships are loaded from the UEX API.
+            UEX does not provide a numeric spawn probability for every mineral, so
+            locally maintained rates such as **Common**, **Rare**, or a reported
+            percentage are merged when the resource, system, and location match.
+            The app automatically falls back to `data/mining_locations.csv` when
+            UEX is unavailable.
             """
         )
 
