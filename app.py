@@ -198,7 +198,8 @@ def apply_custom_theme() -> None:
         .sc-page-banner {
             display: grid;
             grid-template-columns: minmax(300px, .74fr) minmax(520px, 1.26fr);
-            align-items: center;
+            align-items: stretch;
+            min-height: 292px;
             overflow: hidden;
             border-radius: 20px;
             border: 1px solid #d9e3ee;
@@ -224,7 +225,9 @@ def apply_custom_theme() -> None:
         .sc-page-banner-image-wrap {
             position: relative;
             min-width: 0;
-            padding: 1rem 1rem 1rem .35rem;
+            display: flex;
+            align-items: center;
+            padding: .8rem .9rem .8rem .25rem;
             background:
                 radial-gradient(circle at 10% 50%, rgba(19,120,229,.10), transparent 15rem),
                 linear-gradient(135deg, #edf5ff 0%, #f8fbff 100%);
@@ -232,6 +235,7 @@ def apply_custom_theme() -> None:
 
         .sc-page-banner-image-frame {
             width: 100%;
+            aspect-ratio: 3 / 1;
             overflow: hidden;
             border-radius: 16px;
             border: 1px solid rgba(143,199,255,.45);
@@ -241,9 +245,9 @@ def apply_custom_theme() -> None:
 
         .sc-page-banner-image {
             width: 100%;
-            height: auto;
-            object-fit: unset;
-            object-position: initial;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
             display: block;
         }
 
@@ -290,8 +294,11 @@ def apply_custom_theme() -> None:
         .feature-card { background:#fff; border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 10px 26px rgba(24,62,103,.08); }
         .feature-card img {
             width:100%;
+            aspect-ratio:3 / 1;
             height:auto;
             display:block;
+            object-fit:cover;
+            object-position:center center;
             background:#081624;
         }
         .feature-card-body { padding:.85rem .9rem 1rem; }
@@ -348,10 +355,12 @@ def apply_custom_theme() -> None:
             }
             .sc-page-banner-image-frame {
                 min-height: 0;
+                aspect-ratio: 3 / 1;
             }
             .sc-page-banner-image {
                 width: 100%;
-                height: auto;
+                height: 100%;
+                object-fit: cover;
             }
         }
         @media (max-width:720px) {
