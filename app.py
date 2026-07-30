@@ -9760,7 +9760,10 @@ def fetch_sc_trade_tools_reports() -> list[dict[str, Any]]:
     return payload if isinstance(payload, list) else []
 
 
-def normalize_uex_prices(rows: list[dict[str, Any]]) -> pd.DataFrame:
+def normalize_uex_prices(
+    rows: list[dict[str, Any]],
+    commodity_name: str = "",
+) -> pd.DataFrame:
     output: list[dict[str, Any]] = []
     for row in rows:
         terminal_buys = safe_float(row.get("price_buy"))
@@ -9781,8 +9784,17 @@ def normalize_uex_prices(rows: list[dict[str, Any]]) -> pd.DataFrame:
                 area_values.append(value)
         area = " > ".join(area_values) or "System location"
 
+        listing_commodity = str(
+            row.get("commodity_name")
+            or row.get("commodity")
+            or row.get("name_commodity")
+            or commodity_name
+            or "Unknown"
+        ).strip()
+
         output.append(
             {
+                "Commodity": listing_commodity or "Unknown",
                 "System": row.get("star_system_name") or "Unknown",
                 "Environment": uex_trade_environment(row),
                 "Area": area,
@@ -10115,7 +10127,8 @@ def commodities_page() -> None:
         try:
             commodity_id = int(selected_uex.get("id") or 0)
             uex_prices = normalize_uex_prices(
-                fetch_uex_commodity_prices(commodity_id)
+                fetch_uex_commodity_prices(commodity_id),
+                selected_commodity,
             )
             uex_routes = normalize_uex_routes(
                 fetch_uex_commodity_routes(
@@ -10281,9 +10294,9 @@ def commodities_page() -> None:
 
             st.markdown("### Best Trading Terminals")
             st.caption(
-                "Player buys show where you purchase the commodity. Player sells "
-                "show where you deliver it. System, area, and terminal are separated "
-                "to make the listings easier to read."
+                "Each row now identifies the commodity as well as the system, "
+                "area, terminal, price, stock, or demand. Player buys show where "
+                "you purchase it, and player sells show where you deliver it."
             )
 
             buy_table = (
@@ -10313,6 +10326,7 @@ def commodities_page() -> None:
             else:
                 buy_display = buy_table[
                     [
+                        "Commodity",
                         "System",
                         "Environment",
                         "Area",
@@ -10331,6 +10345,9 @@ def commodities_page() -> None:
                     on_select="rerun",
                     selection_mode="single-row",
                     column_config={
+                        "Commodity": st.column_config.TextColumn(
+                            width="medium"
+                        ),
                         "Player Pays": st.column_config.NumberColumn(
                             format="%,.0f aUEC/SCU"
                         ),
@@ -10383,6 +10400,7 @@ def commodities_page() -> None:
             else:
                 sell_display = sell_table[
                     [
+                        "Commodity",
                         "System",
                         "Environment",
                         "Area",
@@ -10401,6 +10419,9 @@ def commodities_page() -> None:
                     on_select="rerun",
                     selection_mode="single-row",
                     column_config={
+                        "Commodity": st.column_config.TextColumn(
+                            width="medium"
+                        ),
                         "Player Receives": st.column_config.NumberColumn(
                             format="%,.0f aUEC/SCU"
                         ),
@@ -10447,6 +10468,7 @@ def commodities_page() -> None:
 
             st.markdown("#### All Matching Terminal Listings")
             market_columns = [
+                "Commodity",
                 "System",
                 "Environment",
                 "Area",
@@ -10475,6 +10497,9 @@ def commodities_page() -> None:
                 width="stretch",
                 hide_index=True,
                 column_config={
+                    "Commodity": st.column_config.TextColumn(
+                        width="medium"
+                    ),
                     "Terminal Buys at": st.column_config.NumberColumn(
                         format="%,.0f aUEC/SCU"
                     ),
