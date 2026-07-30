@@ -138,13 +138,20 @@ SC_TRADE_TOOLS_API_BASE = "https://sc-trade.tools/api"
 SC_TRADE_TOOLS_CACHE_SECONDS = 840
 SC_TRADE_TOOLS_URL = "https://sc-trade.tools/"
 
+CHART_GREEN = "#2E7D32"
+CHART_GREEN_LIGHT = "#66BB6A"
+CHART_GREEN_PALE = "#A5D6A7"
+CHART_RED = "#D32F2F"
+CHART_RED_LIGHT = "#EF5350"
+CHART_RED_DARK = "#C62828"
+
 STAR_CITIZEN_COLORS = [
-    "#98FB17",
-    "#78C814",
-    "#B8FF61",
-    "#4C7814",
-    "#DDF8B9",
-    "#E54950",
+    CHART_GREEN,
+    CHART_RED,
+    CHART_GREEN_LIGHT,
+    CHART_RED_LIGHT,
+    CHART_GREEN_PALE,
+    CHART_RED_DARK,
 ]
 
 
@@ -3132,6 +3139,169 @@ def apply_custom_theme() -> None:
         [data-testid="stToastContainer"],
         [data-testid="stToast"] {
             display: none !important;
+        }
+
+        /* ================================================================
+           NUMBER INPUT AND TOOLTIP ALIGNMENT REPAIR
+           ================================================================ */
+
+        /*
+         * Reset help/tooltip buttons so they are never styled as number
+         * steppers. This applies to labels throughout the complete app.
+         */
+        html body .stApp [data-testid="stWidgetLabel"] button,
+        html body .stApp [data-testid="stTooltipIcon"],
+        html body .stApp [data-testid="stTooltipIcon"] button,
+        html body .stApp label button[aria-label*="help" i],
+        html body .stApp label button[aria-label*="tooltip" i] {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex: 0 0 auto !important;
+            width: 1.15rem !important;
+            min-width: 1.15rem !important;
+            max-width: 1.15rem !important;
+            height: 1.15rem !important;
+            min-height: 1.15rem !important;
+            max-height: 1.15rem !important;
+            margin: 0 0 0 .28rem !important;
+            padding: 0 !important;
+            background: transparent !important;
+            background-image: none !important;
+            border: 0 !important;
+            border-radius: 50% !important;
+            color: #66734F !important;
+            box-shadow: none !important;
+            filter: none !important;
+            transform: none !important;
+            position: static !important;
+            z-index: auto !important;
+        }
+
+        html body .stApp [data-testid="stWidgetLabel"] button:hover,
+        html body .stApp [data-testid="stTooltipIcon"]:hover,
+        html body .stApp [data-testid="stTooltipIcon"] button:hover,
+        html body .stApp label button[aria-label*="help" i]:hover,
+        html body .stApp label button[aria-label*="tooltip" i]:hover {
+            width: 1.15rem !important;
+            min-width: 1.15rem !important;
+            height: 1.15rem !important;
+            min-height: 1.15rem !important;
+            margin: 0 0 0 .28rem !important;
+            padding: 0 !important;
+            background: #EDF6DF !important;
+            border: 0 !important;
+            color: #36550F !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /*
+         * Number-input labels use a consistent line box, while the complete
+         * control remains exactly aligned with neighboring fields.
+         */
+        html body .stApp [data-testid="stNumberInput"] {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"]
+        [data-testid="stWidgetLabel"] {
+            min-height: 1.55rem !important;
+            margin-bottom: .32rem !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"]
+        [data-testid="stWidgetLabel"] > div {
+            display: flex !important;
+            align-items: center !important;
+            min-height: 1.55rem !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"]
+        div[data-baseweb="input"] {
+            display: flex !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 3.05rem !important;
+            min-height: 3.05rem !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            background: #FFFFFF !important;
+            border: 0 !important;
+            border-radius: 10px !important;
+            box-shadow: none !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"] input {
+            flex: 1 1 auto !important;
+            width: 1% !important;
+            min-width: 0 !important;
+            height: 3.05rem !important;
+            min-height: 3.05rem !important;
+            margin: 0 !important;
+            padding: .68rem .78rem !important;
+            border: 0 !important;
+            border-radius: 10px 0 0 10px !important;
+            box-shadow: none !important;
+        }
+
+        /*
+         * Only the actual right-side controls receive stepper dimensions.
+         * The final two non-label buttons are the decrement and increment
+         * controls in Streamlit's number-input shell.
+         */
+        html body .stApp [data-testid="stNumberInput"]
+        div[data-baseweb="input"] button {
+            flex: 0 0 2.45rem !important;
+            width: 2.45rem !important;
+            min-width: 2.45rem !important;
+            max-width: 2.45rem !important;
+            height: 3.05rem !important;
+            min-height: 3.05rem !important;
+            max-height: 3.05rem !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #F2F8E8 !important;
+            border: 0 !important;
+            border-left: 1px solid #C7D9AA !important;
+            border-radius: 0 !important;
+            color: #36550F !important;
+            box-shadow: none !important;
+            filter: none !important;
+            transform: none !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"]
+        div[data-baseweb="input"] button:last-child {
+            border-radius: 0 10px 10px 0 !important;
+        }
+
+        html body .stApp [data-testid="stNumberInput"]
+        div[data-baseweb="input"] button:hover {
+            background: #E2F0CE !important;
+            color: #243713 !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /*
+         * Keep paired amount fields aligned and prevent the panel columns
+         * from clipping the complete four-sided perimeter.
+         */
+        .st-key-ore_entry_panel [data-testid="stHorizontalBlock"] {
+            align-items: flex-end !important;
+        }
+
+        .st-key-ore_entry_panel [data-testid="column"] {
+            min-width: 0 !important;
+            overflow: visible !important;
+        }
+
+        .st-key-ore_entry_panel [data-testid="stNumberInput"] {
+            margin-bottom: 0 !important;
         }
         </style>
         """,
@@ -6315,7 +6485,7 @@ def insert_ore(payload: dict[str, Any]) -> dict[str, Any]:
     if matches.empty:
         raise RuntimeError(
             "The ore entry was not returned by Supabase after saving. "
-            "Check the Version 7 ore migration and RLS policies."
+            "Run the Version 8 ore schema repair and verify the four required columns."
         )
 
     row = matches.iloc[0]
@@ -6989,7 +7159,7 @@ def dashboard_page() -> None:
                 x=earnings_daily["Position"],
                 y=earnings_daily["Plot Value"],
                 marker_color=[
-                    "#4C7814" if value >= 0 else "#E54950"
+                    CHART_GREEN if value >= 0 else CHART_RED
                     for value in earnings_daily["Total Earnings"]
                 ],
                 text=earnings_daily["Label"],
@@ -7070,7 +7240,7 @@ def dashboard_page() -> None:
     )
     source_figure.update_traces(
         marker_color=[
-            "#4C7814" if value >= 0 else "#E54950"
+            CHART_GREEN if value >= 0 else CHART_RED
             for value in source_data["Net Contribution"]
         ],
         textposition="inside",
@@ -7119,9 +7289,9 @@ def dashboard_page() -> None:
             text="Label",
             custom_data=["total_value", "entry_count"],
             color_discrete_map={
-                "Bought": "#4C7814",
-                "Mined": "#98FB17",
-                "Sold": "#E54950",
+                "Bought": CHART_GREEN_LIGHT,
+                "Mined": CHART_GREEN,
+                "Sold": CHART_RED,
             },
             labels={
                 "ore_name": "Mineral",
@@ -7208,10 +7378,10 @@ def dashboard_page() -> None:
             text="Label",
             custom_data=["Signed Value"],
             color_discrete_map={
-                "Purchase Cost": "#4C7814",
-                "Sales Revenue": "#98FB17",
-                "Loss Value": "#E54950",
-                "Net Profit": "#78C814",
+                "Purchase Cost": CHART_RED_LIGHT,
+                "Sales Revenue": CHART_GREEN,
+                "Loss Value": CHART_RED,
+                "Net Profit": CHART_GREEN_LIGHT,
             },
             labels={
                 "Plot Value": "Value magnitude in aUEC",
@@ -7280,7 +7450,7 @@ def dashboard_page() -> None:
         )
         contract_type_figure.update_traces(
             marker_color=[
-                "#4C7814" if value >= 0 else "#E54950"
+                CHART_GREEN if value >= 0 else CHART_RED
                 for value in contract_type_data["net_payout"]
             ],
             textposition="inside",
@@ -7317,9 +7487,9 @@ def dashboard_page() -> None:
             hole=.55,
             color="Activity",
             color_discrete_map={
-                "Contracts": "#4C7814",
-                "Ore / Mining": "#78C814",
-                "Commodities": "#98FB17",
+                "Contracts": CHART_GREEN,
+                "Ore / Mining": CHART_GREEN_LIGHT,
+                "Commodities": CHART_RED,
             },
         )
         activity_mix_figure.update_traces(
@@ -7634,42 +7804,52 @@ def ore_page() -> None:
         quiet_success(receipt)
 
     st.markdown("### Add Ore or Gem Activity")
-    with st.form("ore_form", clear_on_submit=True):
+    with st.container(
+        border=True,
+        key="ore_entry_panel",
+    ):
         action = st.selectbox(
             "Entry type",
             ["Mined", "Bought", "Sold"],
+            key="ore_entry_action",
         )
         selected_ore = st.selectbox(
             "Ore or mineral",
             ORE_TYPES,
+            key="ore_entry_resource",
         )
+
         custom_ore = ""
         if selected_ore == "Other / Custom":
             custom_ore = st.text_input(
                 "Custom ore or mineral",
+                key="ore_entry_custom_resource",
             )
 
         price_method = st.radio(
             "How are you entering the value?",
             ["Price per SCU", "Total cargo value"],
             horizontal=True,
-            help=(
-                "The app always verifies Total Value as Quantity × Unit Price. "
-                "For mined material, a value may be left at zero."
-            ),
+            key="ore_entry_price_method",
+        )
+        st.caption(
+            "The verified value is always calculated from SCU and unit price. "
+            "For mined material, the estimated monetary value may remain zero."
         )
 
-        amount_col1, amount_col2 = st.columns(2)
+        amount_col1, amount_col2 = st.columns(
+            2,
+            gap="medium",
+            vertical_alignment="bottom",
+        )
+
         with amount_col1:
             quantity_scu = st.number_input(
                 "Quantity (SCU)",
                 min_value=0.01,
                 step=0.1,
                 format="%.2f",
-                help=(
-                    "SCU is required so mined, bought, sold, and on-hand "
-                    "quantities can calculate correctly."
-                ),
+                key="ore_entry_quantity",
             )
 
         if price_method == "Price per SCU":
@@ -7678,10 +7858,10 @@ def ore_page() -> None:
                     "Unit price or estimated value (aUEC/SCU)",
                     min_value=0.0,
                     step=100.0,
+                    key="ore_entry_unit_price",
                 )
-            verified_unit_price = float(
-                entered_unit_price
-            )
+
+            verified_unit_price = float(entered_unit_price)
             verified_total = (
                 float(quantity_scu)
                 * verified_unit_price
@@ -7692,7 +7872,9 @@ def ore_page() -> None:
                     "Total cargo value (aUEC)",
                     min_value=0.0,
                     step=1000.0,
+                    key="ore_entry_total_value",
                 )
+
             verified_total = float(entered_total)
             verified_unit_price = (
                 verified_total / float(quantity_scu)
@@ -7703,6 +7885,7 @@ def ore_page() -> None:
         location = st.text_input(
             "Location",
             placeholder="Example: Aberdeen, ARC-L1, Levski",
+            key="ore_entry_location",
         )
         notes = st.text_area(
             "Notes",
@@ -7711,6 +7894,7 @@ def ore_page() -> None:
                 "or other details"
             ),
             height=110,
+            key="ore_entry_notes",
         )
 
         cash_effect = (
@@ -7720,6 +7904,7 @@ def ore_page() -> None:
             if action == "Bought"
             else 0.0
         )
+
         st.info(
             f"Verified math: {quantity_scu:,.2f} SCU × "
             f"{verified_unit_price:,.2f} aUEC/SCU = "
@@ -7727,9 +7912,11 @@ def ore_page() -> None:
             f"Cash effect: {cash_effect:+,.0f} aUEC."
         )
 
-        submitted = st.form_submit_button(
+        submitted = st.button(
             "Save Ore Entry",
+            type="primary",
             width="stretch",
+            key="save_ore_entry",
         )
 
     if submitted:
@@ -7770,13 +7957,44 @@ def ore_page() -> None:
                     f"{saved['unit_price']:,.2f} aUEC/SCU = "
                     f"{saved['total_value']:,.0f} aUEC."
                 )
+
+                # Clear only the entry fields after a verified save.
+                for state_key in (
+                    "ore_entry_action",
+                    "ore_entry_resource",
+                    "ore_entry_custom_resource",
+                    "ore_entry_price_method",
+                    "ore_entry_quantity",
+                    "ore_entry_unit_price",
+                    "ore_entry_total_value",
+                    "ore_entry_location",
+                    "ore_entry_notes",
+                ):
+                    st.session_state.pop(state_key, None)
+
                 st.rerun()
             except Exception as exc:
-                st.error(
-                    "The ore entry could not be saved. Run "
-                    "`schema_migration_v7_ore_math_repair.sql` once in "
-                    f"Supabase, then try again. Details: {exc}"
-                )
+                error_text = str(exc)
+                if (
+                    "quantity_scu" in error_text
+                    and "schema cache" in error_text.lower()
+                ):
+                    st.error(
+                        "Supabase does not currently expose the "
+                        "`quantity_scu` column. Run "
+                        "`schema_migration_v8_ore_schema_cache_repair.sql` "
+                        "as one complete query. Confirm that its first "
+                        "verification result lists `quantity_scu`, "
+                        "`unit_price`, `total_value`, and `cash_effect`. "
+                        "Then wait about 30 seconds and reboot the "
+                        "Streamlit app."
+                    )
+                else:
+                    st.error(
+                        "The ore entry could not be saved. Run "
+                        "`schema_migration_v8_ore_schema_cache_repair.sql` "
+                        f"once in Supabase, then try again. Details: {exc}"
+                    )
 
     _, ores = load_data()
     totals = ore_summary_values(ores)
