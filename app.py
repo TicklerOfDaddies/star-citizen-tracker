@@ -1429,6 +1429,305 @@ def apply_custom_theme() -> None:
             .sidebar-brand { margin-bottom: .65rem; }
             main h2, main h3 { padding: .48rem .6rem !important; }
         }
+
+        /* ================================================================
+           ASSET IMAGE REINTEGRATION
+           Keeps the modern layout while restoring the packaged artwork.
+           ================================================================ */
+
+        .sc-media-hero {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            min-height: 190px;
+            margin: .15rem 0 1.15rem;
+            overflow: hidden;
+            border: 1.5px solid var(--sc-line-strong);
+            border-radius: 18px;
+            background-color: #28311D;
+            background-position: center 42%;
+            background-size: cover;
+            box-shadow: var(--sc-card-shadow);
+            isolation: isolate;
+        }
+
+        .sc-media-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(16,20,13,.92) 0%,
+                    rgba(16,20,13,.72) 45%,
+                    rgba(16,20,13,.22) 100%
+                ),
+                linear-gradient(
+                    0deg,
+                    rgba(16,20,13,.58) 0%,
+                    transparent 62%
+                );
+        }
+
+        .sc-media-hero-content {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            width: 100%;
+            gap: 1.25rem;
+            padding: 1.35rem 1.45rem;
+        }
+
+        .sc-media-hero .sc-page-kicker {
+            color: #D7E8A1 !important;
+            text-shadow: 0 1px 8px rgba(0,0,0,.45);
+        }
+
+        .sc-media-hero .sc-page-title {
+            color: #FFFFFF !important;
+            text-shadow: 0 2px 12px rgba(0,0,0,.48);
+        }
+
+        .sc-media-hero .sc-page-subtitle {
+            max-width: 780px;
+            color: rgba(255,255,255,.86) !important;
+            text-shadow: 0 1px 8px rgba(0,0,0,.4);
+        }
+
+        .sc-media-hero .sc-page-status {
+            border-color: rgba(255,255,255,.4);
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .dashboard-media-hero {
+            position: relative;
+            min-height: 210px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1.5px solid var(--sc-line-strong);
+            border-radius: 18px;
+            background-position: center 44%;
+            background-size: cover;
+            box-shadow: var(--sc-card-shadow);
+            isolation: isolate;
+        }
+
+        .dashboard-media-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                linear-gradient(
+                    90deg,
+                    rgba(15,19,12,.9) 0%,
+                    rgba(15,19,12,.66) 52%,
+                    rgba(15,19,12,.2) 100%
+                ),
+                linear-gradient(
+                    0deg,
+                    rgba(15,19,12,.48),
+                    transparent 62%
+                );
+        }
+
+        .dashboard-media-hero .dashboard-welcome {
+            min-height: 210px;
+            margin: 0;
+            padding: 1.45rem 1.5rem;
+        }
+
+        .dashboard-media-hero .dashboard-welcome-title {
+            color: #FFFFFF !important;
+            text-shadow: 0 2px 14px rgba(0,0,0,.45);
+        }
+
+        .dashboard-media-hero .dashboard-welcome-copy {
+            max-width: 760px;
+            color: rgba(255,255,255,.86) !important;
+            text-shadow: 0 1px 8px rgba(0,0,0,.38);
+        }
+
+        .dashboard-media-hero .sc-page-kicker {
+            color: #D7E8A1 !important;
+        }
+
+        .dashboard-media-hero .dashboard-live-card {
+            border-color: rgba(255,255,255,.38);
+            background: rgba(255,255,255,.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .quick-tool-card {
+            display: block !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+            border: 0 !important;
+            background: transparent !important;
+        }
+
+        .quick-tool-media {
+            position: relative;
+            width: 100%;
+            height: 104px;
+            overflow: hidden;
+            border-bottom: 1.5px solid var(--sc-line);
+            background-color: #EAE9E1;
+            background-position: center;
+            background-size: cover;
+        }
+
+        .quick-tool-media::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                0deg,
+                rgba(16,20,13,.5),
+                transparent 68%
+            );
+        }
+
+        .quick-tool-body {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-height: 82px;
+            padding: .82rem .86rem .72rem;
+        }
+
+        .quick-tool-body .quick-tool-icon {
+            flex: 0 0 2.4rem;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            height: 100%;
+            padding: 0 !important;
+            overflow: hidden;
+            border: 1.5px solid var(--sc-line) !important;
+            border-radius: 15px !important;
+            background: var(--sc-surface);
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: var(--sc-line-strong) !important;
+            transform: translateY(-1px);
+        }
+
+        [class*="st-key-quick_tool_"] .stButton {
+            padding: 0 .7rem .7rem;
+        }
+
+        .sidebar-brand-logo {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            object-fit: contain;
+            padding: .18rem;
+            border: 1.5px solid var(--sc-line-strong);
+            border-radius: 50%;
+            background: #FFFFFF;
+        }
+
+        .sidebar-art-card {
+            position: relative;
+            min-height: 112px;
+            margin: .8rem 0;
+            overflow: hidden;
+            border: 1.5px solid var(--sc-line);
+            border-radius: 14px;
+            background-position: center;
+            background-size: cover;
+            box-shadow: var(--sc-card-shadow);
+            isolation: isolate;
+        }
+
+        .sidebar-art-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(
+                0deg,
+                rgba(14,18,11,.88),
+                rgba(14,18,11,.12)
+            );
+        }
+
+        .sidebar-art-copy {
+            position: absolute;
+            right: .7rem;
+            bottom: .65rem;
+            left: .7rem;
+            color: #FFFFFF;
+            font-size: .78rem;
+            font-weight: 700;
+            line-height: 1.35;
+            text-shadow: 0 1px 8px rgba(0,0,0,.55);
+        }
+
+        .profile-hero.profile-media-hero {
+            position: relative;
+            min-height: 190px;
+            padding: 1.4rem;
+            overflow: hidden;
+            border: 1.5px solid var(--sc-line-strong);
+            border-radius: 18px;
+            background-position: center;
+            background-size: cover;
+            box-shadow: var(--sc-card-shadow);
+            isolation: isolate;
+        }
+
+        .profile-hero.profile-media-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(
+                90deg,
+                rgba(15,19,12,.9),
+                rgba(15,19,12,.52),
+                rgba(15,19,12,.14)
+            );
+        }
+
+        .profile-media-hero .profile-hero-kicker,
+        .profile-media-hero .profile-hero-name,
+        .profile-media-hero .profile-hero-email,
+        .profile-media-hero .profile-hero-bio {
+            color: #FFFFFF !important;
+            text-shadow: 0 1px 10px rgba(0,0,0,.48);
+        }
+
+        @media (max-width: 760px) {
+            .sc-media-hero,
+            .dashboard-media-hero {
+                min-height: 230px;
+                background-position: center;
+            }
+
+            .sc-media-hero-content,
+            .dashboard-media-hero .dashboard-welcome {
+                align-items: flex-start;
+                flex-direction: column;
+                justify-content: flex-end;
+            }
+
+            .quick-tool-media {
+                height: 122px;
+            }
+
+            .profile-hero.profile-media-hero {
+                min-height: 240px;
+                background-position: center;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1453,24 +1752,42 @@ def page_banner(
     subtitle: str,
     kicker: str,
 ) -> None:
-    """Render the premium design-system page heading."""
+    """Render a modern responsive header using the packaged page artwork."""
+    image_uri = image_data_uri(image_filename)
+    background_style = (
+        f"background-image: url('{image_uri}');"
+        if image_uri
+        else ""
+    )
+
     st.markdown(
         f"""
-        <section class="sc-page-heading" aria-label="{html.escape(title)}">
-            <div class="sc-page-heading-copy">
-                <div class="sc-page-kicker">{html.escape(kicker)}</div>
-                <h1 class="sc-page-title">{html.escape(title)}</h1>
-                <p class="sc-page-subtitle">{html.escape(subtitle)}</p>
-            </div>
-            <div class="sc-page-status">
-                <span class="sc-page-status-dot"></span>
-                Live workspace
+        <section
+            class="sc-media-hero"
+            style="{background_style}"
+            aria-label="{html.escape(title)}"
+        >
+            <div class="sc-media-hero-content">
+                <div class="sc-page-heading-copy">
+                    <div class="sc-page-kicker">
+                        {html.escape(kicker)}
+                    </div>
+                    <h1 class="sc-page-title">
+                        {html.escape(title)}
+                    </h1>
+                    <p class="sc-page-subtitle">
+                        {html.escape(subtitle)}
+                    </p>
+                </div>
+                <div class="sc-page-status">
+                    <span class="sc-page-status-dot"></span>
+                    Live workspace
+                </div>
             </div>
         </section>
         """,
         unsafe_allow_html=True,
     )
-
 
 def render_rights_notice() -> None:
     """Display a prominent fan-project and third-party rights notice."""
@@ -2089,9 +2406,16 @@ def profile_page(
         else "Star Citizen operations account"
     )
 
+    profile_background_uri = image_data_uri("edit_banner.jpg")
+    profile_background_style = (
+        f"background-image: url('{profile_background_uri}');"
+        if profile_background_uri
+        else ""
+    )
+
     st.markdown(
         f"""
-        <section class="profile-hero">
+        <section class="profile-hero profile-media-hero" style="{profile_background_style}">
             {avatar_markup(
                 avatar_url=avatar_url,
                 display_name=display_name,
@@ -4970,33 +5294,46 @@ def timezone_settings() -> None:
 
 
 def dashboard_hero() -> None:
-    """Render the premium dashboard heading and live status."""
+    """Render the modern dashboard greeting over the packaged banner."""
     now_utc = datetime.now(ZoneInfo("UTC"))
     preferred = selected_timezone()
     local_now = now_utc.astimezone(ZoneInfo(preferred))
     display_name = html.escape(
         st.session_state.get("user_display_name", "Citizen")
     )
+    image_uri = image_data_uri("dashboard_banner.jpg")
+    background_style = (
+        f"background-image: url('{image_uri}');"
+        if image_uri
+        else ""
+    )
 
     st.markdown(
         f"""
-        <section class="dashboard-welcome">
-            <div>
-                <div class="sc-page-kicker">Operations intelligence</div>
-                <div class="dashboard-welcome-title">
-                    Welcome back, {display_name}
-                </div>
-                <div class="dashboard-welcome-copy">
-                    Review contracts, mining, commodities, loot, and saved
-                    activity from one unified operations console.
-                </div>
-            </div>
-            <div class="dashboard-live-card">
-                <span class="sc-page-status-dot"></span>
+        <section
+            class="dashboard-media-hero"
+            style="{background_style}"
+        >
+            <div class="dashboard-welcome">
                 <div>
-                    <strong>Live</strong><br>
-                    {local_now.strftime('%I:%M %p')} ·
-                    {html.escape(preferred)}
+                    <div class="sc-page-kicker">
+                        Operations intelligence
+                    </div>
+                    <div class="dashboard-welcome-title">
+                        Welcome back, {display_name}
+                    </div>
+                    <div class="dashboard-welcome-copy">
+                        Review contracts, mining, commodities, loot, and
+                        saved activity from one unified operations console.
+                    </div>
+                </div>
+                <div class="dashboard-live-card">
+                    <span class="sc-page-status-dot"></span>
+                    <div>
+                        <strong>Live</strong><br>
+                        {local_now.strftime('%I:%M %p')} ·
+                        {html.escape(preferred)}
+                    </div>
                 </div>
             </div>
         </section>
@@ -5004,18 +5341,65 @@ def dashboard_hero() -> None:
         unsafe_allow_html=True,
     )
 
-
 def feature_dashboard_cards() -> None:
-    """Render compact dashboard shortcuts in the premium design system."""
+    """Render image-backed dashboard shortcuts using packaged assets."""
     cards = [
-        ("◫", "Contracts", "Record payouts and crew shares.", "Contract Calculator"),
-        ("▱", "Ore Ledger", "Track mined, bought, sold, and on-hand SCU.", "Ore Ledger"),
-        ("⬡", "Commodities", "Plan routes and record cargo activity.", "Commodities"),
-        ("⌖", "Mining Locations", "Find resource locations and methods.", "Mining Locations"),
-        ("▦", "Blueprints", "Track ownership and material readiness.", "Blueprints"),
-        ("◎", "Loot & Shops", "Find stores and shared loot locations.", "Loot & Shops"),
-        ("▮", "Saved Records", "Review and manage all recorded activity.", "Saved Records"),
-        ("⇩", "Export Data", "Download Excel, CSV, and Google Sheets data.", "Export Data"),
+        (
+            "contracts_feature.jpg",
+            "◫",
+            "Contracts",
+            "Record payouts and crew shares.",
+            "Contract Calculator",
+        ),
+        (
+            "ore_feature.jpg",
+            "▱",
+            "Ore Ledger",
+            "Track mined, bought, sold, and on-hand SCU.",
+            "Ore Ledger",
+        ),
+        (
+            "commodity_feature.jpg",
+            "⬡",
+            "Commodities",
+            "Plan routes and record cargo activity.",
+            "Commodities",
+        ),
+        (
+            "fleet_feature.jpg",
+            "⌖",
+            "Mining Locations",
+            "Find resource locations and methods.",
+            "Mining Locations",
+        ),
+        (
+            "records_feature.jpg",
+            "▦",
+            "Blueprints",
+            "Track ownership and material readiness.",
+            "Blueprints",
+        ),
+        (
+            "commodity_feature.jpg",
+            "◎",
+            "Loot & Shops",
+            "Find stores and shared loot locations.",
+            "Loot & Shops",
+        ),
+        (
+            "records_feature.jpg",
+            "▮",
+            "Saved Records",
+            "Review and manage all recorded activity.",
+            "Saved Records",
+        ),
+        (
+            "export_banner.jpg",
+            "⇩",
+            "Export Data",
+            "Download Excel, CSV, and Google Sheets data.",
+            "Export Data",
+        ),
     ]
 
     st.markdown(
@@ -5024,7 +5408,8 @@ def feature_dashboard_cards() -> None:
             <div>
                 <div class="section-title">Explore the tracker</div>
                 <div class="section-copy">
-                    Open another workspace without leaving the operations console.
+                    Open another workspace without leaving the operations
+                    console.
                 </div>
             </div>
         </div>
@@ -5035,8 +5420,24 @@ def feature_dashboard_cards() -> None:
     for row_start in range(0, len(cards), 4):
         row_cards = cards[row_start:row_start + 4]
         columns = st.columns(len(row_cards), gap="small")
-        for index, (column, card) in enumerate(zip(columns, row_cards)):
-            icon, title, copy, target = card
+
+        for index, (column, card) in enumerate(
+            zip(columns, row_cards)
+        ):
+            (
+                image_filename,
+                icon,
+                title,
+                copy,
+                target,
+            ) = card
+            image_uri = image_data_uri(image_filename)
+            background_style = (
+                f"background-image: url('{image_uri}');"
+                if image_uri
+                else ""
+            )
+
             with column:
                 with st.container(
                     border=True,
@@ -5045,17 +5446,31 @@ def feature_dashboard_cards() -> None:
                     st.markdown(
                         f"""
                         <div class="quick-tool-card">
-                            <div class="quick-tool-icon">{html.escape(icon)}</div>
-                            <div>
-                                <div class="quick-tool-title">{html.escape(title)}</div>
-                                <div class="quick-tool-copy">{html.escape(copy)}</div>
+                            <div
+                                class="quick-tool-media"
+                                style="{background_style}"
+                                aria-label="{html.escape(title)}"
+                            ></div>
+                            <div class="quick-tool-body">
+                                <div class="quick-tool-icon">
+                                    {html.escape(icon)}
+                                </div>
+                                <div>
+                                    <div class="quick-tool-title">
+                                        {html.escape(title)}
+                                    </div>
+                                    <div class="quick-tool-copy">
+                                        {html.escape(copy)}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
+
                     if st.button(
-                        f"Open workspace  →",
+                        "Open workspace  →",
                         key=f"quick_open_{row_start + index}",
                         width="stretch",
                     ):
@@ -12238,10 +12653,21 @@ def main() -> None:
         return
 
     with st.sidebar:
+        sidebar_logo_uri = image_data_uri(
+            "star_citizen_logo_black.png"
+        )
+        sidebar_logo_markup = (
+            f'<img class="sidebar-brand-logo" '
+            f'src="{sidebar_logo_uri}" '
+            f'alt="Star Citizen Tracker logo">'
+            if sidebar_logo_uri
+            else '<div class="sidebar-brand-mark">✥</div>'
+        )
+
         st.markdown(
-            """
+            f"""
             <div class="sidebar-brand" aria-label="Star Citizen Tracker">
-                <div class="sidebar-brand-mark">✥</div>
+                {sidebar_logo_markup}
                 <div class="sidebar-brand-copy">
                     <div class="sidebar-brand-title">STAR CITIZEN</div>
                     <div class="sidebar-brand-subtitle">TRACKER</div>
@@ -12313,8 +12739,24 @@ def main() -> None:
                 st.session_state.nav_page = navigation_page
                 st.rerun()
 
+        sidebar_art_uri = image_data_uri("sidebar_art.jpg")
+        sidebar_art_style = (
+            f"background-image: url('{sidebar_art_uri}');"
+            if sidebar_art_uri
+            else ""
+        )
+
         st.markdown(
-            """
+            f"""
+            <div
+                class="sidebar-art-card"
+                style="{sidebar_art_style}"
+                aria-label="Star Citizen operations artwork"
+            >
+                <div class="sidebar-art-copy">
+                    Track the verse from one operations console.
+                </div>
+            </div>
             <div class="sidebar-status-card">
                 <div class="sidebar-status-title">
                     <span class="sidebar-status-dot"></span>

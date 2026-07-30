@@ -115,6 +115,31 @@ delete only their own entries.
 Run `schema_migration_v9_loot_and_shops.sql` once before using the shared
 loot table. The live UEX shop finder does not depend on that migration.
 
+
+
+## Asset Image Reintegration
+
+The packaged artwork in `assets/` is integrated into the modern interface
+without reverting the current typography, borders, controls, calculations, or
+page structure.
+
+The current image placements include:
+
+- `dashboard_banner.jpg` for the Dashboard welcome area
+- `hero_banner.jpg` for authentication and account recovery
+- `contracts_banner.jpg` for Contracts and Blueprints
+- `ore_banner.jpg` for the Ore Ledger and Mining Locations
+- `records_banner.jpg` for Records, Commodities, and Loot & Shops
+- `export_banner.jpg` for Export Data
+- `edit_banner.jpg` for the Profile page
+- Feature images for the Dashboard workspace shortcuts
+- `star_citizen_logo_black.png` in the sidebar brand
+- `sidebar_art.jpg` in the sidebar operations card
+
+Images use responsive cover cropping, gradient overlays, and fixed-height
+containers so they remain readable without stretching or changing the
+application's modern layout.
+
 ## Main Features
 
 ### Dashboard
