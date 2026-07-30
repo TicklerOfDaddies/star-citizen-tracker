@@ -145,13 +145,22 @@ CHART_RED = "#D32F2F"
 CHART_RED_LIGHT = "#EF5350"
 CHART_RED_DARK = "#C62828"
 
+CHART_BLUE = "#1976D2"
+CHART_BLUE_LIGHT = "#64B5F6"
+CHART_ORANGE = "#F57C00"
+CHART_ORANGE_LIGHT = "#FFB74D"
+CHART_PURPLE = "#7B1FA2"
+CHART_PURPLE_LIGHT = "#BA68C8"
+CHART_TEAL = "#00897B"
+CHART_TEAL_LIGHT = "#4DB6AC"
+
 STAR_CITIZEN_COLORS = [
+    CHART_BLUE,
+    CHART_ORANGE,
+    CHART_PURPLE,
+    CHART_TEAL,
     CHART_GREEN,
     CHART_RED,
-    CHART_GREEN_LIGHT,
-    CHART_RED_LIGHT,
-    CHART_GREEN_PALE,
-    CHART_RED_DARK,
 ]
 
 
@@ -3451,6 +3460,7 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
         linecolor="#C9DDA9",
         tickfont={"color": "#66734F"},
         title_font={"color": "#4C7814"},
+        automargin=True,
     )
     figure.update_yaxes(
         gridcolor="#EEF5E2",
@@ -3458,7 +3468,69 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
         linecolor="#C9DDA9",
         tickfont={"color": "#66734F"},
         title_font={"color": "#4C7814"},
+        automargin=True,
     )
+
+
+def padded_chart_max(
+    values: Any,
+    *,
+    padding: float = 0.24,
+    minimum: float = 1.0,
+) -> float:
+    """
+    Return a value-aware axis ceiling with room for outside bar labels.
+
+    The result is recalculated whenever Streamlit reruns, so charts continue
+    scaling as saved values increase.
+    """
+    series = pd.to_numeric(
+        pd.Series(values),
+        errors="coerce",
+    ).dropna()
+
+    if series.empty:
+        return minimum
+
+    maximum = float(series.abs().max())
+    if maximum <= 0:
+        return minimum
+
+    return max(maximum * (1.0 + padding), minimum)
+
+
+def apply_bar_axis_padding(
+    figure: go.Figure,
+    values: Any,
+    *,
+    orientation: str = "vertical",
+    padding: float = 0.24,
+) -> None:
+    """Apply dynamic axis space and prevent Plotly from clipping bar labels."""
+    upper = padded_chart_max(
+        values,
+        padding=padding,
+    )
+
+    figure.update_traces(
+        cliponaxis=False,
+        constraintext="none",
+    )
+
+    if orientation == "horizontal":
+        figure.update_xaxes(
+            range=[0, upper],
+            rangemode="tozero",
+            automargin=True,
+        )
+        figure.update_yaxes(automargin=True)
+    else:
+        figure.update_yaxes(
+            range=[0, upper],
+            rangemode="tozero",
+            automargin=True,
+        )
+        figure.update_xaxes(automargin=True)
 
 
 def empty_dashboard_figure(message: str, *, donut: bool = False):
@@ -7301,12 +7373,17 @@ def dashboard_page() -> None:
         )
         total_earnings_figure.update_yaxes(
             title_text="Earnings in aUEC",
-            rangemode="tozero",
+        )
+        apply_bar_axis_padding(
+            total_earnings_figure,
+            earnings_daily["Plot Value"],
+            orientation="vertical",
+            padding=0.20,
         )
         style_plotly_figure(total_earnings_figure, height=390)
         total_earnings_figure.update_layout(
             showlegend=False,
-            margin={"l": 48, "r": 24, "t": 38, "b": 52},
+            margin={"l": 48, "r": 24, "t": 52, "b": 52},
         )
     else:
         total_earnings_figure = empty_dashboard_figure(
@@ -7352,14 +7429,19 @@ def dashboard_page() -> None:
             CHART_GREEN if value >= 0 else CHART_RED
             for value in source_data["Net Contribution"]
         ],
-        textposition="inside",
-        insidetextanchor="middle",
-        textfont={"color": "#FFFFFF"},
+        textposition="outside",
+        textfont={"color": "#2A3B16"},
         hovertemplate=(
             "<b>%{y}</b><br>"
             "Net contribution: %{customdata[0]:+,.0f} aUEC"
             "<extra></extra>"
         ),
+    )
+    apply_bar_axis_padding(
+        source_figure,
+        source_data["Plot Value"],
+        orientation="horizontal",
+        padding=0.34,
     )
     style_plotly_figure(source_figure, height=390)
     source_figure.update_layout(
@@ -7398,9 +7480,9 @@ def dashboard_page() -> None:
             text="Label",
             custom_data=["total_value", "entry_count"],
             color_discrete_map={
-                "Bought": CHART_GREEN_LIGHT,
-                "Mined": CHART_GREEN,
-                "Sold": CHART_RED,
+                "Bought": CHART_ORANGE,
+                "Mined": CHART_TEAL,
+                "Sold": CHART_PURPLE,
             },
             labels={
                 "ore_name": "Mineral",
@@ -7417,19 +7499,25 @@ def dashboard_page() -> None:
                 "Records: %{customdata[1]}<extra></extra>"
             ),
         )
+        apply_bar_axis_padding(
+            ore_value_figure,
+            ore_value_data["Plot Value"],
+            orientation="vertical",
+            padding=0.28,
+        )
         style_plotly_figure(ore_value_figure, height=390)
         ore_value_figure.update_layout(
             legend={
                 "orientation": "h",
                 "yanchor": "bottom",
-                "y": 1.02,
+                "y": 1.10,
                 "xanchor": "center",
                 "x": .5,
                 "title_text": "",
             },
-            margin={"l": 48, "r": 20, "t": 58, "b": 52},
-            uniformtext_minsize=9,
-            uniformtext_mode="hide",
+            margin={"l": 48, "r": 20, "t": 76, "b": 52},
+            uniformtext_minsize=8,
+            uniformtext_mode="show",
         )
     else:
         ore_value_figure = empty_dashboard_figure(
@@ -7506,6 +7594,24 @@ def dashboard_page() -> None:
                 "<extra></extra>"
             ),
         )
+        # Net Profit can be positive or negative, so color each point by sign.
+        for trace in commodity_profit_figure.data:
+            if trace.name == "Net Profit":
+                signed_values = [
+                    float(row[0])
+                    for row in trace.customdata
+                ]
+                trace.marker.color = [
+                    CHART_GREEN if value >= 0 else CHART_RED
+                    for value in signed_values
+                ]
+
+        apply_bar_axis_padding(
+            commodity_profit_figure,
+            long_values["Plot Value"],
+            orientation="vertical",
+            padding=0.34,
+        )
         style_plotly_figure(
             commodity_profit_figure,
             height=410,
@@ -7514,14 +7620,14 @@ def dashboard_page() -> None:
             legend={
                 "orientation": "h",
                 "yanchor": "bottom",
-                "y": 1.02,
+                "y": 1.12,
                 "xanchor": "center",
                 "x": .5,
                 "title_text": "",
             },
-            margin={"l": 48, "r": 20, "t": 62, "b": 58},
+            margin={"l": 48, "r": 20, "t": 82, "b": 58},
             uniformtext_minsize=8,
-            uniformtext_mode="hide",
+            uniformtext_mode="show",
         )
     else:
         commodity_profit_figure = empty_dashboard_figure(
@@ -7559,17 +7665,22 @@ def dashboard_page() -> None:
         )
         contract_type_figure.update_traces(
             marker_color=[
-                CHART_GREEN if value >= 0 else CHART_RED
+                CHART_BLUE if value >= 0 else CHART_RED
                 for value in contract_type_data["net_payout"]
             ],
-            textposition="inside",
-            insidetextanchor="middle",
-            textfont={"color": "#FFFFFF"},
+            textposition="outside",
+            textfont={"color": "#2A3B16"},
             hovertemplate=(
                 "<b>%{y}</b><br>"
                 "Net payout: %{customdata[0]:,.0f} aUEC<br>"
                 "Contracts: %{customdata[1]}<extra></extra>"
             ),
+        )
+        apply_bar_axis_padding(
+            contract_type_figure,
+            contract_type_data["Plot Value"],
+            orientation="horizontal",
+            padding=0.34,
         )
         style_plotly_figure(contract_type_figure, height=390)
         contract_type_figure.update_layout(
@@ -7596,9 +7707,9 @@ def dashboard_page() -> None:
             hole=.55,
             color="Activity",
             color_discrete_map={
-                "Contracts": CHART_GREEN,
-                "Ore / Mining": CHART_GREEN_LIGHT,
-                "Commodities": CHART_RED,
+                "Contracts": CHART_BLUE,
+                "Ore / Mining": CHART_ORANGE,
+                "Commodities": CHART_PURPLE,
             },
         )
         activity_mix_figure.update_traces(
