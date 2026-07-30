@@ -138,6 +138,38 @@ SC_TRADE_TOOLS_API_BASE = "https://sc-trade.tools/api"
 SC_TRADE_TOOLS_CACHE_SECONDS = 840
 SC_TRADE_TOOLS_URL = "https://sc-trade.tools/"
 
+LOOT_ACQUISITION_TYPES = [
+    "Looted",
+    "Mission Reward",
+    "Event Reward",
+    "Crafted",
+    "Salvaged",
+    "Purchased - Special Vendor",
+    "Subscriber / Pledge",
+    "Other",
+]
+
+LOOT_RARITY_LEVELS = [
+    "Common",
+    "Uncommon",
+    "Rare",
+    "Very Rare",
+    "Event / Limited",
+    "Unknown",
+]
+
+LOOT_VERIFICATION_STATUSES = [
+    "Verified",
+    "Community Report",
+    "Needs Recheck",
+    "Unverified",
+]
+
+LOOT_VISIBILITY_OPTIONS = [
+    "Shared",
+    "Private",
+]
+
 CHART_GREEN = "#2E7D32"
 CHART_GREEN_LIGHT = "#66BB6A"
 CHART_GREEN_PALE = "#A5D6A7"
@@ -11799,6 +11831,1441 @@ def commodities_page() -> None:
     render_rights_notice()
 
 
+def empty_uex_item_price_frame() -> pd.DataFrame:
+    """Return the display structure for the live UEX item-shop finder."""
+    return pd.DataFrame(
+        columns=[
+            "Item",
+            "Section",
+            "Category",
+            "Manufacturer",
+            "Size",
+            "System",
+            "Environment",
+            "Location",
+            "Terminal",
+            "Player Pays",
+            "Terminal Pays Player",
+            "Game Version",
+            "Last Updated",
+            "Wiki",
+            "Item ID",
+            "Terminal ID",
+        ]
+    )
+
+
+def normalize_uex_item_prices(
+    price_rows: list[dict[str, Any]],
+    item_rows: list[dict[str, Any]] | None = None,
+    *,
+    selected_section: str = "",
+    selected_category: str = "",
+) -> pd.DataFrame:
+    """Combine UEX item metadata with terminal prices and locations."""
+    item_lookup: dict[int, dict[str, Any]] = {}
+
+    for item in item_rows or []:
+        try:
+            item_lookup[int(item.get("id") or 0)] = item
+        except (TypeError, ValueError):
+            continue
+
+    output: list[dict[str, Any]] = []
+
+    for row in price_rows:
+        try:
+            item_id = int(row.get("id_item") or 0)
+        except (TypeError, ValueError):
+            item_id = 0
+
+        metadata = item_lookup.get(item_id, {})
+
+        item_name = str(
+            row.get("item_name")
+            or metadata.get("name")
+            or "Unknown Item"
+        ).strip()
+
+        section = str(
+            metadata.get("section")
+            or selected_section
+            or "Items"
+        ).strip()
+
+        category = str(
+            metadata.get("category")
+            or selected_category
+            or "Other"
+        ).strip()
+
+        manufacturer = str(
+            metadata.get("company_name")
+            or "Unknown"
+        ).strip()
+
+        size = str(metadata.get("size") or "").strip()
+
+        output.append(
+            {
+                "Item": item_name or "Unknown Item",
+                "Section": section or "Items",
+                "Category": category or "Other",
+                "Manufacturer": manufacturer or "Unknown",
+                "Size": size,
+                "System": str(
+                    row.get("star_system_name") or "Unknown"
+                ).strip(),
+                "Environment": uex_trade_environment(row),
+                "Location": uex_trade_location(row),
+                "Terminal": str(
+                    row.get("terminal_name") or "Unknown"
+                ).strip(),
+                # UEX price_sell is the amount charged when the terminal
+                # sells the item to the player.
+                "Player Pays": safe_float(row.get("price_sell")),
+                # UEX price_buy is the amount paid when the terminal buys
+                # the item from the player.
+                "Terminal Pays Player": safe_float(
+                    row.get("price_buy")
+                ),
+                "Game Version": str(
+                    row.get("game_version")
+                    or metadata.get("game_version")
+                    or ""
+                ).strip(),
+                "Last Updated": unix_datetime_label(
+                    row.get("date_modified")
+                    or row.get("date_added")
+                ),
+                "Wiki": str(
+                    row.get("item_wiki")
+                    or metadata.get("wiki")
+                    or ""
+                ).strip(),
+                "Item ID": item_id,
+                "Terminal ID": int(
+                    row.get("id_terminal") or 0
+                ),
+            }
+        )
+
+    if not output:
+        return empty_uex_item_price_frame()
+
+    return pd.DataFrame(output)
+
+
+def normalize_loot_locations(
+    frame: pd.DataFrame,
+) -> pd.DataFrame:
+    """Normalize shared and private community loot records."""
+    columns = [
+        "id",
+        "user_id",
+        "date_saved",
+        "submitted_by",
+        "item_name",
+        "category",
+        "acquisition_type",
+        "system_name",
+        "location_name",
+        "sub_location",
+        "container_type",
+        "rarity",
+        "mission_or_event",
+        "patch_version",
+        "verification_status",
+        "last_verified",
+        "visibility",
+        "notes",
+    ]
+
+    if frame is None or frame.empty:
+        return pd.DataFrame(columns=columns)
+
+    normalized = frame.copy()
+
+    defaults: dict[str, Any] = {
+        "id": 0,
+        "user_id": "",
+        "date_saved": pd.NaT,
+        "submitted_by": "Citizen",
+        "item_name": "Unknown Item",
+        "category": "Other",
+        "acquisition_type": "Looted",
+        "system_name": "Unknown",
+        "location_name": "Unknown",
+        "sub_location": "",
+        "container_type": "",
+        "rarity": "Unknown",
+        "mission_or_event": "",
+        "patch_version": "",
+        "verification_status": "Unverified",
+        "last_verified": pd.NaT,
+        "visibility": "Shared",
+        "notes": "",
+    }
+
+    for column, default in defaults.items():
+        if column not in normalized.columns:
+            normalized[column] = default
+
+    normalized["date_saved"] = pd.to_datetime(
+        normalized["date_saved"],
+        errors="coerce",
+        utc=True,
+    )
+    try:
+        normalized["date_saved"] = normalized[
+            "date_saved"
+        ].dt.tz_convert(APP_TIMEZONE)
+    except (TypeError, AttributeError):
+        pass
+
+    normalized["last_verified"] = pd.to_datetime(
+        normalized["last_verified"],
+        errors="coerce",
+    )
+
+    text_columns = [
+        "user_id",
+        "submitted_by",
+        "item_name",
+        "category",
+        "acquisition_type",
+        "system_name",
+        "location_name",
+        "sub_location",
+        "container_type",
+        "rarity",
+        "mission_or_event",
+        "patch_version",
+        "verification_status",
+        "visibility",
+        "notes",
+    ]
+
+    for column in text_columns:
+        normalized[column] = (
+            normalized[column]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+    normalized["submitted_by"] = normalized[
+        "submitted_by"
+    ].replace("", "Citizen")
+    normalized["item_name"] = normalized[
+        "item_name"
+    ].replace("", "Unknown Item")
+    normalized["category"] = normalized[
+        "category"
+    ].replace("", "Other")
+    normalized["system_name"] = normalized[
+        "system_name"
+    ].replace("", "Unknown")
+    normalized["location_name"] = normalized[
+        "location_name"
+    ].replace("", "Unknown")
+    normalized["rarity"] = normalized[
+        "rarity"
+    ].replace("", "Unknown")
+    normalized["verification_status"] = normalized[
+        "verification_status"
+    ].replace("", "Unverified")
+    normalized["visibility"] = normalized[
+        "visibility"
+    ].where(
+        normalized["visibility"].isin(
+            LOOT_VISIBILITY_OPTIONS
+        ),
+        "Shared",
+    )
+
+    return normalized[columns]
+
+
+def load_loot_locations() -> tuple[pd.DataFrame, str]:
+    """Load loot records visible to the current authenticated user."""
+    try:
+        response = (
+            get_supabase()
+            .table("loot_locations")
+            .select("*")
+            .order("last_verified", desc=True)
+            .order("date_saved", desc=True)
+            .execute()
+        )
+        return (
+            normalize_loot_locations(
+                pd.DataFrame(response.data or [])
+            ),
+            "",
+        )
+    except Exception as exc:
+        return (
+            normalize_loot_locations(pd.DataFrame()),
+            str(exc),
+        )
+
+
+def insert_loot_location(
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Insert a shared/private loot record and verify it was returned."""
+    item_name = str(payload.get("item_name", "")).strip()
+    location_name = str(
+        payload.get("location_name", "")
+    ).strip()
+    user_id = str(payload.get("user_id", "")).strip()
+
+    if not user_id:
+        raise ValueError("The signed-in user ID is missing.")
+    if not item_name:
+        raise ValueError("Item name is required.")
+    if not location_name:
+        raise ValueError("Location is required.")
+
+    response = (
+        get_supabase()
+        .table("loot_locations")
+        .insert(payload)
+        .execute()
+    )
+    returned = list(response.data or [])
+
+    if not returned:
+        verification = (
+            get_supabase()
+            .table("loot_locations")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("item_name", item_name)
+            .order("id", desc=True)
+            .limit(5)
+            .execute()
+        )
+        returned = list(verification.data or [])
+
+    normalized = normalize_loot_locations(
+        pd.DataFrame(returned)
+    )
+
+    if normalized.empty:
+        raise RuntimeError(
+            "Supabase did not return the saved loot entry."
+        )
+
+    matches = normalized[
+        (normalized["item_name"] == item_name)
+        & (
+            normalized["location_name"]
+            == location_name
+        )
+    ]
+
+    if matches.empty:
+        raise RuntimeError(
+            "The saved loot entry could not be verified."
+        )
+
+    row = matches.iloc[0]
+    return {
+        "id": int(row["id"]),
+        "item_name": str(row["item_name"]),
+        "location_name": str(row["location_name"]),
+        "visibility": str(row["visibility"]),
+    }
+
+
+def loot_and_shops_page() -> None:
+    page_banner(
+        "records_banner.jpg",
+        "Loot and Shop Finder",
+        (
+            "Search live item purchase locations and maintain a shared "
+            "community reference for loot, mission rewards, events, "
+            "containers, and special acquisition sources."
+        ),
+        "Equipment Intelligence",
+    )
+
+    st.caption(
+        "Shop information is loaded from UEX. Exact loot-drop locations "
+        "are community maintained because item-shop APIs do not provide a "
+        "complete authoritative drop table for every mission, container, "
+        "event, or patch."
+    )
+
+    shop_tab, loot_tab, manage_tab = st.tabs(
+        [
+            "Item Shop Finder",
+            "Shared Loot Table",
+            "Add / Manage Loot",
+        ]
+    )
+
+    with shop_tab:
+        st.markdown("### Live Item Shop Finder")
+        st.caption(
+            "Choose an item category, then search all reported stores and "
+            "terminals for the current purchase price."
+        )
+
+        refresh_col, status_col = st.columns(
+            [1, 4],
+            vertical_alignment="center",
+        )
+
+        with refresh_col:
+            if st.button(
+                "Refresh Item Data",
+                key="refresh_uex_item_data",
+                width="stretch",
+            ):
+                fetch_uex_resource.clear()
+                st.rerun()
+
+        try:
+            categories_raw = fetch_uex_resource(
+                "categories?type=item"
+            )
+            item_categories = [
+                row
+                for row in categories_raw
+                if str(row.get("type") or "") == "item"
+                and str(
+                    row.get("is_game_related", 1)
+                ).strip().lower()
+                not in {"0", "false", "no"}
+            ]
+            item_categories.sort(
+                key=lambda row: (
+                    str(row.get("section") or ""),
+                    str(row.get("name") or ""),
+                )
+            )
+            with status_col:
+                quiet_success(
+                    f"Loaded {len(item_categories):,} live item "
+                    "categories from UEX."
+                )
+        except Exception as exc:
+            item_categories = []
+            with status_col:
+                st.error(
+                    "UEX item categories could not be loaded. "
+                    f"Details: {exc}"
+                )
+
+        if not item_categories:
+            st.info(
+                "No item categories are currently available."
+            )
+        else:
+            category_labels: dict[str, dict[str, Any]] = {}
+            for category_row in item_categories:
+                section = str(
+                    category_row.get("section")
+                    or "Items"
+                ).strip()
+                category_name = str(
+                    category_row.get("name")
+                    or "Other"
+                ).strip()
+                label = f"{section} · {category_name}"
+                category_labels[label] = category_row
+
+            selected_label = st.selectbox(
+                "Item category",
+                options=list(category_labels),
+                key="loot_shop_category",
+            )
+            selected_category_row = category_labels[
+                selected_label
+            ]
+            category_id = int(
+                selected_category_row.get("id") or 0
+            )
+            selected_section = str(
+                selected_category_row.get("section")
+                or "Items"
+            )
+            selected_category = str(
+                selected_category_row.get("name")
+                or "Other"
+            )
+
+            try:
+                item_rows = fetch_uex_resource(
+                    f"items?id_category={category_id}"
+                )
+            except Exception as exc:
+                item_rows = []
+                st.warning(
+                    "Item metadata could not be loaded, but shop "
+                    f"prices may still be available. Details: {exc}"
+                )
+
+            try:
+                price_rows = fetch_uex_resource(
+                    f"items_prices?id_category={category_id}"
+                )
+            except Exception as exc:
+                price_rows = []
+                st.error(
+                    "Item shop prices could not be loaded. "
+                    f"Details: {exc}"
+                )
+
+            shop_rows = normalize_uex_item_prices(
+                price_rows,
+                item_rows,
+                selected_section=selected_section,
+                selected_category=selected_category,
+            )
+
+            search_col, system_col, availability_col = (
+                st.columns([2, 1, 1])
+            )
+
+            with search_col:
+                item_search = st.text_input(
+                    "Search item, manufacturer, or location",
+                    placeholder=(
+                        "Example: FS-9, Novikov, Hurston, CenterMass"
+                    ),
+                    key="loot_shop_search",
+                )
+
+            with system_col:
+                system_options = ["All Systems"]
+                if not shop_rows.empty:
+                    system_options += sorted(
+                        shop_rows["System"]
+                        .dropna()
+                        .astype(str)
+                        .unique()
+                        .tolist()
+                    )
+                selected_system = st.selectbox(
+                    "System",
+                    system_options,
+                    key="loot_shop_system",
+                )
+
+            with availability_col:
+                purchasable_only = st.checkbox(
+                    "Purchasable only",
+                    value=True,
+                    key="loot_shop_available_only",
+                    help=(
+                        "Show only rows with a positive terminal "
+                        "selling price."
+                    ),
+                )
+
+            filtered_shops = shop_rows.copy()
+
+            if purchasable_only and not filtered_shops.empty:
+                filtered_shops = filtered_shops[
+                    filtered_shops["Player Pays"] > 0
+                ]
+
+            if (
+                selected_system != "All Systems"
+                and not filtered_shops.empty
+            ):
+                filtered_shops = filtered_shops[
+                    filtered_shops["System"]
+                    == selected_system
+                ]
+
+            if item_search.strip() and not filtered_shops.empty:
+                query = item_search.strip()
+                search_columns = [
+                    "Item",
+                    "Manufacturer",
+                    "System",
+                    "Location",
+                    "Terminal",
+                ]
+                search_mask = filtered_shops[
+                    search_columns
+                ].astype(str).apply(
+                    lambda column: column.str.contains(
+                        query,
+                        case=False,
+                        na=False,
+                        regex=False,
+                    )
+                ).any(axis=1)
+                filtered_shops = filtered_shops[
+                    search_mask
+                ]
+
+            if not filtered_shops.empty:
+                filtered_shops = filtered_shops.sort_values(
+                    [
+                        "Player Pays",
+                        "Item",
+                        "System",
+                        "Location",
+                    ],
+                    ascending=[
+                        True,
+                        True,
+                        True,
+                        True,
+                    ],
+                )
+
+            shop_metric1, shop_metric2, shop_metric3, shop_metric4 = (
+                st.columns(4)
+            )
+
+            shop_metric1.metric(
+                "Matching Items",
+                (
+                    f"{filtered_shops['Item'].nunique():,}"
+                    if not filtered_shops.empty
+                    else "0"
+                ),
+            )
+            shop_metric2.metric(
+                "Shop Listings",
+                f"{len(filtered_shops):,}",
+            )
+            shop_metric3.metric(
+                "Systems",
+                (
+                    f"{filtered_shops['System'].nunique():,}"
+                    if not filtered_shops.empty
+                    else "0"
+                ),
+            )
+            minimum_price = (
+                filtered_shops.loc[
+                    filtered_shops["Player Pays"] > 0,
+                    "Player Pays",
+                ].min()
+                if not filtered_shops.empty
+                and (
+                    filtered_shops["Player Pays"] > 0
+                ).any()
+                else 0.0
+            )
+            shop_metric4.metric(
+                "Lowest Store Price",
+                (
+                    format_money(float(minimum_price))
+                    if minimum_price > 0
+                    else "No price"
+                ),
+            )
+
+            st.markdown("### Purchase Locations")
+
+            display_shop_columns = [
+                "Item",
+                "Category",
+                "Manufacturer",
+                "Size",
+                "System",
+                "Environment",
+                "Location",
+                "Terminal",
+                "Player Pays",
+                "Terminal Pays Player",
+                "Game Version",
+                "Last Updated",
+                "Wiki",
+            ]
+
+            if filtered_shops.empty:
+                st.info(
+                    "No reported shops match the current filters."
+                )
+            else:
+                st.dataframe(
+                    filtered_shops[display_shop_columns],
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Item": st.column_config.TextColumn(
+                            width="large"
+                        ),
+                        "Category": st.column_config.TextColumn(
+                            width="medium"
+                        ),
+                        "Manufacturer": (
+                            st.column_config.TextColumn(
+                                width="medium"
+                            )
+                        ),
+                        "Size": st.column_config.TextColumn(
+                            width="small"
+                        ),
+                        "System": st.column_config.TextColumn(
+                            width="small"
+                        ),
+                        "Environment": (
+                            st.column_config.TextColumn(
+                                width="small"
+                            )
+                        ),
+                        "Location": st.column_config.TextColumn(
+                            width="large"
+                        ),
+                        "Terminal": st.column_config.TextColumn(
+                            width="large"
+                        ),
+                        "Player Pays": (
+                            st.column_config.NumberColumn(
+                                format="%,.0f aUEC",
+                            )
+                        ),
+                        "Terminal Pays Player": (
+                            st.column_config.NumberColumn(
+                                format="%,.0f aUEC",
+                            )
+                        ),
+                        "Wiki": st.column_config.LinkColumn(
+                            display_text="Open",
+                            width="small",
+                        ),
+                    },
+                )
+
+                st.download_button(
+                    "Download Filtered Item Shops CSV",
+                    data=dataframe_csv_bytes(
+                        filtered_shops[
+                            display_shop_columns
+                        ]
+                    ),
+                    file_name=(
+                        "star_citizen_item_shop_locations.csv"
+                    ),
+                    mime="text/csv",
+                    width="stretch",
+                )
+
+    with loot_tab:
+        st.markdown("### Shared Loot and Acquisition Table")
+
+        loot_rows, loot_error = load_loot_locations()
+
+        if loot_error:
+            st.warning(
+                "The shared loot table is not available yet. Run "
+                "`schema_migration_v9_loot_and_shops.sql` once in "
+                "Supabase. The live Item Shop Finder above can still "
+                f"be used. Details: {loot_error}"
+            )
+
+        loot_search = st.text_input(
+            "Search loot, locations, missions, containers, or notes",
+            placeholder=(
+                "Example: executive armor, contested zone, red crate"
+            ),
+            key="shared_loot_search",
+        )
+
+        loot_filter1, loot_filter2, loot_filter3, loot_filter4 = (
+            st.columns(4)
+        )
+
+        with loot_filter1:
+            acquisition_options = [
+                "All Acquisition Types"
+            ]
+            if not loot_rows.empty:
+                acquisition_options += sorted(
+                    loot_rows["acquisition_type"]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                )
+            selected_acquisition = st.selectbox(
+                "Acquisition type",
+                acquisition_options,
+                key="shared_loot_acquisition",
+            )
+
+        with loot_filter2:
+            loot_system_options = ["All Systems"]
+            if not loot_rows.empty:
+                loot_system_options += sorted(
+                    loot_rows["system_name"]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                )
+            selected_loot_system = st.selectbox(
+                "System",
+                loot_system_options,
+                key="shared_loot_system",
+            )
+
+        with loot_filter3:
+            rarity_options = ["All Rarities"]
+            if not loot_rows.empty:
+                rarity_options += sorted(
+                    loot_rows["rarity"]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                )
+            selected_rarity = st.selectbox(
+                "Rarity",
+                rarity_options,
+                key="shared_loot_rarity",
+            )
+
+        with loot_filter4:
+            verification_options = [
+                "All Verification Statuses"
+            ]
+            if not loot_rows.empty:
+                verification_options += sorted(
+                    loot_rows["verification_status"]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                )
+            selected_verification = st.selectbox(
+                "Verification",
+                verification_options,
+                key="shared_loot_verification",
+            )
+
+        filtered_loot = loot_rows.copy()
+
+        if (
+            selected_acquisition
+            != "All Acquisition Types"
+            and not filtered_loot.empty
+        ):
+            filtered_loot = filtered_loot[
+                filtered_loot["acquisition_type"]
+                == selected_acquisition
+            ]
+
+        if (
+            selected_loot_system != "All Systems"
+            and not filtered_loot.empty
+        ):
+            filtered_loot = filtered_loot[
+                filtered_loot["system_name"]
+                == selected_loot_system
+            ]
+
+        if (
+            selected_rarity != "All Rarities"
+            and not filtered_loot.empty
+        ):
+            filtered_loot = filtered_loot[
+                filtered_loot["rarity"]
+                == selected_rarity
+            ]
+
+        if (
+            selected_verification
+            != "All Verification Statuses"
+            and not filtered_loot.empty
+        ):
+            filtered_loot = filtered_loot[
+                filtered_loot["verification_status"]
+                == selected_verification
+            ]
+
+        if loot_search.strip() and not filtered_loot.empty:
+            query = loot_search.strip()
+            loot_search_columns = [
+                "item_name",
+                "category",
+                "acquisition_type",
+                "system_name",
+                "location_name",
+                "sub_location",
+                "container_type",
+                "mission_or_event",
+                "patch_version",
+                "notes",
+            ]
+            loot_mask = filtered_loot[
+                loot_search_columns
+            ].astype(str).apply(
+                lambda column: column.str.contains(
+                    query,
+                    case=False,
+                    na=False,
+                    regex=False,
+                )
+            ).any(axis=1)
+            filtered_loot = filtered_loot[loot_mask]
+
+        loot_metric1, loot_metric2, loot_metric3, loot_metric4 = (
+            st.columns(4)
+        )
+        loot_metric1.metric(
+            "Matching Entries",
+            f"{len(filtered_loot):,}",
+        )
+        loot_metric2.metric(
+            "Unique Items",
+            (
+                f"{filtered_loot['item_name'].nunique():,}"
+                if not filtered_loot.empty
+                else "0"
+            ),
+        )
+        loot_metric3.metric(
+            "Systems",
+            (
+                f"{filtered_loot['system_name'].nunique():,}"
+                if not filtered_loot.empty
+                else "0"
+            ),
+        )
+        verified_count = (
+            int(
+                (
+                    filtered_loot["verification_status"]
+                    == "Verified"
+                ).sum()
+            )
+            if not filtered_loot.empty
+            else 0
+        )
+        loot_metric4.metric(
+            "Verified Entries",
+            f"{verified_count:,}",
+        )
+
+        loot_display_columns = [
+            "item_name",
+            "category",
+            "acquisition_type",
+            "system_name",
+            "location_name",
+            "sub_location",
+            "container_type",
+            "rarity",
+            "mission_or_event",
+            "patch_version",
+            "verification_status",
+            "last_verified",
+            "submitted_by",
+            "visibility",
+            "notes",
+        ]
+
+        loot_display_names = {
+            "item_name": "Item",
+            "category": "Category",
+            "acquisition_type": "Acquisition",
+            "system_name": "System",
+            "location_name": "Location",
+            "sub_location": "Specific Area",
+            "container_type": "Container / Source",
+            "rarity": "Rarity",
+            "mission_or_event": "Mission / Event",
+            "patch_version": "Patch",
+            "verification_status": "Verification",
+            "last_verified": "Last Verified",
+            "submitted_by": "Submitted By",
+            "visibility": "Visibility",
+            "notes": "Notes",
+        }
+
+        if filtered_loot.empty:
+            st.info(
+                "No loot entries match the current filters. Add the "
+                "first org reference under Add / Manage Loot."
+            )
+        else:
+            loot_display = filtered_loot[
+                loot_display_columns
+            ].rename(columns=loot_display_names)
+
+            st.dataframe(
+                loot_display.sort_values(
+                    [
+                        "Item",
+                        "System",
+                        "Location",
+                    ]
+                ),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Item": st.column_config.TextColumn(
+                        width="large"
+                    ),
+                    "Location": st.column_config.TextColumn(
+                        width="large"
+                    ),
+                    "Specific Area": (
+                        st.column_config.TextColumn(
+                            width="large"
+                        )
+                    ),
+                    "Notes": st.column_config.TextColumn(
+                        width="large"
+                    ),
+                    "Last Verified": (
+                        st.column_config.DateColumn(
+                            format="YYYY-MM-DD"
+                        )
+                    ),
+                },
+            )
+
+            st.download_button(
+                "Download Filtered Loot Table CSV",
+                data=dataframe_csv_bytes(loot_display),
+                file_name=(
+                    "star_citizen_shared_loot_locations.csv"
+                ),
+                mime="text/csv",
+                width="stretch",
+            )
+
+    with manage_tab:
+        st.markdown("### Add a Loot or Acquisition Entry")
+        st.caption(
+            "Shared entries are visible to every authenticated app user. "
+            "Private entries remain visible only to the account that "
+            "created them."
+        )
+
+        loot_receipt = st.session_state.pop(
+            "loot_save_receipt",
+            None,
+        )
+        if loot_receipt:
+            quiet_success(loot_receipt)
+
+        with st.form(
+            "add_loot_location_form",
+            clear_on_submit=True,
+        ):
+            add_col1, add_col2 = st.columns(2)
+
+            with add_col1:
+                loot_item_name = st.text_input(
+                    "Item name",
+                    placeholder=(
+                        "Example: Artimex Core, Demeco, Executive Helmet"
+                    ),
+                )
+                loot_category = st.text_input(
+                    "Category",
+                    placeholder=(
+                        "Armor, weapon, component, consumable, blueprint..."
+                    ),
+                )
+                loot_acquisition = st.selectbox(
+                    "Acquisition type",
+                    LOOT_ACQUISITION_TYPES,
+                )
+                loot_rarity = st.selectbox(
+                    "Rarity",
+                    LOOT_RARITY_LEVELS,
+                    index=LOOT_RARITY_LEVELS.index(
+                        "Unknown"
+                    ),
+                )
+                loot_visibility = st.selectbox(
+                    "Visibility",
+                    LOOT_VISIBILITY_OPTIONS,
+                )
+
+            with add_col2:
+                loot_system = st.text_input(
+                    "System",
+                    placeholder="Stanton, Pyro, Nyx...",
+                )
+                loot_location = st.text_input(
+                    "Location",
+                    placeholder=(
+                        "Planet, station, outpost, contested zone..."
+                    ),
+                )
+                loot_sub_location = st.text_input(
+                    "Specific area",
+                    placeholder=(
+                        "Room, floor, boss area, bunker section..."
+                    ),
+                )
+                loot_container = st.text_input(
+                    "Container or source",
+                    placeholder=(
+                        "Red crate, boss drop, mission payout..."
+                    ),
+                )
+                loot_mission = st.text_input(
+                    "Mission or event",
+                    placeholder=(
+                        "Optional mission, contractor, or event name"
+                    ),
+                )
+
+            verify_col1, verify_col2, verify_col3 = (
+                st.columns(3)
+            )
+
+            with verify_col1:
+                loot_patch = st.text_input(
+                    "Patch verified",
+                    placeholder="Example: 4.9",
+                )
+            with verify_col2:
+                loot_status = st.selectbox(
+                    "Verification status",
+                    LOOT_VERIFICATION_STATUSES,
+                    index=LOOT_VERIFICATION_STATUSES.index(
+                        "Community Report"
+                    ),
+                )
+            with verify_col3:
+                loot_last_verified = st.date_input(
+                    "Last verified",
+                    value=datetime.now(
+                        ZoneInfo(selected_timezone())
+                    ).date(),
+                )
+
+            loot_notes = st.text_area(
+                "Notes",
+                placeholder=(
+                    "Drop conditions, access requirements, route notes, "
+                    "spawn behavior, or warnings"
+                ),
+                height=110,
+            )
+
+            add_loot_submitted = st.form_submit_button(
+                "Save Loot Entry",
+                type="primary",
+                width="stretch",
+            )
+
+        if add_loot_submitted:
+            if not loot_item_name.strip():
+                st.error("Item name is required.")
+            elif not loot_location.strip():
+                st.error("Location is required.")
+            else:
+                loot_payload = {
+                    "user_id": st.session_state.user_id,
+                    "submitted_by": st.session_state.get(
+                        "user_display_name",
+                        "Citizen",
+                    ),
+                    "item_name": loot_item_name.strip(),
+                    "category": (
+                        loot_category.strip() or "Other"
+                    ),
+                    "acquisition_type": loot_acquisition,
+                    "system_name": (
+                        loot_system.strip() or "Unknown"
+                    ),
+                    "location_name": loot_location.strip(),
+                    "sub_location": loot_sub_location.strip(),
+                    "container_type": loot_container.strip(),
+                    "rarity": loot_rarity,
+                    "mission_or_event": loot_mission.strip(),
+                    "patch_version": loot_patch.strip(),
+                    "verification_status": loot_status,
+                    "last_verified": (
+                        loot_last_verified.isoformat()
+                    ),
+                    "visibility": loot_visibility,
+                    "notes": loot_notes.strip(),
+                }
+
+                try:
+                    saved_loot = insert_loot_location(
+                        loot_payload
+                    )
+                    st.session_state["loot_save_receipt"] = (
+                        f"ID {saved_loot['id']} · "
+                        f"{saved_loot['item_name']} saved at "
+                        f"{saved_loot['location_name']} as "
+                        f"{saved_loot['visibility']}."
+                    )
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        "The loot entry could not be saved. Run "
+                        "`schema_migration_v9_loot_and_shops.sql` "
+                        f"once in Supabase. Details: {exc}"
+                    )
+
+        st.divider()
+        st.markdown("### Manage My Loot Entries")
+
+        current_loot_rows, current_loot_error = (
+            load_loot_locations()
+        )
+        own_loot_rows = current_loot_rows[
+            current_loot_rows["user_id"]
+            == str(st.session_state.user_id)
+        ].copy()
+
+        if current_loot_error:
+            st.warning(
+                "Management is unavailable until the Version 9 "
+                "migration is run."
+            )
+        elif own_loot_rows.empty:
+            st.info(
+                "You have not created any loot entries yet."
+            )
+        else:
+            loot_options = {
+                int(row["id"]): (
+                    f"ID {int(row['id'])} | "
+                    f"{row['item_name']} | "
+                    f"{row['system_name']} > "
+                    f"{row['location_name']}"
+                )
+                for _, row in own_loot_rows.iterrows()
+            }
+
+            selected_loot_id = st.selectbox(
+                "Select one of my entries",
+                options=list(loot_options),
+                format_func=lambda value: loot_options[
+                    value
+                ],
+                key="manage_loot_entry",
+            )
+
+            selected_loot_row = own_loot_rows[
+                own_loot_rows["id"]
+                == selected_loot_id
+            ].iloc[0]
+
+            with st.form("edit_loot_location_form"):
+                edit_col1, edit_col2 = st.columns(2)
+
+                with edit_col1:
+                    edit_item_name = st.text_input(
+                        "Item name",
+                        value=str(
+                            selected_loot_row["item_name"]
+                        ),
+                    )
+                    edit_category = st.text_input(
+                        "Category",
+                        value=str(
+                            selected_loot_row["category"]
+                        ),
+                    )
+                    edit_acquisition = st.selectbox(
+                        "Acquisition type",
+                        LOOT_ACQUISITION_TYPES,
+                        index=(
+                            LOOT_ACQUISITION_TYPES.index(
+                                selected_loot_row[
+                                    "acquisition_type"
+                                ]
+                            )
+                            if selected_loot_row[
+                                "acquisition_type"
+                            ]
+                            in LOOT_ACQUISITION_TYPES
+                            else 0
+                        ),
+                    )
+                    edit_rarity = st.selectbox(
+                        "Rarity",
+                        LOOT_RARITY_LEVELS,
+                        index=(
+                            LOOT_RARITY_LEVELS.index(
+                                selected_loot_row["rarity"]
+                            )
+                            if selected_loot_row["rarity"]
+                            in LOOT_RARITY_LEVELS
+                            else LOOT_RARITY_LEVELS.index(
+                                "Unknown"
+                            )
+                        ),
+                    )
+                    edit_visibility = st.selectbox(
+                        "Visibility",
+                        LOOT_VISIBILITY_OPTIONS,
+                        index=(
+                            LOOT_VISIBILITY_OPTIONS.index(
+                                selected_loot_row[
+                                    "visibility"
+                                ]
+                            )
+                            if selected_loot_row[
+                                "visibility"
+                            ]
+                            in LOOT_VISIBILITY_OPTIONS
+                            else 0
+                        ),
+                    )
+
+                with edit_col2:
+                    edit_system = st.text_input(
+                        "System",
+                        value=str(
+                            selected_loot_row["system_name"]
+                        ),
+                    )
+                    edit_location = st.text_input(
+                        "Location",
+                        value=str(
+                            selected_loot_row["location_name"]
+                        ),
+                    )
+                    edit_sub_location = st.text_input(
+                        "Specific area",
+                        value=str(
+                            selected_loot_row["sub_location"]
+                        ),
+                    )
+                    edit_container = st.text_input(
+                        "Container or source",
+                        value=str(
+                            selected_loot_row["container_type"]
+                        ),
+                    )
+                    edit_mission = st.text_input(
+                        "Mission or event",
+                        value=str(
+                            selected_loot_row[
+                                "mission_or_event"
+                            ]
+                        ),
+                    )
+
+                edit_verify1, edit_verify2 = st.columns(2)
+
+                with edit_verify1:
+                    edit_patch = st.text_input(
+                        "Patch verified",
+                        value=str(
+                            selected_loot_row[
+                                "patch_version"
+                            ]
+                        ),
+                    )
+                with edit_verify2:
+                    edit_status = st.selectbox(
+                        "Verification status",
+                        LOOT_VERIFICATION_STATUSES,
+                        index=(
+                            LOOT_VERIFICATION_STATUSES.index(
+                                selected_loot_row[
+                                    "verification_status"
+                                ]
+                            )
+                            if selected_loot_row[
+                                "verification_status"
+                            ]
+                            in LOOT_VERIFICATION_STATUSES
+                            else LOOT_VERIFICATION_STATUSES.index(
+                                "Unverified"
+                            )
+                        ),
+                    )
+
+                edit_notes = st.text_area(
+                    "Notes",
+                    value=str(selected_loot_row["notes"]),
+                    height=110,
+                )
+
+                update_loot_submitted = (
+                    st.form_submit_button(
+                        "Update Loot Entry",
+                        width="stretch",
+                    )
+                )
+
+            if update_loot_submitted:
+                if not edit_item_name.strip():
+                    st.error("Item name is required.")
+                elif not edit_location.strip():
+                    st.error("Location is required.")
+                else:
+                    update_payload = {
+                        "item_name": edit_item_name.strip(),
+                        "category": (
+                            edit_category.strip() or "Other"
+                        ),
+                        "acquisition_type": edit_acquisition,
+                        "system_name": (
+                            edit_system.strip() or "Unknown"
+                        ),
+                        "location_name": edit_location.strip(),
+                        "sub_location": (
+                            edit_sub_location.strip()
+                        ),
+                        "container_type": (
+                            edit_container.strip()
+                        ),
+                        "rarity": edit_rarity,
+                        "mission_or_event": (
+                            edit_mission.strip()
+                        ),
+                        "patch_version": edit_patch.strip(),
+                        "verification_status": edit_status,
+                        "visibility": edit_visibility,
+                        "notes": edit_notes.strip(),
+                    }
+
+                    try:
+                        update_record(
+                            "loot_locations",
+                            selected_loot_id,
+                            update_payload,
+                        )
+                        quiet_success(
+                            "Loot entry updated."
+                        )
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(
+                            f"The loot entry could not be updated: {exc}"
+                        )
+
+            delete_confirmed = st.checkbox(
+                "I understand this permanently deletes the "
+                "selected loot entry.",
+                key="delete_loot_confirm",
+            )
+
+            if st.button(
+                "Delete Loot Entry",
+                type="primary",
+                disabled=not delete_confirmed,
+                width="stretch",
+                key="delete_loot_entry",
+            ):
+                try:
+                    delete_record(
+                        "loot_locations",
+                        selected_loot_id,
+                    )
+                    quiet_success("Loot entry deleted.")
+                    st.rerun()
+                except Exception as exc:
+                    st.error(
+                        f"The loot entry could not be deleted: {exc}"
+                    )
+
+
 def mining_environment_tags(row: pd.Series) -> str:
     """Classify a mining row into broad searchable environment groups."""
     site_type = str(row.get("Site Type", "") or "").casefold()
@@ -12776,6 +14243,7 @@ def main() -> None:
             "Ore Ledger",
             "Commodities",
             "Mining Locations",
+            "Loot & Shops",
             "Blueprints",
             "Saved Records",
             "Export Data",
@@ -12827,6 +14295,8 @@ def main() -> None:
         commodities_page()
     elif page == "Mining Locations":
         mining_locations_page()
+    elif page == "Loot & Shops":
+        loot_and_shops_page()
     elif page == "Blueprints":
         blueprints_page()
     elif page == "Saved Records":
