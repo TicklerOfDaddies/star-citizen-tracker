@@ -8,6 +8,42 @@ The application combines contract tracking, mining and ore inventory, commodity 
 
 **Live application:** [https://sc-tracker-tool.streamlit.app/](https://sc-tracker-tool.streamlit.app/)
 
+
+## Premium interface transformation
+
+The application now uses a unified product design system based on the approved
+Purchase Locations concept:
+
+- Warm off-white application background
+- White rounded content cards
+- Olive navigation and action accents
+- Minimal borders and no heavy shadows
+- Compact top-level page headings instead of image-heavy banners
+- Icon-led sidebar navigation
+- Unified metric cards, tabs, inputs, forms, charts, and alerts
+- Compact quick-access cards on the Dashboard
+- Minimal purchase and sale location lists with direct **Use in Tracker**
+  actions
+- Compact item-shop purchase rows instead of wide spreadsheet tables
+- Detailed UEX terminal fields moved into a collapsed advanced-data section
+- Green and red reserved for positive and negative monetary meaning
+- Existing authentication, Supabase data, calculations, exports, UEX data,
+  loot records, and migrations preserved
+
+### Deploying the redesigned version
+
+For the visual redesign, replace:
+
+```text
+app.py
+.streamlit/config.toml
+README.md
+```
+
+No new database migration is required for the design transformation. Existing
+projects should still have migrations through
+`schema_migration_v9_loot_and_shops.sql` applied.
+
 ## Current Release Highlights
 
 This version includes the complete redesign and functionality upgrades developed for the tracker:
@@ -29,6 +65,55 @@ This version includes the complete redesign and functionality upgrades developed
 - Excel, CSV ZIP, and optional filled Google Sheets exports
 - U.S. timezone options plus support for additional IANA timezones
 - Responsive desktop and mobile layouts
+
+
+## Loot and Shop Finder
+
+The **Loot & Shops** page combines live item-store information with a
+community-maintained acquisition table.
+
+### Item Shop Finder
+
+The live shop finder uses UEX item categories, item metadata, and terminal
+prices to display:
+
+- Item
+- Category and section
+- Manufacturer
+- Size
+- System and environment
+- Full terminal location
+- Price paid by the player
+- Price paid by the terminal when buying from the player
+- Game version
+- Last update
+- Wiki link
+
+The table can be searched, filtered by system, limited to currently
+purchasable listings, and downloaded as CSV.
+
+### Shared Loot Table
+
+Authenticated users can record:
+
+- Item name and category
+- Acquisition type
+- System and location
+- Specific room or area
+- Container, boss, mission, or reward source
+- Rarity
+- Mission or event
+- Patch version
+- Verification status and date
+- Notes
+- Shared or private visibility
+
+Shared records are visible to every authenticated app user. Private records
+remain visible only to the account that created them. Users can update or
+delete only their own entries.
+
+Run `schema_migration_v9_loot_and_shops.sql` once before using the shared
+loot table. The live UEX shop finder does not depend on that migration.
 
 ## Main Features
 
@@ -271,6 +356,8 @@ star-citizen-tracker/
 ├── schema_migration_v5_profile_avatars.sql
 ├── schema_migration_v6_commodity_math_repair.sql
 ├── schema_migration_v7_ore_math_repair.sql
+├── schema_migration_v8_ore_schema_cache_repair.sql
+├── schema_migration_v9_loot_and_shops.sql
 ├── commodity_sales_verification.sql
 └── README.md
 ```
@@ -327,6 +414,8 @@ schema_migration_v4_commodity_tracker.sql
 schema_migration_v5_profile_avatars.sql
 schema_migration_v6_commodity_math_repair.sql
 schema_migration_v7_ore_math_repair.sql
+schema_migration_v8_ore_schema_cache_repair.sql
+schema_migration_v9_loot_and_shops.sql
 ```
 
 Use `schema_migration_v3_blueprints_repair.sql` only when the original blueprint migration failed or the blueprint tables and policies require repair.
@@ -485,6 +574,23 @@ With `GOOGLE_SERVICE_ACCOUNT_JSON`, the app can create a populated Google Sheet 
 | `schema_migration_v5_profile_avatars.sql` | Adds profile-avatar storage and policies |
 | `schema_migration_v6_commodity_math_repair.sql` | Repairs commodity totals, cash effects, constraints, and triggers |
 | `schema_migration_v7_ore_math_repair.sql` | Repairs ore unit prices, values, cash effects, constraints, and triggers |
+| `schema_migration_v8_ore_schema_cache_repair.sql` | Guarantees missing ore columns exist, rebuilds the trigger and RLS policies, and refreshes the Supabase/PostgREST schema cache |
+| `schema_migration_v9_loot_and_shops.sql` | Adds the authenticated shared/private community loot table and its Row Level Security policies |
+
+
+
+### Version 8 ore schema-cache repair
+
+Version 7 referenced `quantity_scu` without guaranteeing that the column
+existed first. On a legacy database without that column, PostgreSQL aborted
+the transaction and rolled the entire migration back.
+
+Run `schema_migration_v8_ore_schema_cache_repair.sql` as one complete query.
+The migration creates every required ore column before referencing it,
+rebuilds the calculation trigger and Row Level Security policies, refreshes
+PostgREST's schema cache, and returns two verification results. The first
+result must list `quantity_scu`, `unit_price`, `total_value`, and
+`cash_effect`.
 
 ## Troubleshooting
 
@@ -533,6 +639,8 @@ Run:
 
 ```text
 schema_migration_v7_ore_math_repair.sql
+schema_migration_v8_ore_schema_cache_repair.sql
+schema_migration_v9_loot_and_shops.sql
 ```
 
 Older records that stored only aUEC value cannot be assigned an accurate SCU quantity automatically. Edit those records under:
@@ -566,6 +674,72 @@ Without that secret, download the Excel workbook and import it into Google Sheet
 Confirm that the latest `app.py` and `.streamlit/config.toml` are deployed together, then reboot the Streamlit app.
 
 The current interface draws a complete perimeter around the Streamlit control wrapper to avoid clipped top and bottom borders.
+
+
+
+### Commodity listing identification update
+
+UEX terminal tables now retain and display the commodity name on every row.
+The **Best Places to Buy**, **Best Places to Sell**, **All Matching Terminal
+Listings**, and filtered market CSV include a dedicated `Commodity` column.
+The currently selected commodity is used as a fallback when the UEX price
+response does not return a commodity-name field.
+
+
+
+### Number-input alignment and live ore calculation update
+
+Number-input help icons are now styled separately from decrement and increment
+controls, preventing tooltip buttons from stretching into rectangular boxes.
+Paired numeric fields align along the same bottom edge throughout the Ore
+Ledger entry panel.
+
+The Ore Ledger entry area now uses live Streamlit widgets rather than a form,
+so the verified SCU, unit-price, total-value, and cash-effect calculation
+updates immediately as the user changes a value.
+
+
+
+### Standard green and red chart colors
+
+Dashboard charts now use conventional data colors while the surrounding app
+retains its chartreuse interface theme. Positive values, earnings, revenue,
+and mined activity use standard green. Negative values, costs, losses, and
+sold-series comparisons use standard red.
+
+
+
+### Combined commodity purchase and sale entry
+
+The Commodity Trade Tracker now uses one combined entry panel for quantity,
+price, fees, purchase or departure location, sale or destination location,
+shipment reference, and notes. The prior activity dropdown and duplicate save
+buttons were removed.
+
+Two action buttons appear together at the bottom:
+
+- **Save Commodity Purchase**
+- **Save Commodity Sale**
+
+Either button saves every field in the combined panel. When **Shipment
+destroyed or lost** is selected, either action button records the entry as a
+lost or destroyed shipment.
+
+
+
+### Automatic graph scaling and category colors
+
+Dashboard bar charts now calculate their axis limits from the current values
+on every Streamlit rerun. Additional range is reserved for value labels, so
+larger totals do not clip against the plot boundary or legend.
+
+Green and red are reserved for signed monetary meaning. Positive money uses
+green and negative money uses red. Categorical series use distinct colors:
+
+- Contracts: blue
+- Ore and mining categories: orange or teal
+- Commodities and other categories: purple
+- Ore actions use separate teal, orange, and purple series
 
 ## Major Update History
 

@@ -197,24 +197,32 @@ STAR_CITIZEN_COLORS = [
 
 
 def apply_custom_theme() -> None:
-    """Apply the bright, professional Star Citizen dashboard theme."""
+    """Apply the premium off-white and olive Star Citizen design system."""
     st.markdown(
         """
         <style>
         :root {
-            --app-bg: #F6FDEB;
-            --surface: #FFFFFF;
-            --surface-2: #F6FDEB;
-            --surface-3: #F6FDEB;
-            --border: #E4F8C8;
-            --border-strong: #BDF56F;
-            --accent: #69A912;
-            --accent-2: #4C7814;
-            --accent-soft: #F6FDEB;
-            --text: #1F2A16;
-            --muted: #65704F;
-            --subtle: #89937D;
-            --success: #20A36A;
+            --sc-bg: #F8F7F2;
+            --sc-surface: #FFFFFF;
+            --sc-surface-soft: #FBFAF6;
+            --sc-surface-green: #F4F6EA;
+            --sc-line: #E5E2D8;
+            --sc-line-strong: #D3D7B8;
+            --sc-olive: #64751C;
+            --sc-olive-dark: #465313;
+            --sc-olive-soft: #EEF1DF;
+            --sc-ink: #181A16;
+            --sc-text: #34372F;
+            --sc-muted: #74796D;
+            --sc-subtle: #9A9E94;
+            --sc-positive: #2E7D32;
+            --sc-negative: #D32F2F;
+            --sc-warning: #C98200;
+            --sc-blue: #31689D;
+            --sc-purple: #76518F;
+            --sc-teal: #2C7A74;
+            --sc-radius: 14px;
+            --sc-radius-sm: 10px;
         }
 
         html, body, [class*="css"] {
@@ -222,3168 +230,808 @@ def apply_custom_theme() -> None:
                 BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
+        html, body {
+            background: var(--sc-bg);
+        }
+
         .stApp {
-            background:
-                radial-gradient(circle at 88% -12%, rgba(96,145,24,.10), transparent 34rem),
-                linear-gradient(180deg, #F6FDEB 0%, var(--app-bg) 100%);
-            color: var(--text);
+            background: var(--sc-bg);
+            color: var(--sc-text);
         }
 
         [data-testid="stHeader"] {
-            background: rgba(250,253,245,.86);
-            border-bottom: 1px solid rgba(228,238,210,.82);
-            backdrop-filter: blur(16px);
+            background: rgba(248,247,242,.94);
+            border-bottom: 1px solid var(--sc-line);
+            backdrop-filter: blur(14px);
+        }
+
+        [data-testid="stToolbar"] {
+            right: 1rem;
         }
 
         .block-container {
-            max-width: 1580px;
-            padding-top: .8rem;
-            padding-bottom: 3rem;
+            max-width: 1640px;
+            padding: 1.15rem 1.45rem 3.2rem;
         }
 
         section[data-testid="stSidebar"] {
-            background: rgba(255,255,255,.98);
-            border-right: 1px solid var(--border);
-            box-shadow: 10px 0 34px rgba(54,82,22,.06);
-        }
-
-        section[data-testid="stSidebar"] > div { padding-top: 1rem; }
-        section[data-testid="stSidebar"] [data-testid="stImage"] img {
-            max-height: 94px;
-            width: 100%;
-            object-fit: contain;
-            border-radius: 0;
-        }
-
-        h1, h2, h3 { color: var(--text) !important; letter-spacing: -.018em; }
-        p, label, .stCaption { color: var(--muted); }
-
-        .sc-banner {
-            position: relative;
-            min-height: 300px;
-            display: flex;
-            align-items: flex-end;
-            overflow: hidden;
-            border-radius: 18px;
-            border: 1px solid #E4F8C8;
-            margin-bottom: 1.15rem;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            background-color: #1F2A16;
-            box-shadow: 0 18px 44px rgba(54,82,22,.16);
-        }
-
-        .sc-banner::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(0deg, rgba(22,31,14,.88) 0%, rgba(26,38,16,.08) 66%);
-        }
-
-        .sc-banner-content { position: relative; z-index: 2; max-width: 830px; padding: 1.55rem 1.75rem; }
-        .sc-kicker { color: #BDF56F; text-transform: uppercase; letter-spacing: .16em; font-size: .72rem; font-weight: 800; margin-bottom: .38rem; }
-        .sc-banner-title { color: #fff; font-size: clamp(1.75rem,4vw,2.75rem); line-height: 1.04; font-weight: 800; margin: 0 0 .48rem; text-shadow: 0 3px 15px rgba(0,0,0,.42); }
-        .sc-banner-subtitle { color: #E4F8C8; font-size: .98rem; max-width: 720px; margin: 0; }
-
-        /* Interior page banners use a split layout so the full supplied image
-           remains visible instead of being cropped as a background. */
-        .sc-page-banner {
-            display: grid;
-            grid-template-columns: minmax(300px, .74fr) minmax(520px, 1.26fr);
-            align-items: center;
-            overflow: hidden;
-            border-radius: 20px;
-            border: 1px solid #E4F8C8;
-            margin-bottom: 1.15rem;
-            background: linear-gradient(180deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 18px 44px rgba(54,82,22,.10);
-        }
-
-        .sc-page-banner-copy {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-self: stretch;
-            padding: 1.7rem 1.8rem 1.75rem;
-            color: var(--text);
-            background:
-                radial-gradient(circle at top left, rgba(96,145,24,.12), transparent 14rem),
-                linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(250,253,245,.98) 100%);
-        }
-
-        .sc-page-banner-image-wrap {
-            position: relative;
-            min-width: 0;
-            padding: 1rem 1rem 1rem .35rem;
-            background:
-                radial-gradient(circle at 10% 50%, rgba(96,145,24,.10), transparent 15rem),
-                linear-gradient(135deg, #F6FDEB 0%, #F6FDEB 100%);
-        }
-
-        .sc-page-banner-image-frame {
-            width: 100%;
-            overflow: hidden;
-            border-radius: 16px;
-            border: 1px solid rgba(152,251,23,.35);
-            background: #1F2A16;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(54,82,22,.10);
-        }
-
-        .sc-page-banner-image {
-            width: 100%;
-            height: auto;
-            object-fit: unset;
-            object-position: initial;
-            display: block;
-        }
-
-        .sc-page-banner .sc-kicker { margin-bottom: .5rem; }
-        .sc-page-banner .sc-banner-title {
-            font-size: clamp(1.8rem, 3vw, 2.55rem);
-            color: var(--text);
-            text-shadow: none;
-        }
-        .sc-page-banner .sc-banner-subtitle {
-            max-width: 520px;
-            line-height: 1.58;
-            color: var(--muted);
-        }
-
-        .dashboard-hero-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:14px; margin-bottom:1rem; }
-        .dashboard-hero-grid .sc-banner { margin-bottom:0; min-height:315px; }
-        .time-card { background:rgba(255,255,255,.97); border:1px solid var(--border); border-radius:18px; padding:1rem; box-shadow:0 16px 38px rgba(54,82,22,.12); color:var(--text); }
-        .time-card .time-now { font-size:2rem; font-weight:800; margin:.15rem 0; }
-        .time-card .time-date { font-size:.78rem; color:var(--muted); margin-bottom:.75rem; }
-        .time-zone-row { display:flex; justify-content:space-between; gap:.75rem; padding:.23rem 0; font-size:.77rem; border-bottom:1px solid #F6FDEB; }
-        .time-zone-row:last-child { border-bottom:0; }
-        .time-settings { margin-top:.75rem; padding-top:.7rem; border-top:1px solid var(--border); font-size:.77rem; color:var(--accent); font-weight:700; }
-
-        .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; margin:1.25rem 0 .7rem; }
-        .section-title { color:var(--text); font-size:1.18rem; font-weight:780; margin:0; }
-        .section-copy { color:var(--muted); font-size:.84rem; margin:.15rem 0 0; }
-        .chart-heading { color:var(--text); font-size:1.04rem; font-weight:760; margin:0 0 .12rem; }
-        .chart-copy { color:var(--muted); font-size:.8rem; margin:0 0 .25rem; }
-
-        div[data-testid="stMetric"] {
-            background:var(--surface); border:1px solid var(--border); border-radius:15px;
-            padding:1rem; min-height:118px; box-shadow:0 10px 26px rgba(54,82,22,.08);
-        }
-        [data-testid="stMetricLabel"] { color:#69745A !important; text-transform:uppercase; letter-spacing:.06em; font-size:.69rem !important; font-weight:760; }
-        [data-testid="stMetricValue"] { color:var(--text) !important; font-weight:820; }
-
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            background:var(--surface); border:1px solid var(--border) !important;
-            border-radius:16px !important; box-shadow:0 10px 26px rgba(54,82,22,.07);
-        }
-
-        .feature-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:.4rem 0 1rem; }
-
-        .dashboard-feature-image {
-            width: 100%;
-            aspect-ratio: 3 / 1;
-            height: auto;
-            display: block;
-            object-fit: cover;
-            object-position: center center;
-            border-radius: 12px;
-            background: #1F2A16;
-        }
-
-        .feature-card-title {
-            color: var(--text);
-            font-weight: 780;
-            font-size: .95rem;
-            min-height: 1.45rem;
-            margin-top: .15rem;
-        }
-
-        .feature-card-copy {
-            color: var(--muted);
-            font-size: .78rem;
-            line-height: 1.55;
-            min-height: 3.75rem;
-            margin: .3rem 0 .2rem;
-        }
-
-        [class*="st-key-dashboard_feature_card_"] {
-            height: 100%;
-        }
-
-        [class*="st-key-dashboard_feature_card_"] > div {
-            height: 100%;
-        }
-
-        [class*="st-key-dashboard_feature_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
-            height: 100%;
-            min-height: 360px;
-        }
-
-        [class*="st-key-dashboard_feature_card_"] [data-testid="stVerticalBlock"] {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        [class*="st-key-dashboard_feature_card_"] .stButton {
-            margin-top: auto;
-        }
-
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button,
-        .stLinkButton > a {
-            border: 1px solid #36550F;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #36550F 0%, #36550F 100%);
-            color: #FFFFFF !important;
-            font-size: .92rem !important;
-            font-weight: 750 !important;
-            line-height: 1.2 !important;
-            letter-spacing: .005em;
-            min-height: 2.75rem;
-            box-shadow: 0 7px 16px rgba(74,120,20,.18);
-            transition:
-                background .16s ease,
-                border-color .16s ease,
-                color .16s ease,
-                box-shadow .16s ease,
-                transform .16s ease;
-        }
-
-        .stButton > button *,
-        .stDownloadButton > button *,
-        [data-testid="stFormSubmitButton"] > button *,
-        .stLinkButton > a * {
-            color: inherit !important;
-            font-size: inherit !important;
-            font-weight: inherit !important;
-            line-height: inherit !important;
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover,
-        .stLinkButton > a:hover {
-            border-color: #2A3B16;
-            background: linear-gradient(135deg, #2A3B16 0%, #2A3B16 100%);
-            color: #FFFFFF !important;
-            box-shadow: 0 10px 22px rgba(54,82,22,.28);
-            transform: translateY(-1px);
-        }
-
-        .stButton > button:disabled,
-        .stDownloadButton > button:disabled,
-        [data-testid="stFormSubmitButton"] > button:disabled {
-            background: #BDF56F !important;
-            border-color: #BDF56F !important;
-            color: #707A64 !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        section[data-testid="stSidebar"] .stButton > button {
-            width:100%;
-            height:3.35rem;
-            min-height:3.35rem;
-            justify-content:flex-start;
-            padding:.72rem .9rem;
-            margin:.14rem 0;
-            border-radius:11px;
-            font-size:.92rem !important;
-            text-align:left;
-        }
-
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] {
-            background: #F6FDEB;
-            border: 1px solid #BDF56F;
-            color: #36550F !important;
+            width: 278px !important;
+            min-width: 278px !important;
+            background: #FCFBF8;
+            border-right: 1px solid var(--sc-line);
             box-shadow: none;
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"] * {
-            color: #36550F !important;
+        section[data-testid="stSidebar"] > div {
+            padding: .9rem .8rem 1.2rem;
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover {
-            background: #E4F8C8;
-            border-color: #69A912;
-            color: #2A3B16 !important;
-            box-shadow: 0 7px 16px rgba(76,120,20,.12);
+        section[data-testid="stSidebar"] [data-testid="stImage"] img {
+            width: 100%;
+            max-height: 76px;
+            object-fit: contain;
+            object-position: left center;
+            padding: .25rem .35rem .7rem;
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="secondary"]:hover * {
-            color: #2A3B16 !important;
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--sc-ink) !important;
+            letter-spacing: -.025em;
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #36550F 0%, #36550F 100%);
-            border: 1px solid #36550F;
-            color: #FFFFFF !important;
-            box-shadow:
-                inset 4px 0 0 #98FB17,
-                0 8px 18px rgba(74,120,20,.22);
+        p, label, li, .stCaption {
+            color: var(--sc-muted);
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
-            color: #FFFFFF !important;
+        a {
+            color: var(--sc-olive-dark) !important;
         }
 
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%);
-            border-color: #2A3B16;
-        }
-
-        section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover * {
-            color: #FFFFFF !important;
-        }
-
-        div[data-baseweb="tab-list"] {
+        /* Top page heading */
+        .sc-page-heading {
             display: flex;
-            flex-wrap: wrap;
-            gap: .55rem;
-            padding: .55rem;
-            margin: .45rem 0 1rem;
-            border: 1px solid #BDF56F;
-            border-radius: 14px;
-            background: #F6FDEB;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
-        }
-
-        button[data-baseweb="tab"] {
-            flex: 1 1 150px;
-            min-height: 3.15rem;
-            padding: .68rem .9rem !important;
-            border: 1px solid #BDF56F !important;
-            border-radius: 10px !important;
-            background: #FFFFFF !important;
-            color: #36550F !important;
-            font-size: .88rem !important;
-            font-weight: 790 !important;
-            line-height: 1.2 !important;
-            box-shadow: 0 4px 10px rgba(54,82,22,.07);
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                color .15s ease,
-                transform .15s ease,
-                box-shadow .15s ease;
-        }
-
-        button[data-baseweb="tab"] * {
-            color: inherit !important;
-            font-size: inherit !important;
-            font-weight: inherit !important;
-        }
-
-        button[data-baseweb="tab"]:hover {
-            background: #E4F8C8 !important;
-            border-color: #69A912 !important;
-            color: #2A3B16 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 7px 16px rgba(54,82,22,.13);
-        }
-
-        button[data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(
-                135deg,
-                #36550F 0%,
-                #36550F 100%
-            ) !important;
-            border-color: #36550F !important;
-            color: #FFFFFF !important;
-            box-shadow:
-                inset 4px 0 0 #98FB17,
-                0 8px 18px rgba(74,120,20,.22);
-        }
-
-        button[data-baseweb="tab"][aria-selected="true"] * {
-            color: #FFFFFF !important;
-        }
-
-        .dashboard-metric-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin: .7rem 0 1rem;
-        }
-
-        .dashboard-metric-card {
-            min-width: 0;
-            min-height: 118px;
-            padding: .95rem 1rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 15px;
-            background:
-                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 9px 22px rgba(52,78,22,.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .dashboard-metric-label {
-            color: #4C7814;
-            font-size: .71rem;
-            font-weight: 790;
-            line-height: 1.25;
-            letter-spacing: .055em;
-            text-transform: uppercase;
-            margin-bottom: .45rem;
-        }
-
-        .dashboard-metric-value {
-            color: #2A3B16;
-            font-size: clamp(1.3rem, 2vw, 2rem);
-            font-weight: 850;
-            line-height: 1.08;
-            overflow-wrap: anywhere;
-        }
-
-        .dashboard-metric-value.positive {
-            color: #36550F;
-        }
-
-        .dashboard-metric-value.negative {
-            color: #D43F48;
-        }
-
-        .dashboard-metric-detail {
-            margin-top: .32rem;
-            color: #748069;
-            font-size: .72rem;
-            line-height: 1.35;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-metric-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 600px) {
-            .dashboard-metric-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .sidebar-profile-card {
-            margin: .5rem 0 .7rem;
-            padding: .85rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 15px;
-            background:
-                radial-gradient(circle at top left, rgba(104,159,20,.13), transparent 10rem),
-                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 9px 22px rgba(52,78,22,.08);
-        }
-
-        .sidebar-profile-row {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            min-width: 0;
-        }
-
-        .sidebar-profile-avatar,
-        .sidebar-profile-initials {
-            width: 52px;
-            height: 52px;
-            flex: 0 0 52px;
-            border-radius: 50%;
-            border: 2px solid #98FB17;
-            box-shadow: 0 6px 16px rgba(75,105,34,.17);
-            object-fit: cover;
-            background: #36550F;
-        }
-
-        .sidebar-profile-initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #FFFFFF;
-            font-size: 1.02rem;
-            font-weight: 850;
-            letter-spacing: .02em;
-        }
-
-        .sidebar-profile-copy {
-            min-width: 0;
-        }
-
-        .sidebar-profile-name {
-            color: #2A3B16;
-            font-size: .95rem;
-            font-weight: 820;
-            line-height: 1.2;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar-profile-email {
-            color: #637254;
-            font-size: .71rem;
-            line-height: 1.35;
-            margin-top: .18rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .profile-hero {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr);
-            gap: 1.3rem;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding: 1.35rem 1.5rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 20px;
-            background:
-                radial-gradient(circle at 10% 10%, rgba(104,159,20,.17), transparent 17rem),
-                linear-gradient(135deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 16px 36px rgba(52,78,22,.11);
-        }
-
-        .profile-avatar-large,
-        .profile-avatar-large-initials {
-            width: 124px;
-            height: 124px;
-            border-radius: 50%;
-            border: 4px solid #FFFFFF;
-            box-shadow:
-                0 0 0 2px #98FB17,
-                0 12px 28px rgba(54,82,22,.18);
-            object-fit: cover;
-            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%);
-        }
-
-        .profile-avatar-large-initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #FFFFFF;
-            font-size: 2.2rem;
-            font-weight: 880;
-            letter-spacing: .03em;
-        }
-
-        .profile-hero-kicker {
-            color: #36550F;
-            font-size: .72rem;
-            font-weight: 820;
-            letter-spacing: .12em;
-            text-transform: uppercase;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1.5rem;
+            padding: .25rem .05rem 1rem;
             margin-bottom: .35rem;
         }
 
-        .profile-hero-name {
-            color: #1F2A16;
-            font-size: clamp(1.65rem, 3vw, 2.45rem);
-            font-weight: 850;
+        .sc-page-heading-copy {
+            min-width: 0;
+        }
+
+        .sc-page-kicker {
+            margin-bottom: .28rem;
+            color: var(--sc-olive);
+            font-size: .66rem;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+
+        .sc-page-title {
+            margin: 0;
+            color: var(--sc-ink);
+            font-size: clamp(1.75rem, 3vw, 2.45rem);
             line-height: 1.05;
-            letter-spacing: -.025em;
-        }
-
-        .profile-hero-email {
-            color: #65704F;
-            font-size: .9rem;
-            margin-top: .38rem;
-        }
-
-        .profile-hero-bio {
-            color: #4C7814;
-            font-size: .86rem;
-            line-height: 1.55;
-            margin-top: .65rem;
-            max-width: 800px;
-        }
-
-        .profile-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin: .6rem 0 1rem;
-        }
-
-        .profile-summary-card {
-            min-width: 0;
-            min-height: 108px;
-            padding: .95rem 1rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 15px;
-            background: #FFFFFF;
-            box-shadow: 0 8px 20px rgba(52,78,22,.07);
-        }
-
-        .profile-summary-label {
-            color: #667457;
-            font-size: .69rem;
-            font-weight: 790;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-        }
-
-        .profile-summary-value {
-            color: #2A3B16;
-            font-size: 1.1rem;
-            font-weight: 830;
-            margin-top: .42rem;
-            overflow-wrap: anywhere;
-        }
-
-        .profile-summary-detail {
-            color: #7D8970;
-            font-size: .7rem;
-            line-height: 1.35;
-            margin-top: .25rem;
-        }
-
-        .profile-section-card {
-            padding: 1.05rem 1.1rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 16px;
-            background: #FFFFFF;
-            box-shadow: 0 9px 22px rgba(52,78,22,.07);
-        }
-
-        .profile-security-note {
-            margin: .55rem 0 .8rem;
-            padding: .75rem .85rem;
-            border-left: 4px solid #36550F;
-            border-radius: 9px;
-            background: #F6FDEB;
-            color: #4C7814;
-            font-size: .78rem;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 900px) {
-            .profile-summary-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 620px) {
-            .profile-hero {
-                grid-template-columns: 1fr;
-                text-align: center;
-                justify-items: center;
-            }
-
-            .profile-summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .rights-notice {
-            margin-top: 1rem;
-            padding: .9rem 1rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 12px;
-            background: #F6FDEB;
-            color: #4C7814;
-            font-size: .76rem;
-            line-height: 1.55;
-        }
-
-        .rights-notice strong {
-            color: #2A3B16;
-        }
-
-        .commodity-source-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin: .35rem 0 1rem;
-        }
-
-        .commodity-source-card {
-            padding: .9rem 1rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 13px;
-            background: #FFFFFF;
-            box-shadow: 0 9px 22px rgba(54,82,22,.06);
-        }
-
-        .commodity-source-name {
-            color: #1F2A16;
-            font-size: .95rem;
             font-weight: 780;
-            margin-bottom: .2rem;
         }
 
-        .commodity-source-copy {
-            color: #65704F;
-            font-size: .78rem;
-            line-height: 1.5;
+        .sc-page-subtitle {
+            max-width: 820px;
+            margin: .48rem 0 0;
+            color: var(--sc-muted) !important;
+            font-size: .92rem;
+            line-height: 1.55;
         }
 
-        .commodity-source-status {
-            display: inline-block;
-            margin-top: .55rem;
-            padding: .22rem .52rem;
+        .sc-page-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .42rem;
+            flex: 0 0 auto;
+            padding: .5rem .75rem;
+            border: 1px solid var(--sc-line-strong);
             border-radius: 999px;
-            background: #F6FDEB;
-            color: #36550F;
-            font-size: .7rem;
-            font-weight: 780;
+            background: var(--sc-surface);
+            color: var(--sc-olive-dark);
+            font-size: .74rem;
+            font-weight: 750;
+            white-space: nowrap;
         }
 
-        .commodity-metric-grid {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 12px;
-            margin: .75rem 0 1rem;
+        .sc-page-status-dot {
+            width: .48rem;
+            height: .48rem;
+            border-radius: 50%;
+            background: #6D9322;
         }
 
-        .commodity-metric-card {
-            min-width: 0;
-            min-height: 126px;
-            padding: 1rem 1.05rem;
-            border: 1px solid #E4F8C8;
-            border-radius: 16px;
-            background:
-                linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%);
-            box-shadow: 0 10px 24px rgba(52,78,22,.09);
+        /* Dashboard welcome bar */
+        .dashboard-welcome {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 0 0 1rem;
         }
 
-        .commodity-metric-label {
-            color: #4C7814;
-            font-size: .72rem;
-            font-weight: 790;
-            line-height: 1.25;
-            letter-spacing: .065em;
-            text-transform: uppercase;
-            margin-bottom: .55rem;
+        .dashboard-welcome-title {
+            color: var(--sc-ink);
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 780;
+            letter-spacing: -.03em;
         }
 
-        .commodity-metric-value {
-            color: #2A3B16;
-            font-size: clamp(1.35rem, 2.25vw, 2.2rem);
-            font-weight: 850;
-            line-height: 1.08;
-            letter-spacing: -.025em;
-            white-space: normal;
-            overflow-wrap: anywhere;
-        }
-
-        .commodity-metric-value.positive {
-            color: #36550F;
-        }
-
-        .commodity-metric-value.negative {
-            color: #D43F48;
-        }
-
-        .commodity-metric-detail {
+        .dashboard-welcome-copy {
             margin-top: .35rem;
-            color: #6F7B62;
-            font-size: .72rem;
-            line-height: 1.3;
+            color: var(--sc-muted);
+            font-size: .91rem;
         }
 
-        @media (max-width: 1180px) {
-            .commodity-metric-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
+        .dashboard-live-card {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .62rem .78rem;
+            border: 1px solid var(--sc-line);
+            border-radius: 999px;
+            background: var(--sc-surface);
+            color: var(--sc-text);
+            font-size: .76rem;
         }
 
-        @media (max-width: 720px) {
-            .commodity-metric-grid {
-                grid-template-columns: 1fr;
-            }
+        .dashboard-live-card strong {
+            color: var(--sc-olive-dark);
         }
 
-        @media (max-width: 820px) {
-            .commodity-source-grid {
-                grid-template-columns: 1fr;
-            }
+        /* Section headings */
+        .section-heading,
+        .analytics-heading {
+            margin: 1.15rem 0 .62rem;
         }
 
-        div[data-baseweb="select"] > div,
-        [data-testid="stTextInput"] input,
-        [data-testid="stNumberInput"] input,
-        [data-testid="stTextArea"] textarea,
-        [data-testid="stDateInput"] input,
-        .stTextInput input,
-        .stNumberInput input,
-        .stTextArea textarea,
-        .stDateInput input,
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            background: #FFFFFF !important;
-            border-color: #BDF56F !important;
-            color: #1F2A16 !important;
-            -webkit-text-fill-color: #1F2A16 !important;
-            caret-color: #36550F !important;
-            border-radius: 9px !important;
-            opacity: 1 !important;
+        .section-title,
+        .analytics-title,
+        .chart-heading {
+            color: var(--sc-ink) !important;
+            font-weight: 740;
         }
 
-        [data-testid="stTextInput"] input::placeholder,
-        [data-testid="stNumberInput"] input::placeholder,
-        [data-testid="stTextArea"] textarea::placeholder,
-        input[type="text"]::placeholder,
-        input[type="email"]::placeholder,
-        input[type="password"]::placeholder {
-            color: #7E8970 !important;
-            -webkit-text-fill-color: #7E8970 !important;
-            opacity: 1 !important;
+        .section-title {
+            font-size: 1.14rem;
         }
 
-        [data-testid="stTextInput"] label,
-        [data-testid="stNumberInput"] label,
-        [data-testid="stTextArea"] label,
-        [data-testid="stDateInput"] label {
-            color: #36550F !important;
-            font-weight: 650 !important;
+        .analytics-title,
+        .chart-heading {
+            font-size: 1rem;
         }
 
-        div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stTextInput"] input:focus,
-        [data-testid="stNumberInput"] input:focus,
-        [data-testid="stTextArea"] textarea:focus,
-        [data-testid="stDateInput"] input:focus,
-        .stTextInput input:focus,
-        .stNumberInput input:focus,
-        .stTextArea textarea:focus {
-            border-color: #36550F !important;
-            box-shadow: 0 0 0 2px rgba(104,159,20,.16) !important;
-            outline: none !important;
+        .section-copy,
+        .analytics-copy,
+        .chart-copy {
+            margin-top: .16rem;
+            color: var(--sc-muted) !important;
+            font-size: .79rem;
+            line-height: 1.48;
         }
 
-        [data-baseweb="input"] {
-            background: #FFFFFF !important;
-        }
-        [data-testid="stDataFrame"] { border:1px solid var(--border); border-radius:13px; overflow:hidden; }
-        div[data-testid="stAlert"] { border:1px solid var(--border); border-radius:12px; background:#fff; }
-        [data-testid="stTabs"] button { color:var(--muted); }
-        [data-testid="stTabs"] button[aria-selected="true"] { color:var(--accent); border-bottom-color:var(--accent); }
-        hr { border-color:#E4F8C8; }
-
-        @media (max-width:1050px) {
-            .dashboard-hero-grid { grid-template-columns:1fr; }
-            .feature-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-            .sc-page-banner {
-                grid-template-columns: minmax(280px, .84fr) minmax(420px, 1.16fr);
-            }
-        }
-        @media (max-width:820px) {
-            .sc-page-banner {
-                grid-template-columns: 1fr;
-                min-height: 0;
-            }
-            .sc-page-banner-copy {
-                padding: 1.45rem 1.4rem 1rem;
-            }
-            .sc-page-banner-image-wrap {
-                min-height: 0;
-                padding: 0 1rem 1rem;
-            }
-            .sc-page-banner-image-frame {
-                min-height: 0;
-            }
-            .sc-page-banner-image {
-                width: 100%;
-                height: auto;
-            }
-        }
-        @media (max-width:720px) {
-            .sc-banner { min-height:220px; }
-            .feature-grid { grid-template-columns:1fr; }
+        .analytics-kicker {
+            color: var(--sc-olive);
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase;
         }
 
-        /* Premium application-wide design system */
-        :root {
-            --premium-navy: #2A3B16;
-            --premium-teal: #36550F;
-            --premium-teal-dark: #2A3B16;
-            --premium-blue: #4C7814;
-            --premium-green: #4C7814;
-            --premium-red: #E54950;
-            --premium-orange: #98FB17;
-            --premium-purple: #69A912;
-            --premium-surface: #FFFFFF;
-            --premium-surface-soft: #F6FDEB;
-            --premium-border: #BDF56F;
-            --premium-border-strong: #98FB17;
-            --premium-shadow: 0 12px 28px rgba(54, 82, 22, .09);
-        }
-
-        .stApp {
-            background:
-                radial-gradient(circle at 15% 0%, rgba(152,251,23,.08), transparent 26rem),
-                linear-gradient(180deg, #F6FDEB 0%, #F6FDEB 100%);
-        }
-
-        .block-container {
-            max-width: 1780px;
-            padding-top: 1.25rem;
-            padding-bottom: 3rem;
-        }
-
-        h1, h2, h3, h4 {
-            color: var(--premium-navy) !important;
-            letter-spacing: -.015em;
+        /* Core cards */
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stForm"],
+        [data-testid="stExpander"],
+        [data-testid="stDataFrame"],
+        div[data-testid="stMetric"] {
+            background: var(--sc-surface);
+            border: 1px solid var(--sc-line) !important;
+            border-radius: var(--sc-radius) !important;
+            box-shadow: none !important;
         }
 
         [data-testid="stVerticalBlockBorderWrapper"] {
-            border-color: var(--premium-border) !important;
-            border-radius: 17px !important;
-            background: linear-gradient(145deg, #FFFFFF 0%, #F6FDEB 100%) !important;
-            box-shadow: var(--premium-shadow);
+            padding: .15rem;
         }
 
-        [data-testid="stForm"] {
-            border: 1.5px solid var(--premium-border) !important;
-            border-radius: 16px !important;
-            background: #FFFFFF !important;
-            padding: 1rem !important;
-            box-shadow: 0 9px 22px rgba(43,66,20,.07);
+        div[data-testid="stMetric"] {
+            min-height: 104px;
+            padding: .85rem .95rem;
         }
 
-        [data-testid="stExpander"] {
-            border: 1.5px solid var(--premium-border) !important;
-            border-radius: 13px !important;
-            overflow: hidden;
-            background: #FFFFFF !important;
-            box-shadow: 0 6px 16px rgba(43,66,20,.06);
+        [data-testid="stMetricLabel"] p {
+            color: var(--sc-muted) !important;
+            font-size: .68rem !important;
+            font-weight: 700;
+            letter-spacing: .035em;
         }
 
-        [data-testid="stExpander"] summary {
-            background: #F6FDEB;
-            color: var(--premium-navy) !important;
+        [data-testid="stMetricValue"] {
+            color: var(--sc-ink) !important;
+            font-size: 1.45rem !important;
             font-weight: 760 !important;
         }
 
-        div[data-baseweb="select"] > div,
-        [data-testid="stTextInput"] input,
-        [data-testid="stNumberInput"] input,
-        [data-testid="stTextArea"] textarea,
-        [data-testid="stDateInput"] input,
-        [data-testid="stFileUploaderDropzone"] {
-            min-height: 3rem;
-            background: #FFFFFF !important;
-            border: 1.5px solid var(--premium-border-strong) !important;
-            border-radius: 11px !important;
-            color: #2A3B16 !important;
-            box-shadow: inset 0 1px 2px rgba(54,82,22,.04);
+        [data-testid="stMetricDelta"] {
+            font-size: .7rem;
         }
 
-        [data-testid="stTextArea"] textarea {
-            min-height: 8.5rem;
+        /* Dashboard summary strip */
+        .dashboard-summary-grid,
+        .commodity-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+            gap: .72rem;
+            margin: .55rem 0 1rem;
         }
 
-        div[data-baseweb="select"] > div:hover,
-        [data-testid="stTextInput"] input:hover,
-        [data-testid="stNumberInput"] input:hover,
-        [data-testid="stTextArea"] textarea:hover,
-        [data-testid="stDateInput"] input:hover {
-            border-color: #69A912 !important;
+        .dashboard-summary-card,
+        .commodity-metric-card,
+        .dashboard-metric-card,
+        .profile-summary-card {
+            position: relative;
+            min-width: 0;
+            padding: .82rem .9rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            background: var(--sc-surface);
+            box-shadow: none;
         }
 
-        div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stTextInput"] input:focus,
-        [data-testid="stNumberInput"] input:focus,
-        [data-testid="stTextArea"] textarea:focus,
-        [data-testid="stDateInput"] input:focus {
-            border-color: var(--premium-teal) !important;
-            box-shadow: 0 0 0 3px rgba(104,159,20,.16) !important;
+        .dashboard-summary-icon,
+        .dashboard-metric-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.9rem;
+            height: 1.9rem;
+            margin-bottom: .52rem;
+            border-radius: 50%;
+            background: var(--sc-olive-soft);
+            color: var(--sc-olive-dark);
+            font-size: .78rem;
         }
 
-        [data-testid="stWidgetLabel"] p,
-        [data-testid="stTextInput"] label,
-        [data-testid="stNumberInput"] label,
-        [data-testid="stTextArea"] label,
-        [data-testid="stDateInput"] label,
-        [data-testid="stSelectbox"] label,
-        [data-testid="stMultiSelect"] label {
-            color: #2A3B16 !important;
-            font-weight: 760 !important;
+        .dashboard-summary-label,
+        .dashboard-metric-label,
+        .commodity-metric-label,
+        .profile-summary-label {
+            color: var(--sc-muted) !important;
+            font-size: .64rem;
+            font-weight: 720;
+            letter-spacing: .035em;
+            text-transform: uppercase;
         }
 
+        .dashboard-summary-value,
+        .dashboard-metric-value,
+        .commodity-metric-value,
+        .profile-summary-value {
+            margin-top: .22rem;
+            color: var(--sc-ink) !important;
+            font-size: 1.2rem;
+            line-height: 1.16;
+            font-weight: 770;
+        }
+
+        .dashboard-summary-detail,
+        .dashboard-metric-detail,
+        .commodity-metric-detail,
+        .profile-summary-detail {
+            margin-top: .24rem;
+            color: var(--sc-muted) !important;
+            font-size: .68rem;
+            line-height: 1.35;
+        }
+
+        .positive,
+        .dashboard-summary-card.positive .dashboard-summary-value,
+        .commodity-metric-value.positive,
+        .dashboard-metric-value.positive {
+            color: var(--sc-positive) !important;
+        }
+
+        .negative,
+        .dashboard-summary-card.negative .dashboard-summary-value,
+        .commodity-metric-value.negative,
+        .dashboard-metric-value.negative {
+            color: var(--sc-negative) !important;
+        }
+
+        /* Quick-access tools */
+        .quick-tool-card {
+            display: flex;
+            align-items: center;
+            gap: .72rem;
+            min-height: 76px;
+            padding: .75rem .8rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            background: var(--sc-surface);
+        }
+
+        .quick-tool-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 2.25rem;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 9px;
+            background: var(--sc-olive-soft);
+            color: var(--sc-olive-dark);
+            font-weight: 800;
+        }
+
+        .quick-tool-title {
+            color: var(--sc-ink);
+            font-size: .82rem;
+            font-weight: 720;
+        }
+
+        .quick-tool-copy {
+            margin-top: .14rem;
+            color: var(--sc-muted);
+            font-size: .66rem;
+        }
+
+        /* Buttons */
         .stButton > button,
         .stDownloadButton > button,
         [data-testid="stFormSubmitButton"] > button,
         .stLinkButton > a {
-            min-height: 3rem;
-            border: 1px solid var(--premium-teal-dark) !important;
-            border-radius: 11px !important;
-            background: linear-gradient(135deg, #36550F 0%, #36550F 100%) !important;
-            color: #FFFFFF !important;
-            font-size: .91rem !important;
-            font-weight: 800 !important;
-            box-shadow: 0 8px 18px rgba(74,120,20,.20);
-        }
-
-        .stButton > button *,
-        .stDownloadButton > button *,
-        [data-testid="stFormSubmitButton"] > button *,
-        .stLinkButton > a * {
-            color: inherit !important;
-            font-weight: inherit !important;
+            min-height: 2.55rem;
+            padding: .48rem .85rem;
+            border: 1px solid var(--sc-line-strong) !important;
+            border-radius: var(--sc-radius-sm) !important;
+            background: var(--sc-surface) !important;
+            background-image: none !important;
+            color: var(--sc-olive-dark) !important;
+            font-size: .79rem !important;
+            font-weight: 720 !important;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
         .stButton > button:hover,
         .stDownloadButton > button:hover,
         [data-testid="stFormSubmitButton"] > button:hover,
         .stLinkButton > a:hover {
-            background: linear-gradient(135deg, #36550F 0%, #2A3B16 100%) !important;
-            border-color: #2A3B16 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 11px 22px rgba(54,82,22,.25);
+            background: var(--sc-olive-soft) !important;
+            border-color: #9CA76E !important;
+            color: var(--sc-olive-dark) !important;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
-        .stButton > button[kind="secondary"] {
-            background: #F6FDEB !important;
-            color: #2A3B16 !important;
-            border: 1.5px solid #98FB17 !important;
-            box-shadow: 0 5px 13px rgba(43,66,20,.07);
-        }
-
-        .stButton > button[kind="secondary"]:hover {
-            background: #E4F8C8 !important;
-            color: #2A3B16 !important;
-            border-color: #4C7814 !important;
-        }
-
-        div[data-baseweb="tab-list"] {
-            gap: .55rem !important;
-            padding: .55rem !important;
-            border: 1.5px solid var(--premium-border) !important;
-            border-radius: 14px !important;
-            background: #F6FDEB !important;
-        }
-
-        button[data-baseweb="tab"] {
-            min-height: 3.15rem !important;
-            border: 1.5px solid #BDF56F !important;
-            border-radius: 10px !important;
-            background: #FFFFFF !important;
-            color: #2A3B16 !important;
-            font-weight: 800 !important;
-            box-shadow: 0 4px 10px rgba(43,66,20,.06);
-        }
-
-        button[data-baseweb="tab"]:hover {
-            background: #E4F8C8 !important;
-            border-color: #69A912 !important;
-            color: #2A3B16 !important;
-        }
-
-        button[data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, #36550F 0%, #36550F 100%) !important;
-            border-color: #36550F !important;
-            color: #FFFFFF !important;
-            box-shadow: inset 4px 0 0 #98FB17, 0 8px 18px rgba(74,120,20,.20);
-        }
-
-        button[data-baseweb="tab"][aria-selected="true"] * {
+        .stButton > button[kind="primary"],
+        [data-testid="stFormSubmitButton"] > button[kind="primary"] {
+            background: var(--sc-olive) !important;
+            border-color: var(--sc-olive) !important;
             color: #FFFFFF !important;
         }
 
-        [data-testid="stDataFrame"] {
-            border: 1.5px solid var(--premium-border) !important;
-            border-radius: 14px !important;
-            overflow: hidden;
-            background: #FFFFFF;
-            box-shadow: 0 8px 20px rgba(43,66,20,.07);
+        .stButton > button[kind="primary"] *,
+        [data-testid="stFormSubmitButton"] > button[kind="primary"] * {
+            color: #FFFFFF !important;
         }
 
-        [data-testid="stMetric"] {
-            padding: .85rem .9rem;
-            border: 1px solid var(--premium-border);
-            border-radius: 13px;
-            background: #FFFFFF;
-            box-shadow: 0 7px 17px rgba(43,66,20,.06);
+        .stButton > button[kind="primary"]:hover,
+        [data-testid="stFormSubmitButton"] > button[kind="primary"]:hover {
+            background: var(--sc-olive-dark) !important;
+            border-color: var(--sc-olive-dark) !important;
         }
 
-        [data-testid="stMetricValue"] {
-            color: #2A3B16 !important;
-            font-weight: 840 !important;
+        button:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible,
+        [role="combobox"]:focus-visible {
+            outline: 3px solid rgba(100,117,28,.18) !important;
+            outline-offset: 1px !important;
         }
 
-        div[data-testid="stAlert"] {
-            border-width: 1.5px !important;
-            border-radius: 13px !important;
-            box-shadow: 0 6px 16px rgba(43,66,20,.06);
+        /* Sidebar navigation */
+        section[data-testid="stSidebar"] .stButton {
+            margin-bottom: .22rem;
         }
 
-        .section-heading {
-            margin-top: 1.2rem;
-            padding: .3rem .1rem .65rem;
-            border-bottom: 1px solid #E4F8C8;
+        section[data-testid="stSidebar"] .stButton > button {
+            justify-content: flex-start;
+            width: 100%;
+            min-height: 2.68rem;
+            padding: .5rem .68rem;
+            border-color: transparent !important;
+            background: transparent !important;
+            color: #4F554B !important;
+            text-align: left;
+            font-size: .78rem !important;
         }
 
-        .section-title {
-            color: var(--premium-navy);
-            font-size: 1.18rem;
-            font-weight: 850;
+        section[data-testid="stSidebar"] .stButton > button:hover {
+            border-color: transparent !important;
+            background: #F2F2E8 !important;
+            color: var(--sc-olive-dark) !important;
         }
 
-        .section-copy {
-            color: #6D7A60;
-            font-size: .8rem;
-            margin-top: .18rem;
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+            border-right: 2px solid var(--sc-olive) !important;
+            background: #F1F2E7 !important;
+            color: var(--sc-olive-dark) !important;
         }
 
-        .analytics-heading {
-            margin-bottom: .7rem;
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] * {
+            color: var(--sc-olive-dark) !important;
         }
 
-        .analytics-kicker {
-            color: var(--premium-teal);
-            font-size: .67rem;
-            font-weight: 850;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-        }
-
-        .analytics-title {
-            color: var(--premium-navy);
-            font-size: 1.02rem;
-            font-weight: 840;
-            margin-top: .12rem;
-        }
-
-        .analytics-copy {
-            color: #68755B;
-            font-size: .76rem;
-            line-height: 1.45;
-            margin-top: .2rem;
-        }
-
-        .dashboard-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
-            gap: 10px;
-            margin: .7rem 0 1rem;
-        }
-
-        .dashboard-summary-card {
-            min-width: 0;
-            padding: .9rem .8rem;
-            border: 1.5px solid var(--premium-border);
-            border-radius: 14px;
-            background: #FFFFFF;
-            box-shadow: 0 8px 20px rgba(43,66,20,.07);
-            text-align: center;
-        }
-
-        .dashboard-summary-icon {
-            width: 38px;
-            height: 38px;
-            margin: 0 auto .45rem;
+        .sidebar-user-card {
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 11px;
-            background: #F6FDEB;
-            color: var(--premium-teal);
-            font-size: 1.1rem;
-            font-weight: 850;
+            gap: .7rem;
+            margin: .25rem 0 .75rem;
+            padding: .7rem .72rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            background: var(--sc-surface);
         }
 
-        .dashboard-summary-label {
-            color: #4C7814;
-            font-size: .68rem;
-            font-weight: 800;
-            line-height: 1.25;
-            text-transform: uppercase;
-            letter-spacing: .04em;
+        .sidebar-user-name {
+            color: var(--sc-ink);
+            font-size: .8rem;
+            font-weight: 740;
         }
 
-        .dashboard-summary-value {
-            color: var(--premium-navy);
-            font-size: clamp(.95rem, 1.35vw, 1.3rem);
-            font-weight: 860;
-            line-height: 1.12;
+        .sidebar-user-email {
+            max-width: 145px;
+            overflow: hidden;
+            color: var(--sc-muted);
+            font-size: .62rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-status-card {
+            margin-top: .8rem;
+            padding: .82rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            background: var(--sc-surface);
+        }
+
+        .sidebar-status-title {
+            display: flex;
+            align-items: center;
+            gap: .42rem;
+            color: var(--sc-ink);
+            font-size: .7rem;
+            font-weight: 760;
+        }
+
+        .sidebar-status-dot {
+            width: .45rem;
+            height: .45rem;
+            border-radius: 50%;
+            background: #5C9A36;
+        }
+
+        .sidebar-status-copy {
             margin-top: .35rem;
-            overflow-wrap: anywhere;
+            color: var(--sc-muted);
+            font-size: .63rem;
+            line-height: 1.45;
         }
 
-        .dashboard-summary-detail {
-            color: #74816B;
-            font-size: .66rem;
-            line-height: 1.3;
-            margin-top: .28rem;
-        }
-
-        .dashboard-summary-card.green { border-color: #BDF56F; }
-        .dashboard-summary-card.blue { border-color: #BDF56F; }
-        .dashboard-summary-card.orange { border-color: #B8E986; }
-        .dashboard-summary-card.purple { border-color: #BDF56F; }
-        .dashboard-summary-card.red { border-color: #EDB0B4; }
-
-        .st-key-sidebar_manage_profile {
+        /* Inputs */
+        [data-testid="stTextInput"] > div:last-child,
+        [data-testid="stNumberInput"] > div:last-child,
+        [data-testid="stDateInput"] > div:last-child,
+        [data-testid="stTimeInput"] > div:last-child,
+        [data-testid="stSearchbox"] > div:last-child,
+        [data-testid="stSelectbox"] > div:last-child,
+        [data-testid="stMultiSelect"] > div:last-child,
+        [data-testid="stTextArea"] > div:last-child {
             position: relative;
-            z-index: 10;
-            width: 2.35rem;
-            margin-left: auto;
-            margin-top: -4.55rem;
-            margin-right: .65rem;
-            margin-bottom: 2.35rem;
-        }
-
-        .st-key-sidebar_manage_profile button {
-            width: 2.35rem !important;
-            min-height: 2.35rem !important;
-            height: 2.35rem !important;
-            padding: 0 !important;
-            border-radius: 50% !important;
-            background: #FFFFFF !important;
-            color: var(--premium-teal) !important;
-            border: 1.5px solid #98FB17 !important;
-            box-shadow: 0 6px 14px rgba(43,66,20,.16);
-            font-size: 1.1rem !important;
-        }
-
-        .st-key-sidebar_manage_profile button:hover {
-            background: var(--premium-teal) !important;
-            color: #FFFFFF !important;
-            border-color: var(--premium-teal) !important;
-        }
-
-        section[data-testid="stSidebar"] {
-            border-right: 1px solid #E4F8C8;
-            box-shadow: 7px 0 26px rgba(43,66,20,.05);
-        }
-
-        @media (max-width: 1320px) {
-            .dashboard-summary-grid {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 850px) {
-            .dashboard-summary-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 560px) {
-            .dashboard-summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ================================================================
-           Streamlit 1.4x+ control visibility overrides
-           These role/test-id selectors cover the current Streamlit DOM.
-           ================================================================ */
-
-        /* Clearly boxed text, number, password, email, date, and search inputs */
-        [data-testid="stTextInput"] div[data-baseweb="input"],
-        [data-testid="stNumberInput"] div[data-baseweb="input"],
-        [data-testid="stDateInput"] div[data-baseweb="input"],
-        [data-testid="stTimeInput"] div[data-baseweb="input"],
-        [data-testid="stSearchbox"] div[data-baseweb="input"] {
-            min-height: 3.15rem !important;
-            background: #FFFFFF !important;
-            border: 2px solid #98FB17 !important;
-            border-radius: 11px !important;
-            box-shadow:
-                0 3px 9px rgba(54, 82, 22, .08),
-                inset 0 1px 2px rgba(54, 82, 22, .035) !important;
-            overflow: hidden !important;
-            transition:
-                border-color .15s ease,
-                box-shadow .15s ease,
-                background .15s ease !important;
-        }
-
-        [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stNumberInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
-            border-color: #4C7814 !important;
-            box-shadow: 0 5px 13px rgba(54, 82, 22, .13) !important;
-        }
-
-        [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
-            border-color: #36550F !important;
-            background: #F6FDEB !important;
-            box-shadow:
-                0 0 0 4px rgba(104, 159, 20, .16),
-                0 6px 15px rgba(54, 82, 22, .12) !important;
-        }
-
-        [data-testid="stTextInput"] input,
-        [data-testid="stNumberInput"] input,
-        [data-testid="stDateInput"] input,
-        [data-testid="stTimeInput"] input,
-        [data-testid="stSearchbox"] input {
-            min-height: 3rem !important;
-            padding: .68rem .78rem !important;
-            border: 0 !important;
-            outline: 0 !important;
-            box-shadow: none !important;
-            background: transparent !important;
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-            font-size: .9rem !important;
-            font-weight: 560 !important;
-        }
-
-        /* Text areas need a full visible perimeter */
-        [data-testid="stTextArea"] textarea {
-            min-height: 9rem !important;
-            padding: .82rem .86rem !important;
-            background: #FFFFFF !important;
-            border: 2px solid #98FB17 !important;
-            border-radius: 11px !important;
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-            box-shadow:
-                0 3px 9px rgba(54, 82, 22, .08),
-                inset 0 1px 2px rgba(54, 82, 22, .035) !important;
-            font-size: .9rem !important;
-            line-height: 1.48 !important;
-            transition:
-                border-color .15s ease,
-                box-shadow .15s ease !important;
-        }
-
-        [data-testid="stTextArea"] textarea:hover {
-            border-color: #4C7814 !important;
-        }
-
-        [data-testid="stTextArea"] textarea:focus {
-            border-color: #36550F !important;
-            box-shadow:
-                0 0 0 4px rgba(104, 159, 20, .16),
-                0 6px 15px rgba(54, 82, 22, .12) !important;
-            outline: none !important;
-        }
-
-        /* Selectboxes and multiselects */
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div,
-        [data-testid="stSelectbox"] [role="combobox"],
-        [data-testid="stMultiSelect"] [role="combobox"] {
-            min-height: 3.15rem !important;
-            background: #FFFFFF !important;
-            border: 2px solid #98FB17 !important;
-            border-radius: 11px !important;
-            color: #2A3B16 !important;
-            box-shadow: 0 3px 9px rgba(54, 82, 22, .08) !important;
-            transition:
-                border-color .15s ease,
-                box-shadow .15s ease !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
-            border-color: #4C7814 !important;
-            box-shadow: 0 5px 13px rgba(54, 82, 22, .13) !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            border-color: #36550F !important;
-            box-shadow:
-                0 0 0 4px rgba(104, 159, 20, .16),
-                0 6px 15px rgba(54, 82, 22, .12) !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] *,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-        }
-
-        /* Visible placeholders */
-        [data-testid="stTextInput"] input::placeholder,
-        [data-testid="stNumberInput"] input::placeholder,
-        [data-testid="stTextArea"] textarea::placeholder,
-        [data-testid="stDateInput"] input::placeholder,
-        [data-testid="stSearchbox"] input::placeholder {
-            color: #758269 !important;
-            -webkit-text-fill-color: #758269 !important;
-            opacity: 1 !important;
-            font-weight: 500 !important;
-        }
-
-        /* Input labels */
-        [data-testid="stWidgetLabel"] p,
-        [data-testid="stTextInput"] label p,
-        [data-testid="stNumberInput"] label p,
-        [data-testid="stTextArea"] label p,
-        [data-testid="stSelectbox"] label p,
-        [data-testid="stMultiSelect"] label p,
-        [data-testid="stDateInput"] label p {
-            color: #2A3B16 !important;
-            font-size: .82rem !important;
-            font-weight: 800 !important;
-        }
-
-        /* Number-input +/- controls */
-        [data-testid="stNumberInput"] button {
-            min-width: 2.55rem !important;
-            min-height: 3rem !important;
-            border: 0 !important;
-            border-left: 1px solid #BDF56F !important;
-            border-radius: 0 !important;
-            background: #F6FDEB !important;
-            color: #2A3B16 !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stNumberInput"] button:hover {
-            background: #E4F8C8 !important;
-            color: #2A3B16 !important;
-        }
-
-        /* File upload area */
-        [data-testid="stFileUploaderDropzone"] {
-            border: 2px dashed #98FB17 !important;
-            background: #F6FDEB !important;
-            padding: 1.15rem !important;
-        }
-
-        [data-testid="stFileUploaderDropzone"]:hover {
-            border-color: #36550F !important;
-            background: #F6FDEB !important;
-        }
-
-        /* Current Streamlit tabs: prominent segmented navigation */
-        [data-testid="stTabs"] [role="tablist"] {
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: .58rem !important;
-            padding: .58rem !important;
-            margin: .45rem 0 1rem !important;
-            border: 1.5px solid #BDF56F !important;
-            border-radius: 14px !important;
-            background: #F6FDEB !important;
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,.9),
-                0 5px 14px rgba(54,82,22,.07) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"] {
-            flex: 1 1 145px !important;
-            min-width: 120px !important;
-            min-height: 3.05rem !important;
-            padding: .65rem .9rem !important;
-            border: 1.5px solid #98FB17 !important;
-            border-radius: 10px !important;
-            background: #FFFFFF !important;
-            color: #2A3B16 !important;
-            font-size: .84rem !important;
-            font-weight: 800 !important;
-            line-height: 1.2 !important;
-            box-shadow: 0 4px 10px rgba(54,82,22,.07) !important;
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                color .15s ease,
-                transform .15s ease,
-                box-shadow .15s ease !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"] * {
-            color: inherit !important;
-            font-size: inherit !important;
-            font-weight: inherit !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"]:hover {
-            background: #E4F8C8 !important;
-            border-color: #4C7814 !important;
-            color: #2A3B16 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 7px 15px rgba(54,82,22,.14) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-            background:
-                linear-gradient(135deg, #36550F 0%, #2A3B16 100%) !important;
-            border-color: #2A3B16 !important;
-            color: #FFFFFF !important;
-            box-shadow:
-                inset 4px 0 0 #98FB17,
-                0 8px 18px rgba(74,120,20,.23) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"] * {
-            color: #FFFFFF !important;
-        }
-
-        /* The filled selected tab is the indicator. Do not hide the final tab. */
-        [data-testid="stTabs"] [role="tab"] [data-baseweb="tab-highlight"] {
-            display: none !important;
-        }
-
-        /* Radio options used as record-type selectors */
-        [data-testid="stRadio"] [role="radiogroup"] {
-            gap: .55rem !important;
-            padding: .48rem !important;
-            border: 1.5px solid #BDF56F !important;
-            border-radius: 12px !important;
-            background: #F6FDEB !important;
-        }
-
-        [data-testid="stRadio"] label {
-            padding: .45rem .7rem !important;
-            border: 1px solid #BDF56F !important;
-            border-radius: 9px !important;
-            background: #FFFFFF !important;
-        }
-
-        /* Checkbox outline */
-        [data-testid="stCheckbox"] label {
-            padding: .52rem .65rem !important;
-            border: 1px solid #BDF56F !important;
-            border-radius: 9px !important;
-            background: #F6FDEB !important;
-        }
-
-        /* Form/card padding and separation */
-        [data-testid="stForm"] {
-            padding: 1.15rem !important;
-            border: 1.5px solid #BDF56F !important;
-            border-radius: 16px !important;
-            background: #FFFFFF !important;
-            box-shadow: 0 10px 24px rgba(54,82,22,.09) !important;
-        }
-
-        @media (max-width: 760px) {
-            [data-testid="stTabs"] [role="tab"] {
-                flex: 1 1 100% !important;
-            }
-        }
-
-        /* ================================================================
-           Final control sizing and visibility repair
-           Applied last so it overrides earlier Streamlit/BaseWeb rules.
-           ================================================================ */
-
-        /* Keep normal widgets compact and prevent full-row stretching. */
-        [data-testid="stTextInput"],
-        [data-testid="stNumberInput"],
-        [data-testid="stSelectbox"],
-        [data-testid="stMultiSelect"],
-        [data-testid="stDateInput"],
-        [data-testid="stTimeInput"],
-        [data-testid="stSearchbox"] {
-            width: 100% !important;
-            min-width: 0 !important;
-        }
-
-        /* Text, search, date and time input shells. */
-        [data-testid="stTextInput"] div[data-baseweb="input"],
-        [data-testid="stDateInput"] div[data-baseweb="input"],
-        [data-testid="stTimeInput"] div[data-baseweb="input"],
-        [data-testid="stSearchbox"] div[data-baseweb="input"] {
-            display: flex !important;
-            align-items: center !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 3.15rem !important;
-            height: 3.15rem !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            background: #F6FDEB !important;
-            border: 2px solid #69A912 !important;
-            border-radius: 11px !important;
-            box-sizing: border-box !important;
-            box-shadow:
-                0 2px 7px rgba(54, 82, 22, .08),
-                inset 0 1px 0 rgba(255,255,255,.9) !important;
-        }
-
-        [data-testid="stTextInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stDateInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stTimeInput"] div[data-baseweb="input"]:hover,
-        [data-testid="stSearchbox"] div[data-baseweb="input"]:hover {
-            background: #FFFFFF !important;
-            border-color: #4C7814 !important;
-        }
-
-        [data-testid="stTextInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stDateInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stTimeInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stSearchbox"] div[data-baseweb="input"]:focus-within {
-            background: #FFFFFF !important;
-            border-color: #36550F !important;
-            box-shadow:
-                0 0 0 3px rgba(104,159,20,.17),
-                0 5px 13px rgba(52,78,22,.11) !important;
-        }
-
-        [data-testid="stTextInput"] input,
-        [data-testid="stDateInput"] input,
-        [data-testid="stTimeInput"] input,
-        [data-testid="stSearchbox"] input {
-            flex: 1 1 auto !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            padding: .65rem .78rem !important;
-            margin: 0 !important;
-            border: 0 !important;
-            outline: 0 !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Number inputs: compact value field with attached +/- controls. */
-        [data-testid="stNumberInput"] div[data-baseweb="input"] {
-            display: flex !important;
-            align-items: stretch !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 3.15rem !important;
-            height: 3.15rem !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            background: #F6FDEB !important;
-            border: 2px solid #69A912 !important;
-            border-radius: 11px !important;
-            box-sizing: border-box !important;
-            box-shadow:
-                0 2px 7px rgba(52,78,22,.08),
-                inset 0 1px 0 rgba(255,255,255,.9) !important;
-        }
-
-        [data-testid="stNumberInput"] div[data-baseweb="input"]:hover {
-            background: #FFFFFF !important;
-            border-color: #4C7814 !important;
-        }
-
-        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within {
-            background: #FFFFFF !important;
-            border-color: #36550F !important;
-            box-shadow:
-                0 0 0 3px rgba(104,159,20,.17),
-                0 5px 13px rgba(52,78,22,.11) !important;
-        }
-
-        [data-testid="stNumberInput"] input {
-            flex: 1 1 auto !important;
-            width: auto !important;
-            min-width: 0 !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            padding: .62rem .72rem !important;
-            margin: 0 !important;
-            border: 0 !important;
-            outline: 0 !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-            box-sizing: border-box !important;
-        }
-
-        [data-testid="stNumberInput"] button {
-            flex: 0 0 2.45rem !important;
-            width: 2.45rem !important;
-            min-width: 2.45rem !important;
-            max-width: 2.45rem !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
-            border-left: 1px solid #BDF56F !important;
-            border-radius: 0 !important;
-            background: #F6FDEB !important;
-            color: #2A3B16 !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        [data-testid="stNumberInput"] button:hover {
-            background: #E4F8C8 !important;
-            color: #2A3B16 !important;
-            transform: none !important;
-        }
-
-        /* Select and multiselect shells. */
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-            display: flex !important;
-            align-items: center !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 3.15rem !important;
-            height: auto !important;
-            padding: .18rem .38rem !important;
-            background: #F6FDEB !important;
-            border: 2px solid #69A912 !important;
-            border-radius: 11px !important;
-            box-sizing: border-box !important;
-            box-shadow:
-                0 2px 7px rgba(52,78,22,.08),
-                inset 0 1px 0 rgba(255,255,255,.9) !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
-            background: #FFFFFF !important;
-            border-color: #4C7814 !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            background: #FFFFFF !important;
-            border-color: #36550F !important;
-            box-shadow:
-                0 0 0 3px rgba(104,159,20,.17),
-                0 5px 13px rgba(52,78,22,.11) !important;
-        }
-
-        [data-testid="stSelectbox"] [role="combobox"],
-        [data-testid="stMultiSelect"] [role="combobox"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 2.65rem !important;
-            border: 0 !important;
-            outline: 0 !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] *,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] * {
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-        }
-
-        /* Text areas remain larger, but no longer overflow their cards. */
-        [data-testid="stTextArea"] textarea {
-            display: block !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 8rem !important;
-            max-width: 100% !important;
-            padding: .78rem .82rem !important;
-            margin: 0 !important;
-            background: #F6FDEB !important;
-            border: 2px solid #69A912 !important;
-            border-radius: 11px !important;
-            box-sizing: border-box !important;
-            color: #2A3B16 !important;
-            -webkit-text-fill-color: #2A3B16 !important;
-            box-shadow:
-                0 2px 7px rgba(52,78,22,.08),
-                inset 0 1px 0 rgba(255,255,255,.9) !important;
-            resize: vertical !important;
-        }
-
-        [data-testid="stTextArea"] textarea:hover {
-            background: #FFFFFF !important;
-            border-color: #4C7814 !important;
-        }
-
-        [data-testid="stTextArea"] textarea:focus {
-            background: #FFFFFF !important;
-            border-color: #36550F !important;
-            outline: 0 !important;
-            box-shadow:
-                0 0 0 3px rgba(104,159,20,.17),
-                0 5px 13px rgba(52,78,22,.11) !important;
-        }
-
-        /* Keep placeholders visible against the lightly tinted field fill. */
-        [data-testid="stTextInput"] input::placeholder,
-        [data-testid="stNumberInput"] input::placeholder,
-        [data-testid="stTextArea"] textarea::placeholder,
-        [data-testid="stDateInput"] input::placeholder,
-        [data-testid="stSearchbox"] input::placeholder {
-            color: #6A785A !important;
-            -webkit-text-fill-color: #6A785A !important;
-            opacity: 1 !important;
-        }
-
-        /* Avoid wide desktop forms looking excessively stretched. */
-        [data-testid="stForm"] {
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 1.15rem 1.2rem !important;
-            box-sizing: border-box !important;
-        }
-
-        [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-            gap: 1rem !important;
-            align-items: flex-start !important;
-        }
-
-        /* Smaller profile edit pen. */
-        .st-key-sidebar_manage_profile {
-            width: 1.8rem !important;
-            margin-top: -4.15rem !important;
-            margin-right: .7rem !important;
-            margin-bottom: 2.35rem !important;
-        }
-
-        .st-key-sidebar_manage_profile button {
-            width: 1.8rem !important;
-            min-width: 1.8rem !important;
-            max-width: 1.8rem !important;
-            height: 1.8rem !important;
-            min-height: 1.8rem !important;
-            max-height: 1.8rem !important;
-            padding: 0 !important;
-            border-width: 1px !important;
-            font-size: .72rem !important;
-            line-height: 1 !important;
-            box-shadow: 0 4px 10px rgba(43,66,20,.14) !important;
-        }
-
-        .st-key-sidebar_manage_profile button * {
-            font-size: .72rem !important;
-            line-height: 1 !important;
-        }
-
-        /* Responsive breathing room without major layout changes. */
-        @media (max-width: 1100px) {
-            [data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-                gap: .75rem !important;
-            }
-        }
-
-        @media (max-width: 760px) {
-            [data-testid="stForm"] {
-                padding: .9rem !important;
-            }
-
-            [data-testid="stTextInput"] div[data-baseweb="input"],
-            [data-testid="stNumberInput"] div[data-baseweb="input"],
-            [data-testid="stDateInput"] div[data-baseweb="input"],
-            [data-testid="stTimeInput"] div[data-baseweb="input"],
-            [data-testid="stSearchbox"] div[data-baseweb="input"],
-            [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-            [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-                min-height: 3.3rem !important;
-                height: auto !important;
-            }
-        }
-
-        /* ================================================================
-           Chartreuse theme and final widget visibility repair
-           Accent sampled from the supplied image: #98FB17.
-           ================================================================ */
-        :root {
-            --sc-accent: #98FB17;
-            --sc-accent-soft: #E4F8C8;
-            --sc-accent-pale: #F6FDEB;
-            --sc-green: #4C7814;
-            --sc-green-dark: #36550F;
-            --sc-green-deep: #243713;
-            --sc-border: #8EB84F;
-            --sc-border-soft: #C7DEA3;
-            --sc-text: #243119;
-            --sc-muted: #65705B;
-            --sc-surface: #FFFFFF;
-            --sc-page: #F7FBEF;
-        }
-
-        .stApp {
-            background:
-                radial-gradient(
-                    circle at 12% 0%,
-                    rgba(152,251,23,.10),
-                    transparent 28rem
-                ),
-                linear-gradient(
-                    180deg,
-                    #FBFFF5 0%,
-                    #F3F8EB 100%
-                ) !important;
-        }
-
-        a,
-        .stMarkdown a {
-            color: #4C7814 !important;
-        }
-
-        h1, h2, h3, h4,
-        [data-testid="stWidgetLabel"] p {
-            color: var(--sc-text) !important;
-        }
-
-        /* Reset old text-input shells, then visibly border the actual input. */
-        [data-testid="stTextInput"] div[data-baseweb="input"],
-        [data-testid="stDateInput"] div[data-baseweb="input"],
-        [data-testid="stTimeInput"] div[data-baseweb="input"],
-        [data-testid="stSearchbox"] div[data-baseweb="input"] {
-            height: auto !important;
-            min-height: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
-            border-radius: 0 !important;
-            background: transparent !important;
-            box-shadow: none !important;
             overflow: visible !important;
+            border-radius: var(--sc-radius-sm);
+            background: var(--sc-surface);
         }
 
-        [data-testid="stTextInput"] input,
-        [data-testid="stDateInput"] input,
-        [data-testid="stTimeInput"] input,
-        [data-testid="stSearchbox"] input {
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 3rem !important;
-            height: 3rem !important;
-            padding: .65rem .78rem !important;
-            background: #FFFFFF !important;
-            color: var(--sc-text) !important;
-            -webkit-text-fill-color: var(--sc-text) !important;
-            border: 2px solid var(--sc-border) !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
-            box-shadow:
-                0 2px 7px rgba(54,82,22,.08),
-                inset 0 1px 0 rgba(255,255,255,.95) !important;
+        [data-testid="stTextInput"] > div:last-child::after,
+        [data-testid="stNumberInput"] > div:last-child::after,
+        [data-testid="stDateInput"] > div:last-child::after,
+        [data-testid="stTimeInput"] > div:last-child::after,
+        [data-testid="stSearchbox"] > div:last-child::after,
+        [data-testid="stSelectbox"] > div:last-child::after,
+        [data-testid="stMultiSelect"] > div:last-child::after,
+        [data-testid="stTextArea"] > div:last-child::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            pointer-events: none;
+            border: 1px solid #DCD9CD;
+            border-radius: var(--sc-radius-sm);
         }
 
-        [data-testid="stTextInput"] input:hover,
-        [data-testid="stDateInput"] input:hover,
-        [data-testid="stTimeInput"] input:hover,
-        [data-testid="stSearchbox"] input:hover {
-            border-color: var(--sc-green) !important;
+        [data-testid="stTextInput"] > div:last-child:focus-within::after,
+        [data-testid="stNumberInput"] > div:last-child:focus-within::after,
+        [data-testid="stDateInput"] > div:last-child:focus-within::after,
+        [data-testid="stTimeInput"] > div:last-child:focus-within::after,
+        [data-testid="stSearchbox"] > div:last-child:focus-within::after,
+        [data-testid="stSelectbox"] > div:last-child:focus-within::after,
+        [data-testid="stMultiSelect"] > div:last-child:focus-within::after,
+        [data-testid="stTextArea"] > div:last-child:focus-within::after {
+            border-color: var(--sc-olive);
+            box-shadow: 0 0 0 3px rgba(100,117,28,.12);
         }
 
-        [data-testid="stTextInput"] input:focus,
-        [data-testid="stDateInput"] input:focus,
-        [data-testid="stTimeInput"] input:focus,
-        [data-testid="stSearchbox"] input:focus {
-            outline: none !important;
-            border-color: var(--sc-accent) !important;
-            box-shadow:
-                0 0 0 3px rgba(152,251,23,.22),
-                0 5px 13px rgba(54,82,22,.10) !important;
-        }
-
-        /* Number inputs remain a single compact control. */
-        [data-testid="stNumberInput"] div[data-baseweb="input"] {
-            width: 100% !important;
-            min-height: 3rem !important;
-            height: 3rem !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            background: #FFFFFF !important;
-            border: 2px solid var(--sc-border) !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
-            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
-        }
-
-        [data-testid="stNumberInput"] input {
-            min-width: 0 !important;
-            height: 100% !important;
-            padding: .62rem .72rem !important;
+        [data-baseweb="input"],
+        [data-baseweb="base-input"],
+        [data-baseweb="select"] > div,
+        [role="combobox"] {
             border: 0 !important;
             background: transparent !important;
-            color: var(--sc-text) !important;
-            -webkit-text-fill-color: var(--sc-text) !important;
             box-shadow: none !important;
         }
 
-        [data-testid="stNumberInput"] button {
-            width: 2.35rem !important;
-            min-width: 2.35rem !important;
-            height: 100% !important;
-            min-height: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
-            border-left: 1px solid var(--sc-border-soft) !important;
-            border-radius: 0 !important;
-            background: var(--sc-accent-pale) !important;
-            color: var(--sc-green-dark) !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        [data-testid="stNumberInput"] button:hover {
-            background: var(--sc-accent-soft) !important;
-            color: var(--sc-green-deep) !important;
-        }
-
-        /* Dropdowns and multiselects. */
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-            width: 100% !important;
-            min-height: 3rem !important;
-            height: auto !important;
-            padding: .16rem .38rem !important;
-            background: #FFFFFF !important;
-            border: 2px solid var(--sc-border) !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
-            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:hover,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:hover {
-            border-color: var(--sc-green) !important;
-        }
-
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            border-color: var(--sc-accent) !important;
-            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
-        }
-
-        [data-baseweb="tag"] {
-            background: var(--sc-accent) !important;
-            color: var(--sc-green-deep) !important;
-            border: 1px solid #78C814 !important;
-        }
-
-        [data-baseweb="tag"] * {
-            color: var(--sc-green-deep) !important;
-        }
-
-        [data-testid="stTextArea"] textarea {
-            width: 100% !important;
-            min-height: 8rem !important;
-            padding: .78rem .82rem !important;
-            background: #FFFFFF !important;
+        input, textarea, [role="combobox"] {
             color: var(--sc-text) !important;
             -webkit-text-fill-color: var(--sc-text) !important;
-            border: 2px solid var(--sc-border) !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
-            box-shadow: 0 2px 7px rgba(54,82,22,.08) !important;
-        }
-
-        [data-testid="stTextArea"] textarea:focus {
-            outline: none !important;
-            border-color: var(--sc-accent) !important;
-            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
         }
 
         input::placeholder,
         textarea::placeholder {
-            color: #758067 !important;
-            -webkit-text-fill-color: #758067 !important;
-            opacity: 1 !important;
+            color: var(--sc-subtle) !important;
+            -webkit-text-fill-color: var(--sc-subtle) !important;
+            opacity: 1;
         }
 
-        /* Buttons and tabs use dark green with the bright accent as highlight. */
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button,
-        .stLinkButton > a {
-            background:
-                linear-gradient(
-                    135deg,
-                    #5D9414 0%,
-                    #36550F 100%
-                ) !important;
-            border-color: #36550F !important;
-            color: #FFFFFF !important;
-            box-shadow: 0 8px 18px rgba(54,82,22,.18) !important;
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover,
-        .stLinkButton > a:hover {
-            background:
-                linear-gradient(
-                    135deg,
-                    #4C7814 0%,
-                    #243713 100%
-                ) !important;
-            border-color: #243713 !important;
-        }
-
-        .stButton > button[kind="secondary"] {
-            background: #FBFFF5 !important;
-            color: var(--sc-green-dark) !important;
-            border: 1.5px solid var(--sc-border) !important;
-        }
-
-        [data-testid="stTabs"] [role="tablist"] {
-            background: #EDF7DF !important;
-            border-color: var(--sc-border-soft) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"] {
-            background: #FFFFFF !important;
-            color: var(--sc-green-dark) !important;
-            border-color: var(--sc-border) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"]:hover {
-            background: var(--sc-accent-soft) !important;
-            border-color: var(--sc-green) !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-            background:
-                linear-gradient(
-                    135deg,
-                    #5D9414 0%,
-                    #36550F 100%
-                ) !important;
-            border-color: #36550F !important;
-            color: #FFFFFF !important;
-            box-shadow:
-                inset 4px 0 0 var(--sc-accent),
-                0 8px 18px rgba(54,82,22,.18) !important;
-        }
-
-        [data-testid="stDataFrame"],
-        [data-testid="stForm"],
-        [data-testid="stVerticalBlockBorderWrapper"],
-        [data-testid="stExpander"] {
-            border-color: var(--sc-border-soft) !important;
-            box-shadow: 0 9px 22px rgba(54,82,22,.07) !important;
-        }
-
-        section[data-testid="stSidebar"] {
-            border-right-color: var(--sc-border-soft) !important;
-            box-shadow: 7px 0 26px rgba(54,82,22,.05) !important;
-        }
-
-        /* Smaller edit pen. */
-        .st-key-sidebar_manage_profile {
-            width: 1.45rem !important;
-            margin-top: -3.92rem !important;
-            margin-right: .78rem !important;
-            margin-bottom: 2.45rem !important;
-        }
-
-        .st-key-sidebar_manage_profile button {
-            width: 1.45rem !important;
-            min-width: 1.45rem !important;
-            max-width: 1.45rem !important;
-            height: 1.45rem !important;
-            min-height: 1.45rem !important;
-            max-height: 1.45rem !important;
-            padding: 0 !important;
-            border: 1px solid var(--sc-border) !important;
-            border-radius: 50% !important;
-            background: #FFFFFF !important;
-            color: var(--sc-green-dark) !important;
-            font-size: .62rem !important;
-            line-height: 1 !important;
-            box-shadow: 0 3px 8px rgba(54,82,22,.13) !important;
-        }
-
-        .st-key-sidebar_manage_profile button:hover {
-            background: var(--sc-accent) !important;
-            color: var(--sc-green-deep) !important;
-        }
-
-        @media (max-width: 760px) {
-            [data-testid="stForm"] {
-                padding: .9rem !important;
-            }
-
-            [data-testid="stTextInput"] input,
-            [data-testid="stDateInput"] input,
-            [data-testid="stTimeInput"] input,
-            [data-testid="stSearchbox"] input,
-            [data-testid="stNumberInput"] div[data-baseweb="input"],
-            [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-            [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-                min-height: 3.15rem !important;
-            }
-        }
-
-        /* ================================================================
-           Final visual correction: readable olive/green text and flat buttons
-           ================================================================ */
-
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button,
-        .stLinkButton > a,
-        [data-testid="stTabs"] [role="tab"],
-        button[data-baseweb="tab"] {
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover,
-        .stLinkButton > a:hover,
-        [data-testid="stTabs"] [role="tab"]:hover,
-        button[data-baseweb="tab"]:hover {
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        main [data-testid="stCaptionContainer"] p,
-        main .stCaption,
-        main .section-copy,
-        main .analytics-copy,
-        main .commodity-metric-detail,
-        main .dashboard-metric-detail,
-        main .dashboard-summary-detail,
-        main .profile-summary-detail,
-        main .profile-hero-bio,
-        main .profile-hero-email {
-            color: #66734F !important;
-        }
-
-        main .section-title,
-        main .analytics-title,
-        main .commodity-metric-value,
-        main .dashboard-metric-value,
-        main .dashboard-summary-value,
-        main .profile-summary-value,
-        main [data-testid="stMetricValue"] {
-            color: #2F4617 !important;
-        }
-
-        main .analytics-kicker,
-        main .commodity-metric-label,
-        main .dashboard-metric-label,
-        main .dashboard-summary-label,
-        main .profile-summary-label,
-        main [data-testid="stMetricLabel"] p {
-            color: #4C7814 !important;
-        }
-
-        main .commodity-metric-value.positive,
-        main .dashboard-metric-value.positive {
-            color: #4F8A10 !important;
-        }
-
-        main .commodity-metric-value.negative,
-        main .dashboard-metric-value.negative {
-            color: #D93D45 !important;
-        }
-
-        main [data-testid="stMarkdownContainer"] p {
-            color: #4E5E3D;
-        }
-
-        main [data-testid="stWidgetLabel"] p,
-        main label p {
-            color: #2F4617 !important;
-        }
-
-        main input,
-        main textarea,
-        main [role="combobox"] {
-            color: #273718 !important;
-            -webkit-text-fill-color: #273718 !important;
-        }
-
-        main input::placeholder,
-        main textarea::placeholder {
-            color: #778269 !important;
-            -webkit-text-fill-color: #778269 !important;
-        }
-
-        /* Keep all tab buttons visible; never hide a positional last child. */
-        [data-testid="stTabs"] [role="tablist"] > div:last-child {
-            display: initial;
-        }
-
-        /* ================================================================
-           FINAL FLAT CHARTREUSE THEME
-           Solid controls, no button/tab shadows, no blue text.
-           ================================================================ */
-
-        :root {
-            --flat-accent: #98FB17;
-            --flat-accent-hover: #B8FF61;
-            --flat-green: #4C7814;
-            --flat-green-dark: #36550F;
-            --flat-green-deep: #243713;
-            --flat-border: #91B95B;
-            --flat-border-soft: #C9DDA9;
-            --flat-text: #2C3B1D;
-            --flat-muted: #66734F;
-            --flat-pale: #F7FCEB;
-            --flat-soft: #EDF6DF;
-            --flat-white: #FFFFFF;
-        }
-
-        /* Global text colors */
-        .stApp,
-        .stApp p,
-        .stApp span,
-        .stApp label,
-        .stApp li,
-        .stApp td,
-        .stApp th {
-            color: var(--flat-text);
-        }
-
-        .stApp h1,
-        .stApp h2,
-        .stApp h3,
-        .stApp h4,
-        .stApp h5,
-        .stApp h6 {
-            color: var(--flat-green-deep) !important;
-        }
-
-        .stApp a,
-        .stMarkdown a {
-            color: var(--flat-green) !important;
-            text-decoration-color: var(--flat-accent) !important;
-        }
-
-        main [data-testid="stCaptionContainer"] p,
-        main .stCaption,
-        main .section-copy,
-        main .analytics-copy,
-        main .commodity-metric-detail,
-        main .dashboard-metric-detail,
-        main .dashboard-summary-detail,
-        main .profile-summary-detail,
-        main .profile-hero-bio,
-        main .profile-hero-email,
-        main .sc-page-subtitle,
-        main .sc-banner-subtitle {
-            color: var(--flat-muted) !important;
-        }
-
-        main .section-title,
-        main .analytics-title,
-        main .chart-heading,
-        main .commodity-metric-value,
-        main .dashboard-metric-value,
-        main .dashboard-summary-value,
-        main .profile-summary-value,
-        main [data-testid="stMetricValue"] {
-            color: var(--flat-green-deep) !important;
-        }
-
-        main .analytics-kicker,
-        main .commodity-metric-label,
-        main .dashboard-metric-label,
-        main .dashboard-summary-label,
-        main .profile-summary-label,
-        main [data-testid="stMetricLabel"] p,
-        main [data-testid="stWidgetLabel"] p,
-        main label p {
-            color: var(--flat-green) !important;
-        }
-
-        /* Flat primary buttons */
-        .stButton > button,
-        .stDownloadButton > button,
-        [data-testid="stFormSubmitButton"] > button,
-        .stLinkButton > a {
-            background: var(--flat-green) !important;
-            background-image: none !important;
-            border: 1.5px solid var(--flat-green-dark) !important;
-            color: #FFFFFF !important;
-            box-shadow: none !important;
-            filter: none !important;
-            text-shadow: none !important;
-            transform: none !important;
-        }
-
-        .stButton > button *,
-        .stDownloadButton > button *,
-        [data-testid="stFormSubmitButton"] > button *,
-        .stLinkButton > a * {
-            color: #FFFFFF !important;
-            text-shadow: none !important;
-        }
-
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        [data-testid="stFormSubmitButton"] > button:hover,
-        .stLinkButton > a:hover {
-            background: var(--flat-green-dark) !important;
-            background-image: none !important;
-            border-color: var(--flat-green-deep) !important;
-            color: #FFFFFF !important;
-            box-shadow: none !important;
-            filter: none !important;
-            transform: none !important;
-        }
-
-        .stButton > button:focus,
-        .stDownloadButton > button:focus,
-        [data-testid="stFormSubmitButton"] > button:focus,
-        .stLinkButton > a:focus {
-            box-shadow: 0 0 0 3px rgba(152,251,23,.25) !important;
-        }
-
-        /* Flat secondary buttons */
-        .stButton > button[kind="secondary"] {
-            background: var(--flat-white) !important;
-            background-image: none !important;
-            border: 1.5px solid var(--flat-border) !important;
-            color: var(--flat-green-dark) !important;
-            box-shadow: none !important;
-        }
-
-        .stButton > button[kind="secondary"] * {
-            color: var(--flat-green-dark) !important;
-        }
-
-        .stButton > button[kind="secondary"]:hover {
-            background: var(--flat-soft) !important;
-            border-color: var(--flat-green) !important;
-            color: var(--flat-green-deep) !important;
-            box-shadow: none !important;
-        }
-
-        /* Flat tabs */
-        [data-testid="stTabs"] [role="tablist"],
-        div[data-baseweb="tab-list"] {
-            background: var(--flat-soft) !important;
-            background-image: none !important;
-            border: 1.5px solid var(--flat-border-soft) !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"],
-        button[data-baseweb="tab"] {
-            background: var(--flat-white) !important;
-            background-image: none !important;
-            border: 1.5px solid var(--flat-border) !important;
-            color: var(--flat-green-dark) !important;
-            box-shadow: none !important;
-            filter: none !important;
-            text-shadow: none !important;
-            transform: none !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"] *,
-        button[data-baseweb="tab"] * {
-            color: inherit !important;
-            text-shadow: none !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"]:hover,
-        button[data-baseweb="tab"]:hover {
-            background: var(--flat-accent-hover) !important;
-            background-image: none !important;
-            border-color: var(--flat-green) !important;
-            color: var(--flat-green-deep) !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"],
-        button[data-baseweb="tab"][aria-selected="true"] {
-            background: var(--flat-green) !important;
-            background-image: none !important;
-            border-color: var(--flat-green-dark) !important;
-            color: #FFFFFF !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stTabs"] [role="tab"][aria-selected="true"] *,
-        button[data-baseweb="tab"][aria-selected="true"] * {
-            color: #FFFFFF !important;
-        }
-
-        /* Sidebar navigation buttons remain flat */
-        section[data-testid="stSidebar"] .stButton > button {
-            box-shadow: none !important;
-            background-image: none !important;
-        }
-
-        /* Profile edit pen stays small and flat */
-        .st-key-sidebar_manage_profile button {
-            background: #FFFFFF !important;
-            background-image: none !important;
-            color: var(--flat-green-dark) !important;
-            border-color: var(--flat-border) !important;
-            box-shadow: none !important;
-        }
-
-        .st-key-sidebar_manage_profile button * {
-            color: var(--flat-green-dark) !important;
-        }
-
-        .st-key-sidebar_manage_profile button:hover {
-            background: var(--flat-accent) !important;
-            color: var(--flat-green-deep) !important;
-            box-shadow: none !important;
-        }
-
-        /* Flat cards and metric surfaces */
-        [data-testid="stMetric"],
-        [data-testid="stForm"],
-        [data-testid="stVerticalBlockBorderWrapper"],
-        [data-testid="stExpander"],
-        [data-testid="stDataFrame"],
-        .commodity-metric-card,
-        .dashboard-metric-card,
-        .dashboard-summary-card,
-        .profile-summary-card,
-        .profile-section-card,
-        .sidebar-profile-card {
-            box-shadow: none !important;
-        }
-
-        /* Form fields */
-        [data-testid="stTextInput"] input,
-        [data-testid="stDateInput"] input,
-        [data-testid="stTimeInput"] input,
-        [data-testid="stSearchbox"] input,
-        [data-testid="stTextArea"] textarea,
-        [data-testid="stNumberInput"] div[data-baseweb="input"],
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div {
-            background: #FFFFFF !important;
-            color: var(--flat-text) !important;
-            -webkit-text-fill-color: var(--flat-text) !important;
-            border-color: var(--flat-border) !important;
-            box-shadow: none !important;
-        }
-
-        [data-testid="stTextInput"] input:focus,
-        [data-testid="stDateInput"] input:focus,
-        [data-testid="stTimeInput"] input:focus,
-        [data-testid="stSearchbox"] input:focus,
-        [data-testid="stTextArea"] textarea:focus,
-        [data-testid="stNumberInput"] div[data-baseweb="input"]:focus-within,
-        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within,
-        [data-testid="stMultiSelect"] div[data-baseweb="select"] > div:focus-within {
-            border-color: var(--flat-accent) !important;
-            box-shadow: 0 0 0 3px rgba(152,251,23,.22) !important;
+        [data-testid="stWidgetLabel"] p {
+            color: var(--sc-text) !important;
+            font-size: .7rem !important;
+            font-weight: 680 !important;
         }
 
         [data-testid="stNumberInput"] button {
-            background: var(--flat-pale) !important;
-            color: var(--flat-green-dark) !important;
-            border-left-color: var(--flat-border-soft) !important;
-            box-shadow: none !important;
-        }
-
-        [data-baseweb="tag"] {
-            background: var(--flat-accent) !important;
-            color: var(--flat-green-deep) !important;
-            border-color: var(--flat-green) !important;
-            box-shadow: none !important;
-        }
-
-        [data-baseweb="tag"] * {
-            color: var(--flat-green-deep) !important;
-        }
-
-        /* Information alerts use the green theme instead of blue */
-        [data-testid="stAlert"] {
-            box-shadow: none !important;
-        }
-
-        [data-testid="stAlert"] p,
-        [data-testid="stAlert"] span {
-            color: #4C5E38 !important;
-        }
-
-        /* Tables and dataframe labels */
-        [data-testid="stDataFrame"] {
-            border-color: var(--flat-border-soft) !important;
-        }
-
-        /* No positional tab hiding */
-        [data-testid="stTabs"] [role="tablist"] > div:last-child {
-            display: initial;
-        }
-
-        /* Five-card dashboard shortcut row */
-        [class*="st-key-dashboard_feature_card_"] {
-            min-width: 0;
-        }
-
-        [class*="st-key-dashboard_feature_card_"]
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            height: 100%;
-        }
-
-        [class*="st-key-dashboard_feature_card_"]
-        .feature-card-title {
-            min-height: 2.35rem;
-        }
-
-        [class*="st-key-dashboard_feature_card_"]
-        .feature-card-copy {
-            min-height: 4.2rem;
-        }
-
-        [class*="st-key-dashboard_feature_card_"]
-        .dashboard-feature-image {
-            width: 100%;
-            height: 112px;
-            object-fit: cover;
-            object-position: center;
-        }
-
-        @media (max-width: 1150px) {
-            [class*="st-key-dashboard_feature_card_"]
-            .feature-card-copy {
-                min-height: 5.2rem;
-            }
-        }
-
-        /* ================================================================
-           GLOBAL CONTROL PERIMETER REPAIR
-           This is the final CSS layer and applies to every input control.
-           ================================================================ */
-
-        :root {
-            --control-border: #5E8C24;
-            --control-border-hover: #456A18;
-            --control-border-focus: #98FB17;
-            --control-background: #FFFFFF;
-            --control-text: #2C3B1D;
-            --control-placeholder: #6F7C61;
-            --control-radius: 10px;
-        }
-
-        /*
-         * Draw the border on the complete control wrapper rather than only
-         * on the nested input element. This prevents the top and bottom
-         * edges from being clipped by Streamlit/BaseWeb.
-         */
-        html body .stApp [data-testid="stTextInput"] > div:last-child,
-        html body .stApp [data-testid="stNumberInput"] > div:last-child,
-        html body .stApp [data-testid="stDateInput"] > div:last-child,
-        html body .stApp [data-testid="stTimeInput"] > div:last-child,
-        html body .stApp [data-testid="stSearchbox"] > div:last-child,
-        html body .stApp [data-testid="stSelectbox"] > div:last-child,
-        html body .stApp [data-testid="stMultiSelect"] > div:last-child,
-        html body .stApp [data-testid="stTextArea"] > div:last-child {
-            position: relative !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            border-radius: var(--control-radius) !important;
-            background: var(--control-background) !important;
-            box-sizing: border-box !important;
-            box-shadow: none !important;
-            filter: none !important;
-            overflow: visible !important;
-            isolation: isolate !important;
-        }
-
-        html body .stApp [data-testid="stTextInput"] > div:last-child::after,
-        html body .stApp [data-testid="stNumberInput"] > div:last-child::after,
-        html body .stApp [data-testid="stDateInput"] > div:last-child::after,
-        html body .stApp [data-testid="stTimeInput"] > div:last-child::after,
-        html body .stApp [data-testid="stSearchbox"] > div:last-child::after,
-        html body .stApp [data-testid="stSelectbox"] > div:last-child::after,
-        html body .stApp [data-testid="stMultiSelect"] > div:last-child::after,
-        html body .stApp [data-testid="stTextArea"] > div:last-child::after {
-            content: "" !important;
-            position: absolute !important;
-            inset: 0 !important;
-            border: 2px solid var(--control-border) !important;
-            border-radius: var(--control-radius) !important;
-            box-sizing: border-box !important;
-            pointer-events: none !important;
-            z-index: 20 !important;
-        }
-
-        html body .stApp [data-testid="stTextInput"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stNumberInput"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stDateInput"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stTimeInput"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stSearchbox"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stSelectbox"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stMultiSelect"] > div:last-child:hover::after,
-        html body .stApp [data-testid="stTextArea"] > div:last-child:hover::after {
-            border-color: var(--control-border-hover) !important;
-        }
-
-        html body .stApp [data-testid="stTextInput"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stNumberInput"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stDateInput"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stTimeInput"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stSearchbox"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stSelectbox"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stMultiSelect"] > div:last-child:focus-within::after,
-        html body .stApp [data-testid="stTextArea"] > div:last-child:focus-within::after {
-            border-color: var(--control-border-focus) !important;
-            border-width: 3px !important;
-        }
-
-        /*
-         * Remove conflicting nested borders. The wrapper overlay above is
-         * now the single source of truth for the visible perimeter.
-         */
-        html body .stApp [data-testid="stTextInput"] div[data-baseweb="input"],
-        html body .stApp [data-testid="stNumberInput"] div[data-baseweb="input"],
-        html body .stApp [data-testid="stDateInput"] div[data-baseweb="input"],
-        html body .stApp [data-testid="stTimeInput"] div[data-baseweb="input"],
-        html body .stApp [data-testid="stSearchbox"] div[data-baseweb="input"],
-        html body .stApp [data-testid="stTextInput"] div[data-baseweb="base-input"],
-        html body .stApp [data-testid="stNumberInput"] div[data-baseweb="base-input"],
-        html body .stApp [data-testid="stDateInput"] div[data-baseweb="base-input"],
-        html body .stApp [data-testid="stTimeInput"] div[data-baseweb="base-input"],
-        html body .stApp [data-testid="stSearchbox"] div[data-baseweb="base-input"],
-        html body .stApp [data-testid="stSelectbox"] div[data-baseweb="select"] > div,
-        html body .stApp [data-testid="stMultiSelect"] div[data-baseweb="select"] > div,
-        html body .stApp [data-testid="stSelectbox"] [role="combobox"],
-        html body .stApp [data-testid="stMultiSelect"] [role="combobox"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            background: var(--control-background) !important;
+            background: #F6F5EF !important;
             border: 0 !important;
-            outline: 0 !important;
-            border-radius: var(--control-radius) !important;
+            border-left: 1px solid var(--sc-line) !important;
+            color: var(--sc-olive-dark) !important;
             box-shadow: none !important;
-            filter: none !important;
         }
 
-        html body .stApp [data-testid="stTextInput"] input,
-        html body .stApp [data-testid="stNumberInput"] input,
-        html body .stApp [data-testid="stDateInput"] input,
-        html body .stApp [data-testid="stTimeInput"] input,
-        html body .stApp [data-testid="stSearchbox"] input {
-            min-height: 3.05rem !important;
-            height: 3.05rem !important;
-            padding: .67rem .78rem !important;
-            margin: 0 !important;
-            background: transparent !important;
-            color: var(--control-text) !important;
-            -webkit-text-fill-color: var(--control-text) !important;
-            border: 0 !important;
-            outline: 0 !important;
-            border-radius: var(--control-radius) !important;
-            box-shadow: none !important;
-            box-sizing: border-box !important;
-        }
-
-        html body .stApp [data-testid="stTextArea"] textarea {
-            display: block !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            min-height: 8rem !important;
-            padding: .78rem .84rem !important;
-            margin: 0 !important;
-            background: transparent !important;
-            color: var(--control-text) !important;
-            -webkit-text-fill-color: var(--control-text) !important;
-            border: 0 !important;
-            outline: 0 !important;
-            border-radius: var(--control-radius) !important;
-            box-shadow: none !important;
-            box-sizing: border-box !important;
-            resize: vertical !important;
-        }
-
-        /*
-         * Number input steppers remain inside the single visible perimeter.
-         */
-        html body .stApp [data-testid="stNumberInput"] button {
-            min-width: 2.4rem !important;
-            width: 2.4rem !important;
-            min-height: 3.05rem !important;
-            height: 3.05rem !important;
+        [data-testid="stTooltipIcon"],
+        [data-testid="stTooltipIcon"] button,
+        [data-testid="stWidgetLabel"] button {
+            width: 1rem !important;
+            min-width: 1rem !important;
+            height: 1rem !important;
+            min-height: 1rem !important;
             padding: 0 !important;
-            margin: 0 !important;
-            background: #F2F8E8 !important;
-            color: #36550F !important;
+            background: transparent !important;
             border: 0 !important;
-            border-left: 1px solid #C7D9AA !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            filter: none !important;
-            transform: none !important;
-            z-index: 10 !important;
-        }
-
-        html body .stApp [data-testid="stNumberInput"] button:hover {
-            background: #E2F0CE !important;
-            color: #243713 !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        /*
-         * Multiselect tags and dropdown text.
-         */
-        html body .stApp [data-baseweb="tag"] {
-            background: #C9FF78 !important;
-            color: #243713 !important;
-            border: 1px solid #5E8C24 !important;
+            color: var(--sc-muted) !important;
             box-shadow: none !important;
         }
 
-        html body .stApp [data-baseweb="tag"] * {
-            color: #243713 !important;
+        [data-testid="stRadio"] [role="radiogroup"] {
+            gap: .4rem;
+            padding: .32rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius-sm);
+            background: #FAF9F5;
         }
 
-        /*
-         * File upload, radio, and checkbox controls used elsewhere in the app.
-         */
-        html body .stApp [data-testid="stFileUploaderDropzone"] {
-            background: #FFFFFF !important;
-            border: 2px dashed var(--control-border) !important;
-            border-radius: var(--control-radius) !important;
+        [data-testid="stRadio"] label,
+        [data-testid="stCheckbox"] label {
+            border: 0 !important;
+            background: transparent !important;
             box-shadow: none !important;
         }
 
-        html body .stApp [data-testid="stFileUploaderDropzone"]:hover {
-            border-color: var(--control-border-hover) !important;
-            background: #F9FDEF !important;
+        [data-testid="stFileUploaderDropzone"] {
+            border: 1px dashed var(--sc-line-strong) !important;
+            border-radius: var(--sc-radius) !important;
+            background: var(--sc-surface-soft) !important;
         }
 
-        html body .stApp [data-testid="stRadio"] [role="radiogroup"] {
-            padding: .45rem !important;
-            background: #FFFFFF !important;
-            border: 2px solid var(--control-border) !important;
-            border-radius: var(--control-radius) !important;
+        /* Tabs */
+        [data-testid="stTabs"] [role="tablist"] {
+            gap: .25rem;
+            padding: .25rem;
+            border: 1px solid var(--sc-line);
+            border-radius: 11px;
+            background: #F2F1EA;
             box-shadow: none !important;
         }
 
-        html body .stApp [data-testid="stRadio"] label {
-            background: #F9FDEF !important;
-            border: 1px solid #C7D9AA !important;
-            border-radius: 8px !important;
+        [data-testid="stTabs"] [role="tab"] {
+            min-height: 2.4rem;
+            padding: .42rem .72rem;
+            border: 0 !important;
+            border-radius: 8px;
+            background: transparent !important;
+            color: var(--sc-muted) !important;
             box-shadow: none !important;
         }
 
-        html body .stApp [data-testid="stCheckbox"] label {
-            padding: .48rem .62rem !important;
-            background: #FFFFFF !important;
-            border: 1.5px solid var(--control-border) !important;
-            border-radius: 8px !important;
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            background: var(--sc-surface) !important;
+            color: var(--sc-olive-dark) !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+        }
+
+        /* Dataframes */
+        [data-testid="stDataFrame"] {
+            overflow: hidden;
+        }
+
+        [data-testid="stDataFrame"] > div {
+            border-radius: var(--sc-radius) !important;
+        }
+
+        [data-testid="stDataFrame"] [role="columnheader"] {
+            background: #F4F3EE !important;
+            color: var(--sc-muted) !important;
+            font-size: .68rem !important;
+            font-weight: 720 !important;
+        }
+
+        [data-testid="stDataFrame"] [role="gridcell"] {
+            border-color: #ECEAE2 !important;
+            color: var(--sc-text) !important;
+            font-size: .72rem !important;
+        }
+
+        /* Custom minimal list rows */
+        .sc-list-header {
+            display: grid;
+            grid-template-columns: 1fr 1.55fr 1.55fr .9fr .95fr;
+            gap: .65rem;
+            padding: .5rem .75rem;
+            color: var(--sc-muted);
+            font-size: .62rem;
+            font-weight: 740;
+            letter-spacing: .03em;
+        }
+
+        .sc-list-cell-title {
+            color: var(--sc-ink);
+            font-size: .78rem;
+            font-weight: 720;
+            line-height: 1.25;
+        }
+
+        .sc-list-cell-copy {
+            margin-top: .12rem;
+            color: var(--sc-muted);
+            font-size: .63rem;
+            line-height: 1.25;
+        }
+
+        .sc-stock-high { color: var(--sc-positive); }
+        .sc-stock-medium { color: var(--sc-warning); }
+        .sc-stock-low { color: var(--sc-negative); }
+
+        [class*="st-key-market_row_"],
+        [class*="st-key-item_shop_row_"],
+        [class*="st-key-record_row_"] {
+            margin-bottom: .38rem;
+        }
+
+        [class*="st-key-market_row_"] [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-item_shop_row_"] [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-record_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
+            padding: .42rem .52rem;
+            border-radius: 11px !important;
+            background: var(--sc-surface);
+        }
+
+        [class*="st-key-market_row_"] [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [class*="st-key-item_shop_row_"] [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [class*="st-key-record_row_"] [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: var(--sc-line-strong) !important;
+            background: #FEFEFC;
+        }
+
+        /* Plotly */
+        [data-testid="stPlotlyChart"] {
+            overflow: hidden;
+            border-radius: 11px;
+        }
+
+        /* Alerts */
+        [data-testid="stAlert"] {
+            border: 1px solid var(--sc-line) !important;
+            border-radius: var(--sc-radius-sm) !important;
             box-shadow: none !important;
         }
 
-        /*
-         * Labels and placeholders remain readable against the light theme.
-         */
-        html body .stApp [data-testid="stWidgetLabel"] p,
-        html body .stApp [data-testid="stTextInput"] label p,
-        html body .stApp [data-testid="stNumberInput"] label p,
-        html body .stApp [data-testid="stDateInput"] label p,
-        html body .stApp [data-testid="stTimeInput"] label p,
-        html body .stApp [data-testid="stSearchbox"] label p,
-        html body .stApp [data-testid="stSelectbox"] label p,
-        html body .stApp [data-testid="stMultiSelect"] label p,
-        html body .stApp [data-testid="stTextArea"] label p,
-        html body .stApp [data-testid="stRadio"] label p,
-        html body .stApp [data-testid="stCheckbox"] label p {
-            color: #2F4617 !important;
-            font-weight: 800 !important;
-        }
-
-        html body .stApp input::placeholder,
-        html body .stApp textarea::placeholder {
-            color: var(--control-placeholder) !important;
-            -webkit-text-fill-color: var(--control-placeholder) !important;
-            opacity: 1 !important;
-        }
-
-        /*
-         * Forms and bordered containers receive a clear but restrained edge.
-         */
-        html body .stApp [data-testid="stForm"],
-        html body .stApp [data-testid="stVerticalBlockBorderWrapper"],
-        html body .stApp [data-testid="stExpander"],
-        html body .stApp [data-testid="stDataFrame"] {
-            border-color: #B8D68C !important;
-            box-shadow: none !important;
-        }
-
-        /*
-         * Prevent narrow columns from clipping the new perimeter.
-         */
-        html body .stApp [data-testid="stHorizontalBlock"] {
-            gap: 1rem !important;
-        }
-
-        html body .stApp [data-testid="column"] {
-            min-width: 0 !important;
-            overflow: visible !important;
-        }
-
-        @media (max-width: 760px) {
-            html body .stApp [data-testid="stTextInput"] input,
-            html body .stApp [data-testid="stNumberInput"] input,
-            html body .stApp [data-testid="stDateInput"] input,
-            html body .stApp [data-testid="stTimeInput"] input,
-            html body .stApp [data-testid="stSearchbox"] input {
-                min-height: 3.2rem !important;
-                height: 3.2rem !important;
-            }
-
-            html body .stApp [data-testid="stNumberInput"] button {
-                min-height: 3.2rem !important;
-                height: 3.2rem !important;
-            }
-        }
-
-        /* ================================================================
-           Authentication and session-restoration toolbar clearance
-           ================================================================ */
-        .auth-screen-top-spacer {
-            display: block;
-            width: 100%;
-            height: 3.35rem;
-            pointer-events: none;
-        }
-
-        @media (max-width: 760px) {
-            .auth-screen-top-spacer {
-                height: 4.1rem;
-            }
-        }
-
-        /* ================================================================
-           Quiet submission confirmations
-           Successful actions use compact inline text instead of pop-ups.
-           ================================================================ */
         .quiet-action-confirmation {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: .55rem;
+            gap: .5rem;
             width: fit-content;
             max-width: 100%;
-            margin: .45rem 0 .8rem;
-            padding: .42rem .68rem;
-            background: #F4FAE9;
-            border: 1px solid #91B95B;
-            border-radius: 8px;
-            color: #36550F;
-            font-size: .84rem;
-            font-weight: 700;
-            line-height: 1.35;
-            box-shadow: none;
-        }
-
-        .quiet-action-confirmation span:last-child {
-            color: #36550F !important;
+            margin: .4rem 0 .75rem;
+            padding: .45rem .65rem;
+            border: 1px solid #C9D9B8;
+            border-radius: 9px;
+            background: #F2F7EC;
+            color: #365B30;
+            font-size: .73rem;
+            font-weight: 680;
         }
 
         .quiet-action-indicator {
-            flex: 0 0 .48rem;
-            width: .48rem;
-            height: .48rem;
+            width: .42rem;
+            height: .42rem;
             border-radius: 50%;
-            background: #78C814;
+            background: var(--sc-positive);
         }
 
-        /* Prevent toast overlays from covering the application. */
         [data-testid="stToastContainer"],
         [data-testid="stToast"] {
             display: none !important;
         }
 
-        /* ================================================================
-           NUMBER INPUT AND TOOLTIP ALIGNMENT REPAIR
-           ================================================================ */
-
-        /*
-         * Reset help/tooltip buttons so they are never styled as number
-         * steppers. This applies to labels throughout the complete app.
-         */
-        html body .stApp [data-testid="stWidgetLabel"] button,
-        html body .stApp [data-testid="stTooltipIcon"],
-        html body .stApp [data-testid="stTooltipIcon"] button,
-        html body .stApp label button[aria-label*="help" i],
-        html body .stApp label button[aria-label*="tooltip" i] {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            flex: 0 0 auto !important;
-            width: 1.15rem !important;
-            min-width: 1.15rem !important;
-            max-width: 1.15rem !important;
-            height: 1.15rem !important;
-            min-height: 1.15rem !important;
-            max-height: 1.15rem !important;
-            margin: 0 0 0 .28rem !important;
-            padding: 0 !important;
-            background: transparent !important;
-            background-image: none !important;
-            border: 0 !important;
-            border-radius: 50% !important;
-            color: #66734F !important;
-            box-shadow: none !important;
-            filter: none !important;
-            transform: none !important;
-            position: static !important;
-            z-index: auto !important;
+        .rights-notice {
+            margin-top: 1rem;
+            padding: .8rem;
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            background: var(--sc-surface-soft);
+            color: var(--sc-muted);
+            font-size: .65rem;
+            line-height: 1.5;
         }
 
-        html body .stApp [data-testid="stWidgetLabel"] button:hover,
-        html body .stApp [data-testid="stTooltipIcon"]:hover,
-        html body .stApp [data-testid="stTooltipIcon"] button:hover,
-        html body .stApp label button[aria-label*="help" i]:hover,
-        html body .stApp label button[aria-label*="tooltip" i]:hover {
-            width: 1.15rem !important;
-            min-width: 1.15rem !important;
-            height: 1.15rem !important;
-            min-height: 1.15rem !important;
-            margin: 0 0 0 .28rem !important;
-            padding: 0 !important;
-            background: #EDF6DF !important;
-            border: 0 !important;
-            color: #36550F !important;
-            box-shadow: none !important;
-            transform: none !important;
+        .auth-screen-top-spacer {
+            height: 3.4rem;
         }
 
-        /*
-         * Number-input labels use a consistent line box, while the complete
-         * control remains exactly aligned with neighboring fields.
-         */
-        html body .stApp [data-testid="stNumberInput"] {
-            width: 100% !important;
-            min-width: 0 !important;
+        @media (max-width: 1180px) {
+            section[data-testid="stSidebar"] {
+                width: 246px !important;
+                min-width: 246px !important;
+            }
+
+            .dashboard-summary-grid,
+            .commodity-metric-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
         }
 
-        html body .stApp [data-testid="stNumberInput"]
-        [data-testid="stWidgetLabel"] {
-            min-height: 1.55rem !important;
-            margin-bottom: .32rem !important;
-        }
+        @media (max-width: 760px) {
+            .block-container {
+                padding: .8rem .7rem 2.5rem;
+            }
 
-        html body .stApp [data-testid="stNumberInput"]
-        [data-testid="stWidgetLabel"] > div {
-            display: flex !important;
-            align-items: center !important;
-            min-height: 1.55rem !important;
-        }
+            .sc-page-heading,
+            .dashboard-welcome {
+                align-items: flex-start;
+                flex-direction: column;
+            }
 
-        html body .stApp [data-testid="stNumberInput"]
-        div[data-baseweb="input"] {
-            display: flex !important;
-            align-items: stretch !important;
-            width: 100% !important;
-            min-width: 0 !important;
-            height: 3.05rem !important;
-            min-height: 3.05rem !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            background: #FFFFFF !important;
-            border: 0 !important;
-            border-radius: 10px !important;
-            box-shadow: none !important;
-        }
+            .dashboard-summary-grid,
+            .commodity-metric-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
 
-        html body .stApp [data-testid="stNumberInput"] input {
-            flex: 1 1 auto !important;
-            width: 1% !important;
-            min-width: 0 !important;
-            height: 3.05rem !important;
-            min-height: 3.05rem !important;
-            margin: 0 !important;
-            padding: .68rem .78rem !important;
-            border: 0 !important;
-            border-radius: 10px 0 0 10px !important;
-            box-shadow: none !important;
-        }
+            .sc-list-header {
+                display: none;
+            }
 
-        /*
-         * Only the actual right-side controls receive stepper dimensions.
-         * The final two non-label buttons are the decrement and increment
-         * controls in Streamlit's number-input shell.
-         */
-        html body .stApp [data-testid="stNumberInput"]
-        div[data-baseweb="input"] button {
-            flex: 0 0 2.45rem !important;
-            width: 2.45rem !important;
-            min-width: 2.45rem !important;
-            max-width: 2.45rem !important;
-            height: 3.05rem !important;
-            min-height: 3.05rem !important;
-            max-height: 3.05rem !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #F2F8E8 !important;
-            border: 0 !important;
-            border-left: 1px solid #C7D9AA !important;
-            border-radius: 0 !important;
-            color: #36550F !important;
-            box-shadow: none !important;
-            filter: none !important;
-            transform: none !important;
-        }
-
-        html body .stApp [data-testid="stNumberInput"]
-        div[data-baseweb="input"] button:last-child {
-            border-radius: 0 10px 10px 0 !important;
-        }
-
-        html body .stApp [data-testid="stNumberInput"]
-        div[data-baseweb="input"] button:hover {
-            background: #E2F0CE !important;
-            color: #243713 !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-
-        /*
-         * Keep paired amount fields aligned and prevent the panel columns
-         * from clipping the complete four-sided perimeter.
-         */
-        .st-key-ore_entry_panel [data-testid="stHorizontalBlock"] {
-            align-items: flex-end !important;
-        }
-
-        .st-key-ore_entry_panel [data-testid="column"] {
-            min-width: 0 !important;
-            overflow: visible !important;
-        }
-
-        .st-key-ore_entry_panel [data-testid="stNumberInput"] {
-            margin-bottom: 0 !important;
-        }
-
-        /* ================================================================
-           Combined commodity entry panel
-           ================================================================ */
-        .st-key-combined_commodity_entry_panel
-        [data-testid="stHorizontalBlock"] {
-            align-items: flex-end !important;
-        }
-
-        .st-key-combined_commodity_entry_panel
-        [data-testid="column"] {
-            min-width: 0 !important;
-            overflow: visible !important;
-        }
-
-        .st-key-save_commodity_purchase button {
-            background: #2E7D32 !important;
-            border-color: #1B5E20 !important;
-            color: #FFFFFF !important;
-        }
-
-        .st-key-save_commodity_purchase button:hover {
-            background: #1B5E20 !important;
-            border-color: #174D1B !important;
-        }
-
-        .st-key-save_commodity_sale button {
-            background: #D32F2F !important;
-            border-color: #B71C1C !important;
-            color: #FFFFFF !important;
-        }
-
-        .st-key-save_commodity_sale button:hover {
-            background: #B71C1C !important;
-            border-color: #8E1717 !important;
-        }
-
-        .st-key-save_commodity_purchase button *,
-        .st-key-save_commodity_sale button * {
-            color: #FFFFFF !important;
+            [class*="st-key-market_row_"] [data-testid="stHorizontalBlock"],
+            [class*="st-key-item_shop_row_"] [data-testid="stHorizontalBlock"] {
+                flex-wrap: wrap;
+            }
         }
         </style>
         """,
@@ -3409,41 +1057,18 @@ def page_banner(
     subtitle: str,
     kicker: str,
 ) -> None:
-    """Render a cleaner split page banner while preserving the image."""
-    image_uri = image_data_uri(image_filename)
+    """Render the premium design-system page heading."""
     st.markdown(
         f"""
-        <section class="sc-page-banner" aria-label="{title}">
-            <div class="sc-page-banner-copy">
-                <div class="sc-kicker">{kicker}</div>
-                <div class="sc-banner-title">{title}</div>
-                <p class="sc-banner-subtitle">{subtitle}</p>
-                <div style="
-                    margin-top:.85rem;
-                    display:inline-flex;
-                    align-items:center;
-                    gap:.42rem;
-                    width:max-content;
-                    padding:.34rem .62rem;
-                    border:1px solid #BDF56F;
-                    border-radius:999px;
-                    background:#F6FDEB;
-                    color:#36550F;
-                    font-size:.68rem;
-                    font-weight:800;
-                    letter-spacing:.045em;
-                    text-transform:uppercase;">
-                    ● Live operational workspace
-                </div>
+        <section class="sc-page-heading" aria-label="{html.escape(title)}">
+            <div class="sc-page-heading-copy">
+                <div class="sc-page-kicker">{html.escape(kicker)}</div>
+                <h1 class="sc-page-title">{html.escape(title)}</h1>
+                <p class="sc-page-subtitle">{html.escape(subtitle)}</p>
             </div>
-            <div class="sc-page-banner-image-wrap">
-                <div class="sc-page-banner-image-frame">
-                    <img
-                        class="sc-page-banner-image"
-                        src="{image_uri}"
-                        alt="{title}"
-                    />
-                </div>
+            <div class="sc-page-status">
+                <span class="sc-page-status-dot"></span>
+                Live workspace
             </div>
         </section>
         """,
@@ -6949,132 +4574,97 @@ def timezone_settings() -> None:
 
 
 def dashboard_hero() -> None:
-    """Render the dashboard banner and the U.S. timezone overview."""
-    background = image_data_uri("dashboard_banner.jpg")
+    """Render the premium dashboard heading and live status."""
     now_utc = datetime.now(ZoneInfo("UTC"))
     preferred = selected_timezone()
     local_now = now_utc.astimezone(ZoneInfo(preferred))
-    rows = "".join(
-        f'<div class="time-zone-row"><span>{label}</span><strong>{now_utc.astimezone(ZoneInfo(zone)).strftime("%I:%M %p")}</strong></div>'
-        for label, zone in US_TIMEZONES.items()
-    )
     display_name = html.escape(
         st.session_state.get("user_display_name", "Citizen")
     )
+
     st.markdown(
         f"""
-        <div class="dashboard-hero-grid">
-            <section class="sc-banner" style="background-image:url('{background}');" aria-label="Operations Dashboard">
-                <div class="sc-banner-content">
-                    <div class="sc-kicker">Live Command Overview</div>
-                    <div class="sc-banner-title">Welcome back, {display_name}</div>
-                    <p class="sc-banner-subtitle">Track, analyze, and optimize contracts, mining, trade, and saved operations across the Verse.</p>
+        <section class="dashboard-welcome">
+            <div>
+                <div class="sc-page-kicker">Operations intelligence</div>
+                <div class="dashboard-welcome-title">
+                    Welcome back, {display_name}
                 </div>
-            </section>
-            <aside class="time-card">
-                <div style="font-size:.76rem;color:#65704F;font-weight:750;">SELECTED TIMEZONE</div>
-                <div class="time-now">{local_now.strftime('%I:%M %p')}</div>
-                <div class="time-date">{local_now.strftime('%A, %B %d, %Y')}<br>{preferred}</div>
-                {rows}
-                <div class="time-settings">⚙ Change timezone in My Profile → Preferences</div>
-            </aside>
-        </div>
+                <div class="dashboard-welcome-copy">
+                    Review contracts, mining, commodities, loot, and saved
+                    activity from one unified operations console.
+                </div>
+            </div>
+            <div class="dashboard-live-card">
+                <span class="sc-page-status-dot"></span>
+                <div>
+                    <strong>Live</strong><br>
+                    {local_now.strftime('%I:%M %p')} ·
+                    {html.escape(preferred)}
+                </div>
+            </div>
+        </section>
         """,
         unsafe_allow_html=True,
     )
 
 
 def feature_dashboard_cards() -> None:
-    """Render dashboard shortcuts, including the commodity workspace."""
+    """Render compact dashboard shortcuts in the premium design system."""
     cards = [
-        {
-            "image": "contracts_feature.jpg",
-            "title": "Contracts Snapshot",
-            "copy": (
-                "Track active contracts, completions, reputation, "
-                "expenses, and earnings."
-            ),
-            "button": "View Contracts",
-            "target": "Contract Calculator",
-        },
-        {
-            "image": "ore_feature.jpg",
-            "title": "Ore Trends",
-            "copy": (
-                "Monitor mining output, purchases, sales, inventory, "
-                "and resource values."
-            ),
-            "button": "View Ore Ledger",
-            "target": "Ore Ledger",
-        },
-        {
-            "image": "commodity_feature.jpg",
-            "title": "Commodity Trading",
-            "copy": (
-                "Review live market data, plan routes, and record cargo "
-                "purchases, sales, and losses."
-            ),
-            "button": "View Commodities",
-            "target": "Commodities",
-        },
-        {
-            "image": "records_feature.jpg",
-            "title": "Saved Records",
-            "copy": (
-                "Access contracts, ore activity, commodity transactions, "
-                "and complete operation history."
-            ),
-            "button": "View Records",
-            "target": "Saved Records",
-        },
-        {
-            "image": "fleet_feature.jpg",
-            "title": "Mining Locations",
-            "copy": (
-                "Search ore and gem spawn locations by resource, system, "
-                "environment, and mining method."
-            ),
-            "button": "View Mining Locations",
-            "target": "Mining Locations",
-        },
+        ("◫", "Contracts", "Record payouts and crew shares.", "Contract Calculator"),
+        ("▱", "Ore Ledger", "Track mined, bought, sold, and on-hand SCU.", "Ore Ledger"),
+        ("⬡", "Commodities", "Plan routes and record cargo activity.", "Commodities"),
+        ("⌖", "Mining Locations", "Find resource locations and methods.", "Mining Locations"),
+        ("▦", "Blueprints", "Track ownership and material readiness.", "Blueprints"),
+        ("◎", "Loot & Shops", "Find stores and shared loot locations.", "Loot & Shops"),
+        ("▮", "Saved Records", "Review and manage all recorded activity.", "Saved Records"),
+        ("⇩", "Export Data", "Download Excel, CSV, and Google Sheets data.", "Export Data"),
     ]
 
-    columns = st.columns(len(cards), gap="small")
+    st.markdown(
+        """
+        <div class="section-heading">
+            <div>
+                <div class="section-title">Explore the tracker</div>
+                <div class="section-copy">
+                    Open another workspace without leaving the operations console.
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    for index, (column, card) in enumerate(zip(columns, cards)):
-        with column:
-            with st.container(
-                border=True,
-                key=f"dashboard_feature_card_{index}",
-            ):
-                image_uri = image_data_uri(card["image"])
-                st.markdown(
-                    f"""
-                    <img
-                        class="dashboard-feature-image"
-                        src="{image_uri}"
-                        alt="{html.escape(card["title"])}"
-                    />
-                    <div class="feature-card-title">
-                        {html.escape(card["title"])}
-                    </div>
-                    <div class="feature-card-copy">
-                        {html.escape(card["copy"])}
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-                if st.button(
-                    card["button"],
-                    key=(
-                        "dashboard_shortcut_"
-                        + card["target"].lower().replace(" ", "_")
-                    ),
-                    width="stretch",
+    for row_start in range(0, len(cards), 4):
+        row_cards = cards[row_start:row_start + 4]
+        columns = st.columns(len(row_cards), gap="small")
+        for index, (column, card) in enumerate(zip(columns, row_cards)):
+            icon, title, copy, target = card
+            with column:
+                with st.container(
+                    border=True,
+                    key=f"quick_tool_{row_start + index}",
                 ):
-                    st.session_state.nav_page = card["target"]
-                    st.rerun()
+                    st.markdown(
+                        f"""
+                        <div class="quick-tool-card">
+                            <div class="quick-tool-icon">{html.escape(icon)}</div>
+                            <div>
+                                <div class="quick-tool-title">{html.escape(title)}</div>
+                                <div class="quick-tool-copy">{html.escape(copy)}</div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    if st.button(
+                        f"Open {title}",
+                        key=f"quick_open_{row_start + index}",
+                        width="stretch",
+                    ):
+                        st.session_state.nav_page = target
+                        st.rerun()
 
 def analytics_heading(
     title: str,
@@ -9621,6 +7211,248 @@ def manage_records_section(
                     f"deleted: {exc}"
                 )
 
+def _market_stock_tone(value: float) -> tuple[str, str]:
+    """Return a compact stock status label and CSS class."""
+    if value >= 100:
+        return "High", "sc-stock-high"
+    if value >= 20:
+        return "Medium", "sc-stock-medium"
+    return "Low", "sc-stock-low"
+
+
+def render_market_location_list(
+    frame: pd.DataFrame,
+    *,
+    mode: str,
+    selected_commodity: str,
+    cargo_scu: float,
+    key_prefix: str,
+) -> None:
+    """Render a minimal, app-like terminal list instead of a spreadsheet."""
+    if frame.empty:
+        st.info(
+            "No purchase terminals match the current filters."
+            if mode == "buy"
+            else "No sale terminals match the current filters."
+        )
+        return
+
+    price_column = "Player Pays" if mode == "buy" else "Player Receives"
+    volume_column = "Stock (SCU)" if mode == "buy" else "Demand (SCU)"
+
+    st.markdown(
+        """
+        <div class="sc-list-header">
+            <span>System</span>
+            <span>Area</span>
+            <span>Terminal</span>
+            <span>Price</span>
+            <span>Stock / Demand</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    for position, (_, row) in enumerate(frame.head(10).iterrows()):
+        price = safe_float(row.get(price_column))
+        volume = safe_float(row.get(volume_column))
+        status_label, status_class = _market_stock_tone(volume)
+        location_parts = [
+            str(row.get("System") or "").strip(),
+            str(row.get("Area") or "").strip(),
+            str(row.get("Terminal") or "").strip(),
+        ]
+        location = " > ".join(part for part in location_parts if part)
+        updated = str(row.get("Last Updated") or "").strip()
+
+        with st.container(
+            border=True,
+            key=f"market_row_{key_prefix}_{position}",
+        ):
+            columns = st.columns(
+                [1.05, 1.55, 1.55, .9, 1.05, .85],
+                gap="small",
+                vertical_alignment="center",
+            )
+
+            with columns[0]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("System") or "Unknown"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(str(row.get("Environment") or ""))}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[1]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("Area") or "Unknown"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(selected_commodity)}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[2]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("Terminal") or "Unknown"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(location)}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[3]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">{price:,.0f} aUEC</div>
+                    <div class="sc-list-cell-copy">per SCU</div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[4]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">{volume:,.0f} SCU</div>
+                    <div class="sc-list-cell-copy {status_class}">
+                        {status_label} · {html.escape(updated)}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[5]:
+                if st.button(
+                    "Use in Tracker",
+                    key=f"use_market_{key_prefix}_{position}",
+                    width="stretch",
+                ):
+                    prefill_commodity_tracker_from_terminal(
+                        signature=(
+                            f"{mode}|{selected_commodity}|"
+                            f"{location}|{price}"
+                        ),
+                        commodity_name=selected_commodity,
+                        action="Bought" if mode == "buy" else "Sold",
+                        quantity_scu=float(cargo_scu),
+                        unit_price=float(price),
+                        origin=location if mode == "buy" else "",
+                        destination=location if mode == "sell" else "",
+                    )
+                    quiet_success(
+                        "Terminal copied to My Trade Tracker."
+                    )
+
+
+def render_item_shop_list(
+    frame: pd.DataFrame,
+) -> None:
+    """Render item purchase locations as compact product-like rows."""
+    if frame.empty:
+        st.info("No reported shops match the current filters.")
+        return
+
+    st.markdown(
+        """
+        <div class="sc-list-header">
+            <span>Item</span>
+            <span>System / Area</span>
+            <span>Terminal</span>
+            <span>Price</span>
+            <span>Updated</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    for position, (_, row) in enumerate(frame.head(20).iterrows()):
+        with st.container(
+            border=True,
+            key=f"item_shop_row_{position}",
+        ):
+            columns = st.columns(
+                [1.45, 1.55, 1.55, .9, .95],
+                gap="small",
+                vertical_alignment="center",
+            )
+
+            with columns[0]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("Item") or "Unknown Item"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(str(row.get("Manufacturer") or ""))}
+                        {(" · " + html.escape(str(row.get("Size")))) if str(row.get("Size") or "").strip() else ""}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[1]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("System") or "Unknown"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(str(row.get("Location") or ""))}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[2]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("Terminal") or "Unknown"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(str(row.get("Category") or ""))}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[3]:
+                price = safe_float(row.get("Player Pays"))
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">{price:,.0f} aUEC</div>
+                    <div class="sc-list-cell-copy">purchase price</div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            with columns[4]:
+                st.markdown(
+                    f"""
+                    <div class="sc-list-cell-title">
+                        {html.escape(str(row.get("Game Version") or "Live"))}
+                    </div>
+                    <div class="sc-list-cell-copy">
+                        {html.escape(str(row.get("Last Updated") or ""))}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+
 def render_dashboard_metric_cards(
     cards: list[dict[str, str]],
 ) -> None:
@@ -10789,233 +8621,113 @@ def commodities_page() -> None:
 
             st.markdown("#### Best Places to Buy")
             st.caption(
-                "Select one row to copy that terminal and price into "
-                "My Trade Tracker automatically."
+                "Use a location to prefill the complete purchase entry."
             )
-            if buy_table.empty:
-                st.info("No purchase terminals match the current filters.")
-            else:
-                buy_display = buy_table[
-                    [
-                        "Commodity",
-                        "System",
-                        "Environment",
-                        "Area",
-                        "Terminal",
-                        "Player Pays",
-                        "Stock (SCU)",
-                        "Last Updated",
-                    ]
-                ].reset_index(drop=True)
-
-                buy_event = st.dataframe(
-                    buy_display,
-                    width="stretch",
-                    hide_index=True,
-                    key="commodity_best_buy_selection",
-                    on_select="rerun",
-                    selection_mode="single-row",
-                    column_config={
-                        "Commodity": st.column_config.TextColumn(
-                            width="medium"
-                        ),
-                        "Player Pays": st.column_config.NumberColumn(
-                            format="%,.0f aUEC/SCU"
-                        ),
-                        "Stock (SCU)": st.column_config.NumberColumn(
-                            format="%,.0f SCU"
-                        ),
-                    },
-                )
-
-                selected_buy_rows = list(
-                    buy_event.selection.rows
-                )
-                if selected_buy_rows:
-                    selected_buy = buy_display.iloc[
-                        selected_buy_rows[0]
-                    ]
-                    selected_buy_location = " > ".join(
-                        value
-                        for value in [
-                            str(selected_buy["System"]).strip(),
-                            str(selected_buy["Area"]).strip(),
-                            str(selected_buy["Terminal"]).strip(),
-                        ]
-                        if value
-                    )
-                    prefill_commodity_tracker_from_terminal(
-                        signature=(
-                            f"buy|{selected_commodity}|"
-                            f"{selected_buy_location}|"
-                            f"{float(selected_buy['Player Pays'])}"
-                        ),
-                        commodity_name=selected_commodity,
-                        action="Bought",
-                        quantity_scu=float(cargo_scu),
-                        unit_price=float(selected_buy["Player Pays"]),
-                        origin=selected_buy_location,
-                    )
-                    quiet_success(
-                        "Buy terminal copied to My Trade Tracker. "
-                        "Open that tab to review and save the entry."
-                    )
+            render_market_location_list(
+                buy_table,
+                mode="buy",
+                selected_commodity=selected_commodity,
+                cargo_scu=float(cargo_scu),
+                key_prefix="buy",
+            )
 
             st.markdown("#### Best Places to Sell")
             st.caption(
-                "Select one row to copy that destination and sale price into "
-                "My Trade Tracker automatically."
+                "Use a location to prefill the complete sale entry."
             )
-            if sell_table.empty:
-                st.info("No sale terminals match the current filters.")
-            else:
-                sell_display = sell_table[
-                    [
-                        "Commodity",
-                        "System",
-                        "Environment",
-                        "Area",
-                        "Terminal",
-                        "Player Receives",
-                        "Demand (SCU)",
-                        "Last Updated",
-                    ]
-                ].reset_index(drop=True)
+            render_market_location_list(
+                sell_table,
+                mode="sell",
+                selected_commodity=selected_commodity,
+                cargo_scu=float(cargo_scu),
+                key_prefix="sell",
+            )
 
-                sell_event = st.dataframe(
-                    sell_display,
+            with st.expander(
+                "Advanced terminal data",
+                expanded=False,
+            ):
+                st.caption(
+                    "Detailed UEX pricing, volatility, averages, demand, "
+                    "stock, and game-version fields."
+                )
+                market_columns = [
+                    "Commodity",
+                    "System",
+                    "Environment",
+                    "Area",
+                    "Terminal",
+                    "Location",
+                    "Terminal Buys at",
+                    "Terminal Sells at",
+                    "Demand (SCU)",
+                    "Stock (SCU)",
+                    "Forecast Demand (SCU)",
+                    "User Buy Avg",
+                    "User Sell Avg",
+                    "Weekly Buy Avg",
+                    "Weekly Sell Avg",
+                    "Monthly Buy Avg",
+                    "Monthly Sell Avg",
+                    "Buy Volatility",
+                    "Sell Volatility",
+                    "Quality",
+                    "Container Sizes",
+                    "Game Version",
+                    "Last Updated",
+                ]
+                st.dataframe(
+                    filtered_prices[market_columns],
                     width="stretch",
                     hide_index=True,
-                    key="commodity_best_sell_selection",
-                    on_select="rerun",
-                    selection_mode="single-row",
                     column_config={
                         "Commodity": st.column_config.TextColumn(
                             width="medium"
                         ),
-                        "Player Receives": st.column_config.NumberColumn(
+                        "Terminal Buys at": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Terminal Sells at": st.column_config.NumberColumn(
                             format="%,.0f aUEC/SCU"
                         ),
                         "Demand (SCU)": st.column_config.NumberColumn(
                             format="%,.0f SCU"
                         ),
+                        "Stock (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                        "Forecast Demand (SCU)": st.column_config.NumberColumn(
+                            format="%,.0f SCU"
+                        ),
+                        "User Buy Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "User Sell Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Weekly Buy Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Weekly Sell Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Monthly Buy Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
+                        "Monthly Sell Avg": st.column_config.NumberColumn(
+                            format="%,.0f aUEC/SCU"
+                        ),
                     },
                 )
-
-                selected_sell_rows = list(
-                    sell_event.selection.rows
+                st.download_button(
+                    "Download Filtered Commodity Market CSV",
+                    data=dataframe_csv_bytes(filtered_prices[market_columns]),
+                    file_name=(
+                        f"star_citizen_{re.sub(r'[^a-z0-9]+', '_', selected_commodity.lower()).strip('_')}_market.csv"
+                    ),
+                    mime="text/csv",
+                    width="stretch",
                 )
-                if selected_sell_rows:
-                    selected_sell = sell_display.iloc[
-                        selected_sell_rows[0]
-                    ]
-                    selected_sell_location = " > ".join(
-                        value
-                        for value in [
-                            str(selected_sell["System"]).strip(),
-                            str(selected_sell["Area"]).strip(),
-                            str(selected_sell["Terminal"]).strip(),
-                        ]
-                        if value
-                    )
-                    prefill_commodity_tracker_from_terminal(
-                        signature=(
-                            f"sell|{selected_commodity}|"
-                            f"{selected_sell_location}|"
-                            f"{float(selected_sell['Player Receives'])}"
-                        ),
-                        commodity_name=selected_commodity,
-                        action="Sold",
-                        quantity_scu=float(cargo_scu),
-                        unit_price=float(
-                            selected_sell["Player Receives"]
-                        ),
-                        destination=selected_sell_location,
-                    )
-                    quiet_success(
-                        "Sale terminal copied to My Trade Tracker. "
-                        "Open that tab to review and save the entry."
-                    )
-
-            st.markdown("#### All Matching Terminal Listings")
-            market_columns = [
-                "Commodity",
-                "System",
-                "Environment",
-                "Area",
-                "Terminal",
-                "Location",
-                "Terminal Buys at",
-                "Terminal Sells at",
-                "Demand (SCU)",
-                "Stock (SCU)",
-                "Forecast Demand (SCU)",
-                "User Buy Avg",
-                "User Sell Avg",
-                "Weekly Buy Avg",
-                "Weekly Sell Avg",
-                "Monthly Buy Avg",
-                "Monthly Sell Avg",
-                "Buy Volatility",
-                "Sell Volatility",
-                "Quality",
-                "Container Sizes",
-                "Game Version",
-                "Last Updated",
-            ]
-            st.dataframe(
-                filtered_prices[market_columns],
-                width="stretch",
-                hide_index=True,
-                column_config={
-                    "Commodity": st.column_config.TextColumn(
-                        width="medium"
-                    ),
-                    "Terminal Buys at": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Terminal Sells at": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Demand (SCU)": st.column_config.NumberColumn(
-                        format="%,.0f SCU"
-                    ),
-                    "Stock (SCU)": st.column_config.NumberColumn(
-                        format="%,.0f SCU"
-                    ),
-                    "Forecast Demand (SCU)": st.column_config.NumberColumn(
-                        format="%,.0f SCU"
-                    ),
-                    "User Buy Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "User Sell Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Weekly Buy Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Weekly Sell Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Monthly Buy Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                    "Monthly Sell Avg": st.column_config.NumberColumn(
-                        format="%,.0f aUEC/SCU"
-                    ),
-                },
-            )
-            st.download_button(
-                "Download Filtered Commodity Market CSV",
-                data=dataframe_csv_bytes(filtered_prices[market_columns]),
-                file_name=(
-                    f"star_citizen_{re.sub(r'[^a-z0-9]+', '_', selected_commodity.lower()).strip('_')}_market.csv"
-                ),
-                mime="text/csv",
-                width="stretch",
-            )
-
     with routes_tab:
         if uex_routes.empty:
             st.info("No UEX routes were returned for this commodity and investment.")
@@ -12468,87 +10180,30 @@ def loot_and_shops_page() -> None:
 
             st.markdown("### Purchase Locations")
 
-            display_shop_columns = [
-                "Item",
-                "Category",
-                "Manufacturer",
-                "Size",
-                "System",
-                "Environment",
-                "Location",
-                "Terminal",
-                "Player Pays",
-                "Terminal Pays Player",
-                "Game Version",
-                "Last Updated",
-                "Wiki",
-            ]
+            render_item_shop_list(filtered_shops)
 
-            if filtered_shops.empty:
-                st.info(
-                    "No reported shops match the current filters."
-                )
-            else:
-                st.dataframe(
-                    filtered_shops[display_shop_columns],
-                    width="stretch",
-                    hide_index=True,
-                    column_config={
-                        "Item": st.column_config.TextColumn(
-                            width="large"
-                        ),
-                        "Category": st.column_config.TextColumn(
-                            width="medium"
-                        ),
-                        "Manufacturer": (
-                            st.column_config.TextColumn(
-                                width="medium"
-                            )
-                        ),
-                        "Size": st.column_config.TextColumn(
-                            width="small"
-                        ),
-                        "System": st.column_config.TextColumn(
-                            width="small"
-                        ),
-                        "Environment": (
-                            st.column_config.TextColumn(
-                                width="small"
-                            )
-                        ),
-                        "Location": st.column_config.TextColumn(
-                            width="large"
-                        ),
-                        "Terminal": st.column_config.TextColumn(
-                            width="large"
-                        ),
-                        "Player Pays": (
-                            st.column_config.NumberColumn(
-                                format="%,.0f aUEC",
-                            )
-                        ),
-                        "Terminal Pays Player": (
-                            st.column_config.NumberColumn(
-                                format="%,.0f aUEC",
-                            )
-                        ),
-                        "Wiki": st.column_config.LinkColumn(
-                            display_text="Open",
-                            width="small",
-                        ),
-                    },
-                )
-
+            if not filtered_shops.empty:
+                display_shop_columns = [
+                    "Item",
+                    "Category",
+                    "Manufacturer",
+                    "Size",
+                    "System",
+                    "Environment",
+                    "Location",
+                    "Terminal",
+                    "Player Pays",
+                    "Terminal Pays Player",
+                    "Game Version",
+                    "Last Updated",
+                    "Wiki",
+                ]
                 st.download_button(
                     "Download Filtered Item Shops CSV",
                     data=dataframe_csv_bytes(
-                        filtered_shops[
-                            display_shop_columns
-                        ]
+                        filtered_shops[display_shop_columns]
                     ),
-                    file_name=(
-                        "star_citizen_item_shop_locations.csv"
-                    ),
+                    file_name="star_citizen_item_shop_locations.csv",
                     mime="text/csv",
                     width="stretch",
                 )
@@ -14190,8 +11845,6 @@ def main() -> None:
         logo_path = ASSETS_DIR / "star_citizen_logo_black.png"
         if logo_path.exists():
             st.image(str(logo_path), width="stretch")
-        st.markdown("### Star Citizen Tracker")
-        st.caption("Private operations console")
 
         sidebar_display_name = st.session_state.get(
             "user_display_name",
@@ -14205,56 +11858,49 @@ def main() -> None:
             "user_avatar_url",
             "",
         )
+
         st.markdown(
             f"""
-            <div class="sidebar-profile-card">
-                <div class="sidebar-profile-row">
-                    {avatar_markup(
-                        avatar_url=sidebar_avatar_url,
-                        display_name=sidebar_display_name,
-                        email=sidebar_email,
-                        large=False,
-                    )}
-                    <div class="sidebar-profile-copy">
-                        <div class="sidebar-profile-name">
-                            {html.escape(sidebar_display_name)}
-                        </div>
-                        <div class="sidebar-profile-email">
-                            {html.escape(sidebar_email)}
-                        </div>
+            <div class="sidebar-user-card">
+                {avatar_markup(
+                    avatar_url=sidebar_avatar_url,
+                    display_name=sidebar_display_name,
+                    email=sidebar_email,
+                    large=False,
+                )}
+                <div>
+                    <div class="sidebar-user-name">
+                        {html.escape(sidebar_display_name)}
+                    </div>
+                    <div class="sidebar-user-email">
+                        {html.escape(sidebar_email)}
                     </div>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-        if st.button(
-            "✎",
-            key="sidebar_manage_profile",
-            help="Edit profile and account settings",
-            type="secondary",
-        ):
-            st.session_state.nav_page = "My Profile"
-            st.rerun()
 
         navigation_pages = [
-            "Dashboard",
-            "Contract Calculator",
-            "Ore Ledger",
-            "Commodities",
-            "Mining Locations",
-            "Loot & Shops",
-            "Blueprints",
-            "Saved Records",
-            "Export Data",
+            ("◴", "Dashboard"),
+            ("▤", "Contract Calculator"),
+            ("▱", "Ore Ledger"),
+            ("⬡", "Commodities"),
+            ("⌖", "Mining Locations"),
+            ("◎", "Loot & Shops"),
+            ("▦", "Blueprints"),
+            ("▮", "Saved Records"),
+            ("⇩", "Export Data"),
+            ("⚙", "My Profile"),
         ]
+
         if "nav_page" not in st.session_state:
             st.session_state.nav_page = "Dashboard"
 
-        for navigation_page in navigation_pages:
+        for icon, navigation_page in navigation_pages:
             is_active = st.session_state.nav_page == navigation_page
             if st.button(
-                navigation_page,
+                f"{icon}   {navigation_page}",
                 key=f"nav_{navigation_page.lower().replace(' ', '_')}",
                 type="primary" if is_active else "secondary",
                 width="stretch",
@@ -14262,19 +11908,23 @@ def main() -> None:
                 st.session_state.nav_page = navigation_page
                 st.rerun()
 
-        st.divider()
-        st.caption("System status: All systems operational")
-        st.caption(
-            "Unofficial fan-made tool. Star Citizen and related content belong "
-            "to their respective rights holders. Not affiliated with or endorsed "
-            "by Cloud Imperium Games or Roberts Space Industries."
+        st.markdown(
+            """
+            <div class="sidebar-status-card">
+                <div class="sidebar-status-title">
+                    <span class="sidebar-status-dot"></span>
+                    LIVE DATA
+                </div>
+                <div class="sidebar-status-copy">
+                    Universe sync: Online<br>
+                    UEX and Supabase services are configured separately.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-        st.link_button(
-            "Official Star Citizen Website",
-            "https://robertsspaceindustries.com/",
-            width="stretch",
-        )
-        if st.button("Sign out", width="stretch"):
+
+        if st.button("Sign out", width="stretch", key="sidebar_sign_out"):
             try:
                 client.auth.sign_out()
             finally:
