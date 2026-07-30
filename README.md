@@ -828,3 +828,8 @@ Market values, locations, spawn information, routes, and game mechanics can chan
 The tracker is actively evolving alongside Star Citizen, UEX, SC Trade Tools, SC Craft Tools, Streamlit, and Supabase.
 
 Because third-party APIs and game data can change, occasional maintenance may be required after provider updates or major game patches.
+
+
+## Modern product interface v2
+
+This release replaces legacy banner imagery with a text-and-icon design system and modernizes the complete Streamlit interface. It adds stronger visual hierarchy, larger typography, visible control borders, elevated cards, segmented tabs, improved data tables, refined navigation, responsive layouts, and app-style list rows. Supabase tables, migrations, authentication, UEX integrations, calculations, and saved user data remain unchanged.

@@ -206,8 +206,8 @@ def apply_custom_theme() -> None:
             --sc-surface: #FFFFFF;
             --sc-surface-soft: #FBFAF6;
             --sc-surface-green: #F4F6EA;
-            --sc-line: #E5E2D8;
-            --sc-line-strong: #D3D7B8;
+            --sc-line: #D8D3C1;
+            --sc-line-strong: #A6B45D;
             --sc-olive: #64751C;
             --sc-olive-dark: #465313;
             --sc-olive-soft: #EEF1DF;
@@ -228,6 +228,7 @@ def apply_custom_theme() -> None:
         html, body, [class*="css"] {
             font-family: Inter, ui-sans-serif, system-ui, -apple-system,
                 BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-size: 16px;
         }
 
         html, body {
@@ -281,6 +282,8 @@ def apply_custom_theme() -> None:
 
         p, label, li, .stCaption {
             color: var(--sc-muted);
+            font-size: .97rem;
+            line-height: 1.6;
         }
 
         a {
@@ -304,7 +307,7 @@ def apply_custom_theme() -> None:
         .sc-page-kicker {
             margin-bottom: .28rem;
             color: var(--sc-olive);
-            font-size: .66rem;
+            font-size: .84rem;
             font-weight: 800;
             letter-spacing: .14em;
             text-transform: uppercase;
@@ -313,7 +316,7 @@ def apply_custom_theme() -> None:
         .sc-page-title {
             margin: 0;
             color: var(--sc-ink);
-            font-size: clamp(1.75rem, 3vw, 2.45rem);
+            font-size: clamp(2rem, 3.2vw, 2.7rem);
             line-height: 1.05;
             font-weight: 780;
         }
@@ -322,7 +325,7 @@ def apply_custom_theme() -> None:
             max-width: 820px;
             margin: .48rem 0 0;
             color: var(--sc-muted) !important;
-            font-size: .92rem;
+            font-size: 1.03rem;
             line-height: 1.55;
         }
 
@@ -332,11 +335,11 @@ def apply_custom_theme() -> None:
             gap: .42rem;
             flex: 0 0 auto;
             padding: .5rem .75rem;
-            border: 1px solid var(--sc-line-strong);
+            border: 1.5px solid var(--sc-line-strong);
             border-radius: 999px;
             background: var(--sc-surface);
             color: var(--sc-olive-dark);
-            font-size: .74rem;
+            font-size: .84rem;
             font-weight: 750;
             white-space: nowrap;
         }
@@ -359,7 +362,7 @@ def apply_custom_theme() -> None:
 
         .dashboard-welcome-title {
             color: var(--sc-ink);
-            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-size: clamp(2rem, 3.2vw, 2.75rem);
             font-weight: 780;
             letter-spacing: -.03em;
         }
@@ -367,7 +370,7 @@ def apply_custom_theme() -> None:
         .dashboard-welcome-copy {
             margin-top: .35rem;
             color: var(--sc-muted);
-            font-size: .91rem;
+            font-size: 1.12rem;
         }
 
         .dashboard-live-card {
@@ -375,11 +378,11 @@ def apply_custom_theme() -> None:
             align-items: center;
             gap: .65rem;
             padding: .62rem .78rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: 999px;
             background: var(--sc-surface);
             color: var(--sc-text);
-            font-size: .76rem;
+            font-size: .88rem;
         }
 
         .dashboard-live-card strong {
@@ -400,12 +403,12 @@ def apply_custom_theme() -> None:
         }
 
         .section-title {
-            font-size: 1.14rem;
+            font-size: 1.34rem;
         }
 
         .analytics-title,
         .chart-heading {
-            font-size: 1rem;
+            font-size: 1.12rem;
         }
 
         .section-copy,
@@ -413,13 +416,13 @@ def apply_custom_theme() -> None:
         .chart-copy {
             margin-top: .16rem;
             color: var(--sc-muted) !important;
-            font-size: .79rem;
+            font-size: .92rem;
             line-height: 1.48;
         }
 
         .analytics-kicker {
             color: var(--sc-olive);
-            font-size: .62rem;
+            font-size: .74rem;
             font-weight: 800;
             letter-spacing: .13em;
             text-transform: uppercase;
@@ -432,7 +435,7 @@ def apply_custom_theme() -> None:
         [data-testid="stDataFrame"],
         div[data-testid="stMetric"] {
             background: var(--sc-surface);
-            border: 1px solid var(--sc-line) !important;
+            border: 1.5px solid var(--sc-line) !important;
             border-radius: var(--sc-radius) !important;
             box-shadow: none !important;
         }
@@ -448,19 +451,19 @@ def apply_custom_theme() -> None:
 
         [data-testid="stMetricLabel"] p {
             color: var(--sc-muted) !important;
-            font-size: .68rem !important;
+            font-size: .8rem !important;
             font-weight: 700;
             letter-spacing: .035em;
         }
 
         [data-testid="stMetricValue"] {
             color: var(--sc-ink) !important;
-            font-size: 1.45rem !important;
+            font-size: 1.7rem !important;
             font-weight: 760 !important;
         }
 
         [data-testid="stMetricDelta"] {
-            font-size: .7rem;
+            font-size: .84rem;
         }
 
         /* Dashboard summary strip */
@@ -479,7 +482,7 @@ def apply_custom_theme() -> None:
             position: relative;
             min-width: 0;
             padding: .82rem .9rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius);
             background: var(--sc-surface);
             box-shadow: none;
@@ -496,7 +499,7 @@ def apply_custom_theme() -> None:
             border-radius: 50%;
             background: var(--sc-olive-soft);
             color: var(--sc-olive-dark);
-            font-size: .78rem;
+            font-size: .92rem;
         }
 
         .dashboard-summary-label,
@@ -504,7 +507,7 @@ def apply_custom_theme() -> None:
         .commodity-metric-label,
         .profile-summary-label {
             color: var(--sc-muted) !important;
-            font-size: .64rem;
+            font-size: .76rem;
             font-weight: 720;
             letter-spacing: .035em;
             text-transform: uppercase;
@@ -516,7 +519,7 @@ def apply_custom_theme() -> None:
         .profile-summary-value {
             margin-top: .22rem;
             color: var(--sc-ink) !important;
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             line-height: 1.16;
             font-weight: 770;
         }
@@ -527,7 +530,7 @@ def apply_custom_theme() -> None:
         .profile-summary-detail {
             margin-top: .24rem;
             color: var(--sc-muted) !important;
-            font-size: .68rem;
+            font-size: .96rem;
             line-height: 1.35;
         }
 
@@ -552,7 +555,7 @@ def apply_custom_theme() -> None:
             gap: .72rem;
             min-height: 76px;
             padding: .75rem .8rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius);
             background: var(--sc-surface);
         }
@@ -579,7 +582,7 @@ def apply_custom_theme() -> None:
         .quick-tool-copy {
             margin-top: .14rem;
             color: var(--sc-muted);
-            font-size: .66rem;
+            font-size: .84rem;
         }
 
         /* Buttons */
@@ -587,14 +590,14 @@ def apply_custom_theme() -> None:
         .stDownloadButton > button,
         [data-testid="stFormSubmitButton"] > button,
         .stLinkButton > a {
-            min-height: 2.55rem;
-            padding: .48rem .85rem;
+            min-height: 2.85rem;
+            padding: .6rem 1rem;
             border: 1px solid var(--sc-line-strong) !important;
             border-radius: var(--sc-radius-sm) !important;
             background: var(--sc-surface) !important;
             background-image: none !important;
             color: var(--sc-olive-dark) !important;
-            font-size: .79rem !important;
+            font-size: .92rem !important;
             font-weight: 720 !important;
             box-shadow: none !important;
             transform: none !important;
@@ -645,13 +648,13 @@ def apply_custom_theme() -> None:
         section[data-testid="stSidebar"] .stButton > button {
             justify-content: flex-start;
             width: 100%;
-            min-height: 2.68rem;
+            min-height: 2.95rem;
             padding: .5rem .68rem;
             border-color: transparent !important;
             background: transparent !important;
             color: #4F554B !important;
             text-align: left;
-            font-size: .78rem !important;
+            font-size: .92rem !important;
         }
 
         section[data-testid="stSidebar"] .stButton > button:hover {
@@ -676,14 +679,14 @@ def apply_custom_theme() -> None:
             gap: .7rem;
             margin: .25rem 0 .75rem;
             padding: .7rem .72rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius);
             background: var(--sc-surface);
         }
 
         .sidebar-user-name {
             color: var(--sc-ink);
-            font-size: .8rem;
+            font-size: .96rem;
             font-weight: 740;
         }
 
@@ -691,7 +694,7 @@ def apply_custom_theme() -> None:
             max-width: 145px;
             overflow: hidden;
             color: var(--sc-muted);
-            font-size: .62rem;
+            font-size: .74rem;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
@@ -699,7 +702,7 @@ def apply_custom_theme() -> None:
         .sidebar-status-card {
             margin-top: .8rem;
             padding: .82rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius);
             background: var(--sc-surface);
         }
@@ -709,7 +712,7 @@ def apply_custom_theme() -> None:
             align-items: center;
             gap: .42rem;
             color: var(--sc-ink);
-            font-size: .7rem;
+            font-size: .84rem;
             font-weight: 760;
         }
 
@@ -723,7 +726,7 @@ def apply_custom_theme() -> None:
         .sidebar-status-copy {
             margin-top: .35rem;
             color: var(--sc-muted);
-            font-size: .63rem;
+            font-size: .76rem;
             line-height: 1.45;
         }
 
@@ -755,7 +758,7 @@ def apply_custom_theme() -> None:
             inset: 0;
             z-index: 20;
             pointer-events: none;
-            border: 1px solid #DCD9CD;
+            border: 1.7px solid #B9C76E;
             border-radius: var(--sc-radius-sm);
         }
 
@@ -794,14 +797,14 @@ def apply_custom_theme() -> None:
 
         [data-testid="stWidgetLabel"] p {
             color: var(--sc-text) !important;
-            font-size: .7rem !important;
+            font-size: .84rem !important;
             font-weight: 680 !important;
         }
 
         [data-testid="stNumberInput"] button {
             background: #F6F5EF !important;
             border: 0 !important;
-            border-left: 1px solid var(--sc-line) !important;
+            border-left: 1.5px solid var(--sc-line) !important;
             color: var(--sc-olive-dark) !important;
             box-shadow: none !important;
         }
@@ -823,7 +826,7 @@ def apply_custom_theme() -> None:
         [data-testid="stRadio"] [role="radiogroup"] {
             gap: .4rem;
             padding: .32rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius-sm);
             background: #FAF9F5;
         }
@@ -845,15 +848,15 @@ def apply_custom_theme() -> None:
         [data-testid="stTabs"] [role="tablist"] {
             gap: .25rem;
             padding: .25rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: 11px;
             background: #F2F1EA;
             box-shadow: none !important;
         }
 
         [data-testid="stTabs"] [role="tab"] {
-            min-height: 2.4rem;
-            padding: .42rem .72rem;
+            min-height: 2.7rem;
+            padding: .52rem .9rem;
             border: 0 !important;
             border-radius: 8px;
             background: transparent !important;
@@ -867,6 +870,45 @@ def apply_custom_theme() -> None:
             box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
         }
 
+
+
+        .section-title,
+        .analytics-title,
+        .chart-heading {
+            padding-bottom: .18rem;
+            border-bottom: 1px solid rgba(166,180,93,.28);
+        }
+
+        [data-testid="stTextInput"] label,
+        [data-testid="stNumberInput"] label,
+        [data-testid="stSelectbox"] label,
+        [data-testid="stMultiSelect"] label,
+        [data-testid="stTextArea"] label,
+        [data-testid="stDateInput"] label,
+        [data-testid="stTimeInput"] label {
+            margin-bottom: .2rem !important;
+        }
+
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stSelectbox"] [role="combobox"],
+        [data-testid="stMultiSelect"] [role="combobox"] {
+            font-size: .97rem !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] p {
+            font-size: .9rem !important;
+            font-weight: 700 !important;
+        }
+
+        [data-testid="stExpander"] summary,
+        [data-testid="stExpander"] summary p {
+            font-size: .95rem !important;
+            font-weight: 700 !important;
+            color: var(--sc-ink) !important;
+        }
+        
         /* Dataframes */
         [data-testid="stDataFrame"] {
             overflow: hidden;
@@ -879,14 +921,14 @@ def apply_custom_theme() -> None:
         [data-testid="stDataFrame"] [role="columnheader"] {
             background: #F4F3EE !important;
             color: var(--sc-muted) !important;
-            font-size: .68rem !important;
+            font-size: .8rem !important;
             font-weight: 720 !important;
         }
 
         [data-testid="stDataFrame"] [role="gridcell"] {
             border-color: #ECEAE2 !important;
             color: var(--sc-text) !important;
-            font-size: .72rem !important;
+            font-size: .84rem !important;
         }
 
         /* Custom minimal list rows */
@@ -896,14 +938,14 @@ def apply_custom_theme() -> None:
             gap: .65rem;
             padding: .5rem .75rem;
             color: var(--sc-muted);
-            font-size: .62rem;
+            font-size: .74rem;
             font-weight: 740;
             letter-spacing: .03em;
         }
 
         .sc-list-cell-title {
             color: var(--sc-ink);
-            font-size: .78rem;
+            font-size: .92rem;
             font-weight: 720;
             line-height: 1.25;
         }
@@ -911,7 +953,7 @@ def apply_custom_theme() -> None:
         .sc-list-cell-copy {
             margin-top: .12rem;
             color: var(--sc-muted);
-            font-size: .63rem;
+            font-size: .76rem;
             line-height: 1.25;
         }
 
@@ -948,7 +990,7 @@ def apply_custom_theme() -> None:
 
         /* Alerts */
         [data-testid="stAlert"] {
-            border: 1px solid var(--sc-line) !important;
+            border: 1.5px solid var(--sc-line) !important;
             border-radius: var(--sc-radius-sm) !important;
             box-shadow: none !important;
         }
@@ -965,7 +1007,7 @@ def apply_custom_theme() -> None:
             border-radius: 9px;
             background: #F2F7EC;
             color: #365B30;
-            font-size: .73rem;
+            font-size: .86rem;
             font-weight: 680;
         }
 
@@ -984,11 +1026,11 @@ def apply_custom_theme() -> None:
         .rights-notice {
             margin-top: 1rem;
             padding: .8rem;
-            border: 1px solid var(--sc-line);
+            border: 1.5px solid var(--sc-line);
             border-radius: var(--sc-radius);
             background: var(--sc-surface-soft);
             color: var(--sc-muted);
-            font-size: .65rem;
+            font-size: .8rem;
             line-height: 1.5;
         }
 
@@ -1032,6 +1074,360 @@ def apply_custom_theme() -> None:
             [class*="st-key-item_shop_row_"] [data-testid="stHorizontalBlock"] {
                 flex-wrap: wrap;
             }
+        }
+
+
+        /* ================================================================
+           MODERN PRODUCT UI V2
+           Replaces legacy imagery and strengthens the app-wide hierarchy.
+           ================================================================ */
+        :root {
+            --sc-bg: #F6F5EF;
+            --sc-surface: #FFFFFF;
+            --sc-surface-soft: #FAF9F5;
+            --sc-surface-green: #F2F4E8;
+            --sc-line: #D7D4C8;
+            --sc-line-strong: #AEB875;
+            --sc-olive: #687A20;
+            --sc-olive-dark: #435012;
+            --sc-olive-soft: #EEF1DF;
+            --sc-ink: #161813;
+            --sc-text: #34382F;
+            --sc-muted: #6F7468;
+            --sc-subtle: #969B90;
+            --sc-radius: 16px;
+            --sc-radius-sm: 11px;
+            --sc-card-shadow: 0 7px 24px rgba(45, 54, 25, .055);
+        }
+
+        .stApp {
+            background:
+                radial-gradient(circle at 88% 3%, rgba(104,122,32,.045), transparent 24rem),
+                var(--sc-bg);
+        }
+
+        [data-testid="stHeader"] {
+            border-bottom: 1px solid rgba(174,184,117,.55);
+            background: rgba(246,245,239,.91);
+        }
+
+        .block-container {
+            padding-top: 1.35rem;
+        }
+
+        /* Modern text-only brand; no outdated banner artwork. */
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: .78rem;
+            margin: .1rem .2rem 1rem;
+            padding: .65rem .55rem .9rem;
+            border-bottom: 1px solid var(--sc-line);
+        }
+
+        .sidebar-brand-mark {
+            display: grid;
+            place-items: center;
+            width: 2.6rem;
+            height: 2.6rem;
+            flex: 0 0 2.6rem;
+            border: 1.5px solid var(--sc-olive-dark);
+            border-radius: 50%;
+            color: var(--sc-olive-dark);
+            background: #FFFFFF;
+            font-size: 1.35rem;
+            box-shadow: 0 4px 12px rgba(67,80,18,.07);
+        }
+
+        .sidebar-brand-title,
+        .sidebar-brand-subtitle {
+            color: var(--sc-ink);
+            font-weight: 820;
+            letter-spacing: .13em;
+            line-height: 1.05;
+        }
+
+        .sidebar-brand-title { font-size: .86rem; }
+        .sidebar-brand-subtitle { margin-top: .2rem; font-size: .72rem; }
+
+        /* Page and section hierarchy. */
+        .sc-page-heading {
+            padding: .25rem .15rem 1.2rem;
+            border-bottom: 1px solid rgba(174,184,117,.38);
+            margin-bottom: 1rem;
+        }
+
+        .sc-page-kicker,
+        .analytics-kicker {
+            color: var(--sc-olive-dark);
+            font-weight: 850;
+        }
+
+        .sc-page-title {
+            font-size: clamp(2.05rem, 3.2vw, 2.85rem);
+        }
+
+        .sc-page-subtitle {
+            font-size: 1rem;
+            color: #646A5D !important;
+        }
+
+        main h2,
+        main h3 {
+            margin-top: 1.3rem !important;
+            padding: .55rem .75rem !important;
+            border-left: 4px solid var(--sc-olive) !important;
+            border-bottom: 1px solid rgba(174,184,117,.34) !important;
+            border-radius: 0 10px 10px 0;
+            background: linear-gradient(90deg, rgba(238,241,223,.8), transparent 72%);
+            letter-spacing: -.02em;
+        }
+
+        .section-heading,
+        .analytics-heading {
+            padding: .75rem .85rem;
+            border: 1px solid var(--sc-line);
+            border-left: 4px solid var(--sc-olive);
+            border-radius: 12px;
+            background: linear-gradient(90deg, #F7F8EF, #FFFFFF);
+        }
+
+        .section-title { font-size: 1.36rem; }
+        .analytics-title,
+        .chart-heading { font-size: 1.16rem; }
+        .section-copy,
+        .analytics-copy,
+        .chart-copy { font-size: .91rem; }
+
+        /* Cards and surfaces. */
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stForm"],
+        [data-testid="stExpander"],
+        [data-testid="stDataFrame"],
+        div[data-testid="stMetric"],
+        .dashboard-summary-card,
+        .commodity-metric-card,
+        .dashboard-metric-card,
+        .profile-summary-card,
+        .quick-tool-card,
+        .sidebar-user-card,
+        .sidebar-status-card {
+            border: 1.5px solid var(--sc-line) !important;
+            box-shadow: var(--sc-card-shadow) !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        .dashboard-summary-card:hover,
+        .commodity-metric-card:hover,
+        .dashboard-metric-card:hover,
+        .quick-tool-card:hover {
+            border-color: var(--sc-line-strong) !important;
+        }
+
+        div[data-testid="stMetric"] {
+            min-height: 116px;
+            padding: 1rem 1.05rem;
+        }
+
+        [data-testid="stMetricLabel"] p {
+            font-size: .8rem !important;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        [data-testid="stMetricValue"] {
+            font-size: 1.75rem !important;
+        }
+
+        /* Modern controls and buttons. */
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            min-height: 2.95rem;
+            border: 1.5px solid var(--sc-line-strong) !important;
+            border-radius: 11px !important;
+            font-size: .92rem !important;
+            letter-spacing: .005em;
+            transition: background .15s ease, border-color .15s ease, transform .15s ease;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            transform: translateY(-1px) !important;
+            border-color: var(--sc-olive) !important;
+        }
+
+        .stButton > button[kind="primary"],
+        [data-testid="stFormSubmitButton"] > button[kind="primary"] {
+            background: linear-gradient(180deg, #728626, #5C6E19) !important;
+            border-color: #536316 !important;
+        }
+
+        .st-key-sidebar_sign_out button {
+            color: #A52B2B !important;
+            border-color: rgba(211,47,47,.38) !important;
+            background: #FFF9F8 !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button {
+            min-height: 3rem;
+            padding: .6rem .82rem;
+            border-radius: 10px !important;
+            font-size: .91rem !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+            border-left: 4px solid var(--sc-olive) !important;
+            border-right: 1px solid var(--sc-line-strong) !important;
+            background: linear-gradient(90deg, #EEF1DF, #F9F9F4) !important;
+        }
+
+        /* Inputs: visible, modern, and consistent. */
+        [data-testid="stTextInput"] > div:last-child::after,
+        [data-testid="stNumberInput"] > div:last-child::after,
+        [data-testid="stDateInput"] > div:last-child::after,
+        [data-testid="stTimeInput"] > div:last-child::after,
+        [data-testid="stSearchbox"] > div:last-child::after,
+        [data-testid="stSelectbox"] > div:last-child::after,
+        [data-testid="stMultiSelect"] > div:last-child::after,
+        [data-testid="stTextArea"] > div:last-child::after {
+            border: 1.7px solid #BBC48A;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.65);
+        }
+
+        [data-testid="stWidgetLabel"] p {
+            font-size: .84rem !important;
+            font-weight: 760 !important;
+            color: #30352A !important;
+        }
+
+        input,
+        textarea,
+        [role="combobox"] {
+            font-size: .96rem !important;
+        }
+
+        [data-testid="stRadio"] [role="radiogroup"] {
+            padding: .38rem;
+            border: 1.5px solid #BBC48A;
+            background: #F8F9F1;
+        }
+
+        [data-testid="stRadio"] label,
+        [data-testid="stCheckbox"] label {
+            min-height: 2.35rem;
+            padding: .42rem .65rem !important;
+            border-radius: 9px !important;
+        }
+
+        /* Segmented tabs. */
+        [data-testid="stTabs"] [role="tablist"] {
+            padding: .34rem;
+            border: 1.5px solid var(--sc-line-strong);
+            background: #EFEEE7;
+        }
+
+        [data-testid="stTabs"] [role="tab"] {
+            min-height: 2.75rem;
+            padding: .55rem .92rem;
+            font-size: .9rem !important;
+            font-weight: 730;
+        }
+
+        [data-testid="stTabs"] [role="tab"][aria-selected="true"] {
+            border: 1px solid rgba(174,184,117,.75) !important;
+            box-shadow: 0 3px 10px rgba(45,54,25,.07) !important;
+        }
+
+        /* Modern data views. */
+        [data-testid="stDataFrame"] {
+            border-radius: 14px !important;
+            overflow: hidden;
+        }
+
+        [data-testid="stDataFrame"] [role="columnheader"] {
+            background: #ECEFDF !important;
+            color: #3D4719 !important;
+            font-size: .8rem !important;
+            text-transform: uppercase;
+            letter-spacing: .045em;
+        }
+
+        [data-testid="stDataFrame"] [role="gridcell"] {
+            border-color: #E4E2D8 !important;
+            font-size: .84rem !important;
+        }
+
+        [data-testid="stDataFrame"] [role="row"]:hover [role="gridcell"] {
+            background: #FAFBF5 !important;
+        }
+
+        .sc-list-header {
+            padding: .65rem .85rem;
+            border-bottom: 1px solid var(--sc-line);
+            background: #F0F2E6;
+            border-radius: 10px 10px 0 0;
+            font-size: .74rem;
+        }
+
+        .sc-list-cell-title { font-size: .92rem; }
+        .sc-list-cell-copy { font-size: .76rem; }
+
+        [class*="st-key-market_row_"] [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-item_shop_row_"] [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-record_row_"] [data-testid="stVerticalBlockBorderWrapper"] {
+            padding: .62rem .7rem;
+            border-radius: 12px !important;
+        }
+
+        /* Charts and alerts become clearly separate modules. */
+        [data-testid="stPlotlyChart"] {
+            padding: .35rem;
+            border: 1.5px solid var(--sc-line);
+            border-radius: 14px;
+            background: #FFFFFF;
+            box-shadow: var(--sc-card-shadow);
+        }
+
+        [data-testid="stAlert"] {
+            border-width: 1.5px !important;
+            padding: .8rem .9rem;
+        }
+
+        /* Quick tools feel like modern product modules, not image tiles. */
+        [class*="st-key-quick_tool_"] [data-testid="stVerticalBlockBorderWrapper"] {
+            height: 100%;
+            background: linear-gradient(145deg, #FFFFFF, #F8F9F2);
+        }
+
+        .quick-tool-card {
+            min-height: 92px;
+            padding: .9rem;
+            border: 0 !important;
+            box-shadow: none !important;
+            background: transparent;
+        }
+
+        .quick-tool-icon {
+            width: 2.65rem;
+            height: 2.65rem;
+            flex-basis: 2.65rem;
+            border: 1px solid #C5CD9A;
+            border-radius: 12px;
+            background: #F1F4E5;
+            font-size: 1.05rem;
+        }
+
+        .quick-tool-title { font-size: .96rem; }
+        .quick-tool-copy { font-size: .78rem; }
+
+        @media (max-width: 760px) {
+            html, body, [class*="css"] { font-size: 15px; }
+            .sidebar-brand { margin-bottom: .65rem; }
+            main h2, main h3 { padding: .48rem .6rem !important; }
         }
         </style>
         """,
@@ -4659,7 +5055,7 @@ def feature_dashboard_cards() -> None:
                         unsafe_allow_html=True,
                     )
                     if st.button(
-                        f"Open {title}",
+                        f"Open workspace  →",
                         key=f"quick_open_{row_start + index}",
                         width="stretch",
                     ):
@@ -11842,9 +12238,18 @@ def main() -> None:
         return
 
     with st.sidebar:
-        logo_path = ASSETS_DIR / "star_citizen_logo_black.png"
-        if logo_path.exists():
-            st.image(str(logo_path), width="stretch")
+        st.markdown(
+            """
+            <div class="sidebar-brand" aria-label="Star Citizen Tracker">
+                <div class="sidebar-brand-mark">✥</div>
+                <div class="sidebar-brand-copy">
+                    <div class="sidebar-brand-title">STAR CITIZEN</div>
+                    <div class="sidebar-brand-subtitle">TRACKER</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         sidebar_display_name = st.session_state.get(
             "user_display_name",
