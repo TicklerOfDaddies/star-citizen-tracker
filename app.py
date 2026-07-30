@@ -3303,6 +3303,47 @@ def apply_custom_theme() -> None:
         .st-key-ore_entry_panel [data-testid="stNumberInput"] {
             margin-bottom: 0 !important;
         }
+
+        /* ================================================================
+           Combined commodity entry panel
+           ================================================================ */
+        .st-key-combined_commodity_entry_panel
+        [data-testid="stHorizontalBlock"] {
+            align-items: flex-end !important;
+        }
+
+        .st-key-combined_commodity_entry_panel
+        [data-testid="column"] {
+            min-width: 0 !important;
+            overflow: visible !important;
+        }
+
+        .st-key-save_commodity_purchase button {
+            background: #2E7D32 !important;
+            border-color: #1B5E20 !important;
+            color: #FFFFFF !important;
+        }
+
+        .st-key-save_commodity_purchase button:hover {
+            background: #1B5E20 !important;
+            border-color: #174D1B !important;
+        }
+
+        .st-key-save_commodity_sale button {
+            background: #D32F2F !important;
+            border-color: #B71C1C !important;
+            color: #FFFFFF !important;
+        }
+
+        .st-key-save_commodity_sale button:hover {
+            background: #B71C1C !important;
+            border-color: #8E1717 !important;
+        }
+
+        .st-key-save_commodity_purchase button *,
+        .st-key-save_commodity_sale button * {
+            color: #FFFFFF !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -5826,7 +5867,6 @@ def commodity_trade_tracker(
             )
 
         defaults = {
-            "commodity_transaction_type": "Bought",
             "commodity_shipment_lost": False,
             "commodity_transaction_quantity": max(
                 float(default_quantity_scu),
@@ -5843,15 +5883,23 @@ def commodity_trade_tracker(
         default_sell_price = 0.0
         if not uex_prices.empty:
             buy_prices = pd.to_numeric(
-                uex_prices.get("Terminal Sells at", pd.Series(dtype=float)),
+                uex_prices.get(
+                    "Terminal Sells at",
+                    pd.Series(dtype=float),
+                ),
                 errors="coerce",
             ).fillna(0.0)
             sell_prices = pd.to_numeric(
-                uex_prices.get("Terminal Buys at", pd.Series(dtype=float)),
+                uex_prices.get(
+                    "Terminal Buys at",
+                    pd.Series(dtype=float),
+                ),
                 errors="coerce",
             ).fillna(0.0)
+
             positive_buys = buy_prices[buy_prices > 0]
             positive_sells = sell_prices[sell_prices > 0]
+
             if not positive_buys.empty:
                 default_buy_price = float(positive_buys.min())
             if not positive_sells.empty:
@@ -5862,24 +5910,32 @@ def commodity_trade_tracker(
             default_buy_price,
         )
 
-        with st.form("commodity_transaction_form"):
-            top_col1, top_col2, top_col3 = st.columns(3)
+        with st.container(
+            border=True,
+            key="combined_commodity_entry_panel",
+        ):
+            top_col1, top_col2 = st.columns(
+                [2.2, 1],
+                gap="medium",
+                vertical_alignment="bottom",
+            )
+
             with top_col1:
                 tracked_commodity = st.selectbox(
                     "Commodity",
                     available_names,
                     key="tracked_commodity_name",
                 )
+
             with top_col2:
-                transaction_type = st.selectbox(
-                    "Activity",
-                    ["Bought", "Sold"],
-                    key="commodity_transaction_type",
-                )
-            with top_col3:
                 shipment_lost = st.checkbox(
                     "Shipment destroyed or lost",
                     key="commodity_shipment_lost",
+                    help=(
+                        "When selected, either save button records the "
+                        "transaction as Lost / Destroyed instead of a "
+                        "purchase or sale."
+                    ),
                 )
 
             price_method = st.radio(
@@ -5889,7 +5945,12 @@ def commodity_trade_tracker(
                 key="commodity_price_entry_method",
             )
 
-            value_col1, value_col2, value_col3 = st.columns(3)
+            value_col1, value_col2, value_col3 = st.columns(
+                3,
+                gap="medium",
+                vertical_alignment="bottom",
+            )
+
             with value_col1:
                 quantity_scu = st.number_input(
                     "Quantity (SCU)",
@@ -5907,6 +5968,7 @@ def commodity_trade_tracker(
                         step=100.0,
                         key="commodity_transaction_unit_price",
                     )
+
                 total_entry = (
                     float(quantity_scu)
                     * float(unit_price_input)
@@ -5920,6 +5982,7 @@ def commodity_trade_tracker(
                         step=1000.0,
                         key="commodity_total_entry_value",
                     )
+
                 calculated_unit_price = (
                     float(total_entry) / float(quantity_scu)
                     if quantity_scu > 0
@@ -5934,44 +5997,12 @@ def commodity_trade_tracker(
                     key="commodity_transaction_fees",
                 )
 
-            final_action = (
-                "Lost / Destroyed"
-                if shipment_lost
-                else transaction_type
-            )
-            verified_total = (
-                float(quantity_scu)
-                * float(calculated_unit_price)
-            )
-            verified_cash_effect = (
-                verified_total - float(fees)
-                if final_action == "Sold"
-                else -(verified_total + float(fees))
-            )
-            action_label = (
-                "Destroyed / Lost Shipment"
-                if shipment_lost
-                else (
-                    "Commodity Purchase"
-                    if transaction_type == "Bought"
-                    else "Commodity Sale"
-                )
-            )
+            st.markdown("#### Route and shipment details")
 
-            st.info(
-                f"Verified math: {quantity_scu:,.2f} SCU × "
-                f"{calculated_unit_price:,.2f} aUEC/SCU = "
-                f"{verified_total:,.0f} aUEC. Net cash effect: "
-                f"{verified_cash_effect:+,.0f} aUEC."
+            location_col1, location_col2 = st.columns(
+                2,
+                gap="medium",
             )
-            quick_submitted = st.form_submit_button(
-                f"Save {action_label} Now",
-                type="primary",
-                width="stretch",
-            )
-
-            st.markdown("#### Optional route and shipment details")
-            location_col1, location_col2 = st.columns(2)
             with location_col1:
                 origin = st.text_input(
                     "Purchase or departure location",
@@ -5987,7 +6018,9 @@ def commodity_trade_tracker(
 
             shipment_reference = st.text_input(
                 "Shipment name or reference",
-                placeholder="Optional run name, ship, or cargo reference",
+                placeholder=(
+                    "Optional run name, ship, or cargo reference"
+                ),
                 key="commodity_shipment_reference",
             )
             transaction_notes = st.text_area(
@@ -6000,13 +6033,75 @@ def commodity_trade_tracker(
                 key="commodity_transaction_notes",
             )
 
-            detailed_submitted = st.form_submit_button(
-                f"Save {action_label} with Details",
-                width="stretch",
+            verified_total = (
+                float(quantity_scu)
+                * float(calculated_unit_price)
             )
-            submitted = quick_submitted or detailed_submitted
+            purchase_cash_effect = -(
+                verified_total + float(fees)
+            )
+            sale_cash_effect = (
+                verified_total - float(fees)
+            )
+            loss_cash_effect = -(
+                verified_total + float(fees)
+            )
 
-        if submitted:
+            if shipment_lost:
+                st.info(
+                    f"Verified math: {quantity_scu:,.2f} SCU × "
+                    f"{calculated_unit_price:,.2f} aUEC/SCU = "
+                    f"{verified_total:,.0f} aUEC. Lost-shipment cash "
+                    f"effect: {loss_cash_effect:+,.0f} aUEC."
+                )
+            else:
+                st.info(
+                    f"Verified math: {quantity_scu:,.2f} SCU × "
+                    f"{calculated_unit_price:,.2f} aUEC/SCU = "
+                    f"{verified_total:,.0f} aUEC. Purchase cash effect: "
+                    f"{purchase_cash_effect:+,.0f} aUEC. Sale cash "
+                    f"effect: {sale_cash_effect:+,.0f} aUEC."
+                )
+
+            purchase_col, sale_col = st.columns(
+                2,
+                gap="medium",
+            )
+            with purchase_col:
+                purchase_submitted = st.button(
+                    "Save Commodity Purchase",
+                    type="primary",
+                    width="stretch",
+                    key="save_commodity_purchase",
+                )
+            with sale_col:
+                sale_submitted = st.button(
+                    "Save Commodity Sale",
+                    type="primary",
+                    width="stretch",
+                    key="save_commodity_sale",
+                )
+
+            st.caption(
+                "Both buttons save the quantity, price, fees, locations, "
+                "shipment reference, and notes shown above."
+            )
+
+        submitted_action = (
+            "Bought"
+            if purchase_submitted
+            else "Sold"
+            if sale_submitted
+            else None
+        )
+
+        if submitted_action:
+            final_action = (
+                "Lost / Destroyed"
+                if shipment_lost
+                else submitted_action
+            )
+
             if calculated_unit_price <= 0:
                 st.error(
                     "Enter a positive price per SCU or total cargo value."
@@ -6025,6 +6120,7 @@ def commodity_trade_tracker(
                     "shipment_reference": shipment_reference.strip(),
                     "notes": transaction_notes.strip(),
                 }
+
                 try:
                     saved = insert_commodity_transaction(payload)
                     saved_id = (
@@ -6039,6 +6135,19 @@ def commodity_trade_tracker(
                         f"{saved['total_value']:,.0f} aUEC. Net cash effect: "
                         f"{saved['cash_effect']:+,.0f} aUEC."
                     )
+
+                    for state_key in (
+                        "commodity_shipment_lost",
+                        "commodity_transaction_quantity",
+                        "commodity_transaction_fees",
+                        "commodity_total_entry_value",
+                        "commodity_transaction_origin",
+                        "commodity_transaction_destination",
+                        "commodity_shipment_reference",
+                        "commodity_transaction_notes",
+                    ):
+                        st.session_state.pop(state_key, None)
+
                     st.rerun()
                 except Exception as exc:
                     st.error(
@@ -9426,7 +9535,7 @@ def prefill_commodity_tracker_from_terminal(
 
     st.session_state["_commodity_terminal_prefill_signature"] = signature
     st.session_state["tracked_commodity_name"] = commodity_name
-    st.session_state["commodity_transaction_type"] = action
+    st.session_state["commodity_prefill_action"] = action
     st.session_state["commodity_shipment_lost"] = False
     st.session_state["commodity_transaction_quantity"] = max(
         float(quantity_scu),
@@ -9445,7 +9554,8 @@ def prefill_commodity_tracker_from_terminal(
     terminal = origin or destination or "the selected terminal"
     st.session_state["commodity_prefill_notice"] = (
         f"{commodity_name} {action.lower()} entry prefilled from {terminal}. "
-        "Open My Trade Tracker, review the quantity and costs, then save it."
+        "Open My Trade Tracker, review all fields, then use the matching "
+        "Purchase or Sale button at the bottom."
     )
 
 
