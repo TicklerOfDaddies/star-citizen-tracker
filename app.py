@@ -2915,6 +2915,14 @@ def apply_custom_theme() -> None:
         section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
             color: #9EB0C4 !important;
         }
+
+        /* DEEP SPACE BLUE V11 GRAPH TEXT */
+        [data-testid="stPlotlyChart"] .xtick text,[data-testid="stPlotlyChart"] .ytick text{fill:#B8CCE3!important;}
+        [data-testid="stPlotlyChart"] .gtitle,[data-testid="stPlotlyChart"] .g-xtitle text,[data-testid="stPlotlyChart"] .g-ytitle text,[data-testid="stPlotlyChart"] .annotation-text{fill:#F4F8FF!important;}
+        [data-testid="stPlotlyChart"] .legendtext,[data-testid="stPlotlyChart"] .legendtitletext{fill:#C6D7EA!important;}
+        [data-testid="stPlotlyChart"] .bartext,[data-testid="stPlotlyChart"] .slicetext,[data-testid="stPlotlyChart"] .pointtext,[data-testid="stPlotlyChart"] .textpoint{fill:#F4F8FF!important;}
+        [data-testid="stPlotlyChart"] .cbaxis text{fill:#B8CCE3!important;}
+        [data-testid="stPlotlyChart"] .cbtitle text{fill:#8CBFFF!important;}
         </style>
         """,
         unsafe_allow_html=True,
@@ -3205,47 +3213,58 @@ def render_rights_notice() -> None:
 
 
 def style_plotly_figure(figure, *, height: int = 430) -> None:
-    """Give Plotly charts the same deep-space appearance as the current app."""
+    """Apply a complete Deep Space Blue text and surface theme to Plotly."""
+    primary_text = "#F4F8FF"
+    secondary_text = "#C6D7EA"
+    axis_text = "#B8CCE3"
+    accent_text = "#8CBFFF"
     figure.update_layout(
-        template="plotly_dark",
-        height=height,
-        paper_bgcolor="#07111F",
-        plot_bgcolor="#0B1C31",
-        font={"color": "#DCE8F7", "family": "Inter, sans-serif"},
+        template="plotly_dark", height=height,
+        paper_bgcolor="#07111F", plot_bgcolor="#0B1C31",
+        font={"color": primary_text, "family": "Inter, sans-serif", "size": 13},
+        title={"font": {"color": primary_text, "family": "Inter, sans-serif", "size": 17}},
         colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 30, "r": 26, "t": 42, "b": 30},
-        legend_title_text="",
-        legend={
-            "orientation": "h",
-            "yanchor": "bottom",
-            "y": 1.02,
-            "xanchor": "left",
-            "x": 0,
-            "bgcolor": "rgba(7,17,31,.0)",
-            "font": {"color": "#CFE2FF"},
-        },
-        hoverlabel={
-            "bgcolor": "#102A4A",
-            "bordercolor": "#2E5F96",
-            "font_color": "#F4F8FF",
-        },
+        margin={"l": 34, "r": 28, "t": 46, "b": 34}, legend_title_text="",
+        legend={"orientation":"h","yanchor":"bottom","y":1.02,"xanchor":"left","x":0,
+                "bgcolor":"rgba(7,17,31,0)","borderwidth":0,
+                "font":{"color":secondary_text,"family":"Inter, sans-serif","size":12},
+                "title":{"font":{"color":accent_text,"family":"Inter, sans-serif","size":12}}},
+        hoverlabel={"bgcolor":"#102A4A","bordercolor":"#3A6FA8",
+                    "font":{"color":primary_text,"family":"Inter, sans-serif","size":13}},
+        uniformtext={"minsize":10,"mode":"show"},
     )
-    figure.update_xaxes(
-        gridcolor="rgba(107,145,191,.20)",
-        zerolinecolor="rgba(107,145,191,.28)",
-        linecolor="rgba(107,145,191,.35)",
-        tickfont={"color": "#AFC4DD"},
-        title_font={"color": "#8CBFFF"},
-        automargin=True,
+    axis_common = dict(
+        color=axis_text, gridcolor="rgba(107,145,191,.20)",
+        zerolinecolor="rgba(107,145,191,.38)", linecolor="rgba(107,145,191,.38)",
+        tickcolor="rgba(107,145,191,.38)", showline=True, automargin=True,
+        tickfont={"color":axis_text,"family":"Inter, sans-serif","size":12},
+        title_font={"color":accent_text,"family":"Inter, sans-serif","size":13},
     )
-    figure.update_yaxes(
-        gridcolor="rgba(107,145,191,.20)",
-        zerolinecolor="rgba(107,145,191,.28)",
-        linecolor="rgba(107,145,191,.35)",
-        tickfont={"color": "#AFC4DD"},
-        title_font={"color": "#8CBFFF"},
-        automargin=True,
-    )
+    figure.update_xaxes(**axis_common)
+    figure.update_yaxes(**axis_common)
+    for trace in figure.data:
+        trace_type = str(getattr(trace, "type", "") or "").lower()
+        if hasattr(trace, "textfont"):
+            trace.textfont = {"color": primary_text, "family":"Inter, sans-serif", "size":12}
+        if trace_type in {"pie","sunburst","treemap","funnelarea"}:
+            if hasattr(trace, "insidetextfont"):
+                trace.insidetextfont={"color":"#FFFFFF","family":"Inter, sans-serif","size":12}
+            if hasattr(trace, "outsidetextfont"):
+                trace.outsidetextfont={"color":secondary_text,"family":"Inter, sans-serif","size":12}
+        marker=getattr(trace,"marker",None)
+        colorbar=getattr(marker,"colorbar",None) if marker else None
+        if colorbar is not None:
+            colorbar.tickfont={"color":axis_text,"family":"Inter, sans-serif","size":11}
+            colorbar.title={"font":{"color":accent_text,"family":"Inter, sans-serif","size":12}}
+    for annotation in list(figure.layout.annotations or []):
+        annotation.font={"color":primary_text,"family":"Inter, sans-serif","size":annotation.font.size if annotation.font and annotation.font.size else 13}
+        if isinstance(annotation.text,str):
+            annotation.text=annotation.text.replace("#2A3B16",primary_text).replace("#C6D7EA",secondary_text).replace("#4C7814",accent_text)
+    try:
+        figure.update_coloraxes(colorbar_tickfont={"color":axis_text,"family":"Inter, sans-serif","size":11},
+                                colorbar_title_font={"color":accent_text,"family":"Inter, sans-serif","size":12})
+    except Exception:
+        pass
 
 
 def padded_chart_max(
@@ -3347,10 +3366,10 @@ def empty_dashboard_figure(message: str, *, donut: bool = False):
         y=0.5,
         xref="paper",
         yref="paper",
-        text=f"<b>No data yet</b><br><span style='color:#66734F'>{message}</span>",
+        text=f"<b>No data yet</b><br><span style='color:#C6D7EA'>{message}</span>",
         showarrow=False,
         align="center",
-        font={"size": 14, "color": "#2A3B16"},
+        font={"size": 14, "color": "#F4F8FF"},
     )
     style_plotly_figure(figure)
     return figure
@@ -7300,7 +7319,7 @@ def dashboard_page() -> None:
             for value in source_data["Net Contribution"]
         ],
         textposition="outside",
-        textfont={"color": "#2A3B16"},
+        textfont={"color": "#F4F8FF"},
         hovertemplate=(
             "<b>%{y}</b><br>"
             "Net contribution: %{customdata[0]:+,.0f} aUEC"
@@ -7539,7 +7558,7 @@ def dashboard_page() -> None:
                 for value in contract_type_data["net_payout"]
             ],
             textposition="outside",
-            textfont={"color": "#2A3B16"},
+            textfont={"color": "#F4F8FF"},
             hovertemplate=(
                 "<b>%{y}</b><br>"
                 "Net payout: %{customdata[0]:,.0f} aUEC<br>"
@@ -7600,7 +7619,7 @@ def dashboard_page() -> None:
             x=.5,
             y=.5,
             showarrow=False,
-            font={"size": 14, "color": "#2A3B16"},
+            font={"size": 14, "color": "#F4F8FF"},
         )
         style_plotly_figure(activity_mix_figure, height=390)
         activity_mix_figure.update_layout(
