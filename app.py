@@ -3038,6 +3038,10 @@ def apply_custom_theme() -> None:
         /* ================================================================
            DEEP SPACE BLUE V17 — COMPACT CONTRACT GRAPH SPACING
            ================================================================ */
+
+        /* ================================================================
+           DEEP SPACE BLUE V18 — CONTRACT GRAPH ALIGNMENT
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -3741,7 +3745,6 @@ def center_dashboard_bar_figure(
         )
         figure.update_yaxes(
             automargin=False,
-            title_standoff=10,
             ticklabelposition="outside",
         )
     else:
@@ -8040,17 +8043,22 @@ def dashboard_page() -> None:
             contract_type_figure,
             contract_type_data["Plot Value"],
             orientation="horizontal",
-            padding=0.34,
+            padding=0.28,
         )
         style_plotly_figure(contract_type_figure, height=390)
         contract_type_figure.update_layout(showlegend=False)
+        contract_type_figure.update_yaxes(
+            title_text="",
+            title_standoff=0,
+            ticklabelstandoff=6,
+        )
         center_dashboard_bar_figure(
             contract_type_figure,
             orientation="horizontal",
-            top=34,
-            bottom=56,
-            left=96,
-            right=72,
+            top=28,
+            bottom=52,
+            left=104,
+            right=52,
         )
     else:
         contract_type_figure = empty_dashboard_figure(
