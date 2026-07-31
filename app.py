@@ -1603,6 +1603,37 @@ def apply_custom_theme() -> None:
             flex: 0 0 2.4rem;
         }
 
+        .quick-tool-icon img {
+            display: block;
+            width: 1.42rem;
+            height: 1.42rem;
+            object-fit: contain;
+        }
+
+        .quick-tool-media {
+            filter: saturate(.96) contrast(1.03);
+        }
+
+        [class*="st-key-quick_tool_3"] .quick-tool-media {
+            background-position: center 58%;
+        }
+
+        [class*="st-key-quick_tool_4"] .quick-tool-media {
+            background-position: center 52%;
+        }
+
+        [class*="st-key-quick_tool_5"] .quick-tool-media {
+            background-position: center 50%;
+        }
+
+        [class*="st-key-quick_tool_6"] .quick-tool-media {
+            background-position: center 50%;
+        }
+
+        [class*="st-key-quick_tool_7"] .quick-tool-media {
+            background-position: center 46%;
+        }
+
         [class*="st-key-quick_tool_"]
         [data-testid="stVerticalBlockBorderWrapper"] {
             height: 100%;
@@ -1742,7 +1773,16 @@ def image_data_uri(filename: str) -> str:
         return ""
     encoded = base64.b64encode(image_path.read_bytes()).decode("ascii")
     suffix = image_path.suffix.lower()
-    mime = "image/png" if suffix == ".png" else "image/jpeg"
+    mime_types = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".svg": "image/svg+xml",
+    }
+    mime = mime_types.get(suffix)
+    if not mime:
+        return ""
     return f"data:{mime};base64,{encoded}"
 
 
@@ -5342,60 +5382,60 @@ def dashboard_hero() -> None:
     )
 
 def feature_dashboard_cards() -> None:
-    """Render image-backed dashboard shortcuts using packaged assets."""
+    """Render the image-backed dashboard workspace cards."""
     cards = [
         (
             "contracts_feature.jpg",
-            "◫",
+            "icons/contracts.svg",
             "Contracts",
             "Record payouts and crew shares.",
             "Contract Calculator",
         ),
         (
             "ore_feature.jpg",
-            "▱",
+            "icons/ore-ledger.svg",
             "Ore Ledger",
             "Track mined, bought, sold, and on-hand SCU.",
             "Ore Ledger",
         ),
         (
             "commodity_feature.jpg",
-            "⬡",
+            "icons/commodities.svg",
             "Commodities",
             "Plan routes and record cargo activity.",
             "Commodities",
         ),
         (
-            "fleet_feature.jpg",
-            "⌖",
+            "mining_locations_feature.jpg",
+            "icons/mining-locations.svg",
             "Mining Locations",
             "Find resource locations and methods.",
             "Mining Locations",
         ),
         (
-            "records_feature.jpg",
-            "▦",
+            "blueprints_feature.jpg",
+            "icons/blueprints.svg",
             "Blueprints",
             "Track ownership and material readiness.",
             "Blueprints",
         ),
         (
-            "commodity_feature.jpg",
-            "◎",
+            "loot_shops_feature.jpg",
+            "icons/loot-shops.svg",
             "Loot & Shops",
             "Find stores and shared loot locations.",
             "Loot & Shops",
         ),
         (
-            "records_feature.jpg",
-            "▮",
+            "saved_records_feature.jpg",
+            "icons/saved-records.svg",
             "Saved Records",
             "Review and manage all recorded activity.",
             "Saved Records",
         ),
         (
-            "export_banner.jpg",
-            "⇩",
+            "export_data_feature.jpg",
+            "icons/export-data.svg",
             "Export Data",
             "Download Excel, CSV, and Google Sheets data.",
             "Export Data",
@@ -5426,15 +5466,23 @@ def feature_dashboard_cards() -> None:
         ):
             (
                 image_filename,
-                icon,
+                icon_filename,
                 title,
                 copy,
                 target,
             ) = card
+
             image_uri = image_data_uri(image_filename)
+            icon_uri = image_data_uri(icon_filename)
             background_style = (
                 f"background-image: url('{image_uri}');"
                 if image_uri
+                else ""
+            )
+            icon_markup = (
+                f'<img src="{icon_uri}" '
+                f'alt="{html.escape(title)} icon">'
+                if icon_uri
                 else ""
             )
 
@@ -5452,8 +5500,11 @@ def feature_dashboard_cards() -> None:
                                 aria-label="{html.escape(title)}"
                             ></div>
                             <div class="quick-tool-body">
-                                <div class="quick-tool-icon">
-                                    {html.escape(icon)}
+                                <div
+                                    class="quick-tool-icon"
+                                    aria-hidden="true"
+                                >
+                                    {icon_markup}
                                 </div>
                                 <div>
                                     <div class="quick-tool-title">
