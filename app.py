@@ -3042,6 +3042,10 @@ def apply_custom_theme() -> None:
         /* ================================================================
            DEEP SPACE BLUE V18 — CONTRACT GRAPH ALIGNMENT
            ================================================================ */
+
+        /* ================================================================
+           DEEP SPACE BLUE V19 — SUMMARY ICONS + TOP GRAPH FIX
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -3155,6 +3159,18 @@ def render_app_icon_styles() -> None:
         .dashboard-summary-icon .app-svg-icon {
             width: 1.22rem;
             height: 1.22rem;
+            object-fit: contain;
+            opacity: 1 !important;
+            visibility: visible !important;
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(64%)
+                sepia(82%)
+                saturate(2286%)
+                hue-rotate(186deg)
+                brightness(100%)
+                contrast(101%);
         }
 
         .icon-badge-glyph {
@@ -7372,7 +7388,7 @@ def dashboard_icon_badge_markup(
     alt: str = "",
     badge_class: str = "dashboard-summary-icon",
 ) -> str:
-    """Render a resilient icon badge using a CSS background image."""
+    """Render a resilient icon badge using packaged SVG/PNG assets."""
     icon_uri = image_data_uri(filename)
     label_attr = (
         f' aria-label="{html.escape(alt)}" role="img"'
@@ -7387,7 +7403,8 @@ def dashboard_icon_badge_markup(
         )
     return (
         f'<div class="{html.escape(badge_class)}"{label_attr}>'
-        f'<span class="icon-badge-glyph" style="background-image:url({icon_uri});"></span>'
+        f'<img class="app-svg-icon dashboard-badge-img" '
+        f'src="{icon_uri}" alt="{html.escape(alt)}">'
         '</div>'
     )
 
@@ -7779,17 +7796,22 @@ def dashboard_page() -> None:
         source_figure,
         source_data["Plot Value"],
         orientation="horizontal",
-        padding=0.34,
+        padding=0.28,
     )
     style_plotly_figure(source_figure, height=390)
     source_figure.update_layout(showlegend=False)
+    source_figure.update_yaxes(
+        title_text="",
+        title_standoff=0,
+        ticklabelstandoff=6,
+    )
     center_dashboard_bar_figure(
         source_figure,
         orientation="horizontal",
-        top=30,
-        bottom=58,
-        left=112,
-        right=102,
+        top=26,
+        bottom=52,
+        left=110,
+        right=56,
     )
     # Ore value by mineral
     if not ores.empty:
