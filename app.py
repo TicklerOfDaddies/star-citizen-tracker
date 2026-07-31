@@ -1896,6 +1896,888 @@ def apply_custom_theme() -> None:
                 height: 128px !important;
             }
         }
+
+        /* ================================================================
+           MODERN UI V7 — STRONGER BORDERS AND TYPOGRAPHY
+           Creates clearer separation across every tile, control, table,
+           form, chart, heading, and text-entry element.
+           ================================================================ */
+
+        :root {
+            --sc-line: #B9B5A5;
+            --sc-line-strong: #7F9134;
+            --sc-control-line: #929D58;
+            --sc-divider: #C9C5B6;
+            --sc-ink: #11130F;
+            --sc-text: #2B3027;
+            --sc-muted: #5E6458;
+            --sc-card-shadow:
+                0 1px 2px rgba(35,42,18,.06),
+                0 8px 24px rgba(35,42,18,.055);
+        }
+
+        /* Main app and sidebar separation */
+        [data-testid="stHeader"] {
+            border-bottom: 2px solid var(--sc-divider) !important;
+        }
+
+        section[data-testid="stSidebar"] {
+            border-right: 2px solid var(--sc-divider) !important;
+        }
+
+        .sidebar-brand {
+            border-bottom: 2px solid var(--sc-divider) !important;
+        }
+
+        /* Page, section, and chart headings */
+        .sc-page-heading {
+            border-bottom: 2px solid var(--sc-divider) !important;
+        }
+
+        .sc-page-title,
+        .dashboard-welcome-title {
+            font-weight: 840 !important;
+        }
+
+        .section-heading,
+        .analytics-heading {
+            border: 2px solid var(--sc-line) !important;
+            border-left: 5px solid var(--sc-olive) !important;
+            box-shadow: 0 3px 10px rgba(35,42,18,.045) !important;
+        }
+
+        .section-title,
+        .analytics-title,
+        .chart-heading,
+        main h2,
+        main h3,
+        main h4 {
+            color: var(--sc-ink) !important;
+            font-weight: 820 !important;
+        }
+
+        main h2,
+        main h3 {
+            border-left-width: 5px !important;
+            border-bottom: 2px solid var(--sc-divider) !important;
+        }
+
+        .section-copy,
+        .analytics-copy,
+        .chart-copy,
+        .sc-page-subtitle {
+            color: var(--sc-muted) !important;
+            font-weight: 520 !important;
+        }
+
+        /* All cards, forms, expanders, metrics, and framed containers */
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stForm"],
+        [data-testid="stExpander"],
+        [data-testid="stDataFrame"],
+        div[data-testid="stMetric"],
+        .dashboard-summary-card,
+        .commodity-metric-card,
+        .dashboard-metric-card,
+        .profile-summary-card,
+        .sidebar-user-card,
+        .sidebar-status-card,
+        .rights-notice,
+        .sc-media-hero,
+        .dashboard-media-hero,
+        .profile-hero.profile-media-hero {
+            border: 2px solid var(--sc-line) !important;
+            box-shadow: var(--sc-card-shadow) !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [data-testid="stForm"]:hover,
+        [data-testid="stExpander"]:hover,
+        .dashboard-summary-card:hover,
+        .commodity-metric-card:hover,
+        .dashboard-metric-card:hover,
+        .profile-summary-card:hover {
+            border-color: var(--sc-line-strong) !important;
+        }
+
+        /* Dashboard workspace tiles */
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border: 2px solid var(--sc-line) !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: var(--sc-line-strong) !important;
+            box-shadow:
+                0 2px 4px rgba(35,42,18,.06),
+                0 10px 28px rgba(35,42,18,.08) !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stImageContainer"] {
+            border-bottom: 2px solid var(--sc-line) !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-body {
+            border-bottom: 1.5px solid var(--sc-divider);
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-icon {
+            border: 2px solid var(--sc-control-line) !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-title {
+            color: var(--sc-ink) !important;
+            font-weight: 820 !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-copy {
+            color: var(--sc-muted) !important;
+            font-weight: 540 !important;
+        }
+
+        /* Buttons */
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            border: 2px solid var(--sc-control-line) !important;
+            font-weight: 760 !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            border-color: var(--sc-olive-dark) !important;
+        }
+
+        .stButton > button[kind="primary"],
+        [data-testid="stFormSubmitButton"] > button[kind="primary"] {
+            border: 2px solid #455313 !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button {
+            border: 1.5px solid transparent !important;
+            font-weight: 700 !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button:hover {
+            border-color: var(--sc-line) !important;
+        }
+
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] {
+            border-top: 2px solid var(--sc-line) !important;
+            border-right: 2px solid var(--sc-line) !important;
+            border-bottom: 2px solid var(--sc-line) !important;
+            border-left: 5px solid var(--sc-olive) !important;
+        }
+
+        /* Text, number, date, time, search, select, multiselect, and textarea */
+        [data-testid="stTextInput"] > div:last-child::after,
+        [data-testid="stNumberInput"] > div:last-child::after,
+        [data-testid="stDateInput"] > div:last-child::after,
+        [data-testid="stTimeInput"] > div:last-child::after,
+        [data-testid="stSearchbox"] > div:last-child::after,
+        [data-testid="stSelectbox"] > div:last-child::after,
+        [data-testid="stMultiSelect"] > div:last-child::after,
+        [data-testid="stTextArea"] > div:last-child::after {
+            border: 2px solid var(--sc-control-line) !important;
+            box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,.78),
+                0 1px 2px rgba(35,42,18,.035) !important;
+        }
+
+        [data-testid="stTextInput"] > div:last-child:focus-within::after,
+        [data-testid="stNumberInput"] > div:last-child:focus-within::after,
+        [data-testid="stDateInput"] > div:last-child:focus-within::after,
+        [data-testid="stTimeInput"] > div:last-child:focus-within::after,
+        [data-testid="stSearchbox"] > div:last-child:focus-within::after,
+        [data-testid="stSelectbox"] > div:last-child:focus-within::after,
+        [data-testid="stMultiSelect"] > div:last-child:focus-within::after,
+        [data-testid="stTextArea"] > div:last-child:focus-within::after {
+            border-color: var(--sc-olive-dark) !important;
+            box-shadow:
+                0 0 0 3px rgba(104,122,32,.16),
+                inset 0 0 0 1px rgba(255,255,255,.8) !important;
+        }
+
+        [data-testid="stWidgetLabel"] p {
+            color: var(--sc-ink) !important;
+            font-weight: 790 !important;
+        }
+
+        input,
+        textarea,
+        [role="combobox"] {
+            color: var(--sc-text) !important;
+            font-weight: 560 !important;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #777D70 !important;
+            font-weight: 500 !important;
+        }
+
+        [data-testid="stNumberInput"] button {
+            border-left: 2px solid var(--sc-divider) !important;
+        }
+
+        /* Radio, checkbox, toggle, slider, and uploader framing */
+        [data-testid="stRadio"] [role="radiogroup"] {
+            border: 2px solid var(--sc-control-line) !important;
+        }
+
+        [data-testid="stCheckbox"] label,
+        [data-testid="stToggle"] label {
+            font-weight: 650 !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] {
+            border: 2px dashed var(--sc-control-line) !important;
+        }
+
+        /* Tabs */
+        [data-testid="stTabs"] [role="tablist"] {
+            border: 2px solid var(--sc-control-line) !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] {
+            font-weight: 740 !important;
+        }
+
+        [data-testid="stTabs"]
+        [role="tab"][aria-selected="true"] {
+            border: 2px solid var(--sc-line-strong) !important;
+            font-weight: 820 !important;
+        }
+
+        /* Expanders */
+        [data-testid="stExpander"] summary {
+            border-bottom: 1.5px solid transparent;
+        }
+
+        [data-testid="stExpander"][open] summary {
+            border-bottom-color: var(--sc-divider);
+        }
+
+        [data-testid="stExpander"] summary p {
+            font-weight: 790 !important;
+        }
+
+        /* Metrics */
+        [data-testid="stMetricLabel"] p,
+        .dashboard-summary-label,
+        .dashboard-metric-label,
+        .commodity-metric-label,
+        .profile-summary-label {
+            color: #4F5549 !important;
+            font-weight: 790 !important;
+        }
+
+        [data-testid="stMetricValue"],
+        .dashboard-summary-value,
+        .dashboard-metric-value,
+        .commodity-metric-value,
+        .profile-summary-value {
+            color: var(--sc-ink) !important;
+            font-weight: 830 !important;
+        }
+
+        /* Tables, dataframe grids, and custom record rows */
+        [data-testid="stDataFrame"] {
+            border: 2px solid var(--sc-line) !important;
+        }
+
+        [data-testid="stDataFrame"] [role="columnheader"] {
+            border-right: 1.5px solid var(--sc-divider) !important;
+            border-bottom: 2px solid var(--sc-control-line) !important;
+            font-weight: 820 !important;
+        }
+
+        [data-testid="stDataFrame"] [role="gridcell"] {
+            border-right: 1.25px solid var(--sc-divider) !important;
+            border-bottom: 1.25px solid var(--sc-divider) !important;
+            font-weight: 540 !important;
+        }
+
+        .sc-list-header {
+            border: 2px solid var(--sc-line) !important;
+            border-bottom: 2px solid var(--sc-control-line) !important;
+            font-weight: 820 !important;
+        }
+
+        .sc-list-cell-title {
+            color: var(--sc-ink) !important;
+            font-weight: 790 !important;
+        }
+
+        .sc-list-cell-copy {
+            color: var(--sc-muted) !important;
+            font-weight: 530 !important;
+        }
+
+        [class*="st-key-market_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-item_shop_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-record_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border: 2px solid var(--sc-line) !important;
+        }
+
+        /* Charts, alerts, status blocks, and code */
+        [data-testid="stPlotlyChart"] {
+            border: 2px solid var(--sc-line) !important;
+        }
+
+        [data-testid="stAlert"] {
+            border-width: 2px !important;
+        }
+
+        [data-testid="stCodeBlock"] {
+            border: 2px solid var(--sc-line) !important;
+            border-radius: var(--sc-radius-sm);
+        }
+
+        .quiet-action-confirmation {
+            border: 2px solid #A7BD8F !important;
+            font-weight: 700 !important;
+        }
+
+        .rights-notice {
+            border-left: 5px solid var(--sc-olive) !important;
+        }
+
+        /* Dividers */
+        [data-testid="stDivider"] {
+            border-color: var(--sc-divider) !important;
+        }
+
+        hr {
+            border-top: 2px solid var(--sc-divider) !important;
+        }
+
+        /* ================================================================
+           DEEP SPACE BLUE V8
+           Full application theme based on Option 2.
+           ================================================================ */
+
+        :root {
+            --sc-bg: #07111F;
+            --sc-surface: #0E1B2D;
+            --sc-surface-soft: #111F33;
+            --sc-surface-green: #102A47;
+            --sc-line: #29445F;
+            --sc-line-strong: #2B73D2;
+            --sc-control-line: #315E8F;
+            --sc-divider: #223A53;
+            --sc-olive: #2563EB;
+            --sc-olive-dark: #60A5FA;
+            --sc-olive-soft: #102C52;
+            --sc-ink: #F8FAFC;
+            --sc-text: #E5EDF7;
+            --sc-muted: #A9B7C8;
+            --sc-subtle: #7F91A6;
+            --sc-positive: #38D68B;
+            --sc-negative: #FF6B78;
+            --sc-warning: #F6C453;
+            --sc-blue: #60A5FA;
+            --sc-purple: #A78BFA;
+            --sc-teal: #38BDF8;
+            --sc-card-shadow:
+                0 1px 2px rgba(0,0,0,.3),
+                0 12px 30px rgba(0,0,0,.22);
+        }
+
+        html, body,
+        .stApp,
+        [data-testid="stAppViewContainer"],
+        [data-testid="stMain"] {
+            background: var(--sc-bg) !important;
+            color: var(--sc-text) !important;
+        }
+
+        [data-testid="stHeader"] {
+            background: rgba(7,17,31,.94) !important;
+            border-bottom-color: var(--sc-divider) !important;
+        }
+
+        [data-testid="stToolbar"] {
+            color: var(--sc-text) !important;
+        }
+
+        section[data-testid="stSidebar"] {
+            background:
+                linear-gradient(
+                    180deg,
+                    #06101D 0%,
+                    #081628 52%,
+                    #07111F 100%
+                ) !important;
+            border-right-color: var(--sc-divider) !important;
+        }
+
+        section[data-testid="stSidebar"] > div {
+            background: transparent !important;
+        }
+
+        h1, h2, h3, h4, h5, h6,
+        .sc-page-title,
+        .dashboard-welcome-title,
+        .section-title,
+        .analytics-title,
+        .chart-heading,
+        .quick-tool-title,
+        .sc-list-cell-title,
+        .sidebar-user-name,
+        .sidebar-status-title {
+            color: var(--sc-ink) !important;
+        }
+
+        p, label, li, .stCaption,
+        .section-copy,
+        .analytics-copy,
+        .chart-copy,
+        .quick-tool-copy,
+        .sc-list-cell-copy,
+        .sidebar-user-email,
+        .sidebar-status-copy {
+            color: var(--sc-muted) !important;
+        }
+
+        a {
+            color: var(--sc-blue) !important;
+        }
+
+        .sc-page-kicker,
+        .analytics-kicker {
+            color: var(--sc-blue) !important;
+        }
+
+        .sc-page-heading,
+        .section-heading,
+        .analytics-heading {
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+        }
+
+        .section-heading,
+        .analytics-heading {
+            border-left-color: var(--sc-blue) !important;
+        }
+
+        .sc-page-status,
+        .dashboard-live-card {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-line-strong) !important;
+            background: rgba(14,27,45,.92) !important;
+        }
+
+        .sc-page-status-dot,
+        .sidebar-status-dot,
+        .quiet-action-indicator {
+            background: #3B82F6 !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [data-testid="stForm"],
+        [data-testid="stExpander"],
+        [data-testid="stDataFrame"],
+        div[data-testid="stMetric"],
+        .dashboard-summary-card,
+        .commodity-metric-card,
+        .dashboard-metric-card,
+        .profile-summary-card,
+        .sidebar-user-card,
+        .sidebar-status-card,
+        .rights-notice,
+        .quick-tool-card {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+            box-shadow: var(--sc-card-shadow) !important;
+        }
+
+        [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [data-testid="stForm"]:hover,
+        [data-testid="stExpander"]:hover,
+        .dashboard-summary-card:hover,
+        .commodity-metric-card:hover,
+        .dashboard-metric-card:hover,
+        .profile-summary-card:hover {
+            border-color: var(--sc-line-strong) !important;
+        }
+
+        .dashboard-summary-icon,
+        .dashboard-metric-icon,
+        .quick-tool-icon {
+            color: var(--sc-blue) !important;
+            border-color: var(--sc-line-strong) !important;
+            background: var(--sc-olive-soft) !important;
+        }
+
+        .dashboard-summary-label,
+        .dashboard-metric-label,
+        .commodity-metric-label,
+        .profile-summary-label,
+        [data-testid="stMetricLabel"] p {
+            color: var(--sc-muted) !important;
+        }
+
+        .dashboard-summary-value,
+        .dashboard-metric-value,
+        .commodity-metric-value,
+        .profile-summary-value,
+        [data-testid="stMetricValue"] {
+            color: var(--sc-ink) !important;
+        }
+
+        .positive,
+        .dashboard-summary-card.positive .dashboard-summary-value,
+        .commodity-metric-value.positive,
+        .dashboard-metric-value.positive {
+            color: var(--sc-positive) !important;
+        }
+
+        .negative,
+        .dashboard-summary-card.negative .dashboard-summary-value,
+        .commodity-metric-value.negative,
+        .dashboard-metric-value.negative {
+            color: var(--sc-negative) !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: var(--sc-line-strong) !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stImageContainer"] {
+            border-bottom-color: var(--sc-line) !important;
+            background: #0A1728 !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-body,
+        [class*="st-key-quick_tool_"] .stButton {
+            background: var(--sc-surface) !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-body {
+            border-bottom-color: var(--sc-divider) !important;
+        }
+
+        .stButton > button,
+        .stDownloadButton > button,
+        [data-testid="stFormSubmitButton"] > button,
+        .stLinkButton > a {
+            color: var(--sc-blue) !important;
+            border-color: var(--sc-control-line) !important;
+            background: #0B1A2E !important;
+        }
+
+        .stButton > button:hover,
+        .stDownloadButton > button:hover,
+        [data-testid="stFormSubmitButton"] > button:hover,
+        .stLinkButton > a:hover {
+            color: #FFFFFF !important;
+            border-color: var(--sc-blue) !important;
+            background: #123765 !important;
+        }
+
+        .stButton > button[kind="primary"],
+        [data-testid="stFormSubmitButton"] > button[kind="primary"] {
+            color: #FFFFFF !important;
+            border-color: #3B82F6 !important;
+            background:
+                linear-gradient(
+                    180deg,
+                    #2F73ED 0%,
+                    #1D55C7 100%
+                ) !important;
+        }
+
+        .stButton > button[kind="primary"]:hover,
+        [data-testid="stFormSubmitButton"] > button[kind="primary"]:hover {
+            border-color: #60A5FA !important;
+            background:
+                linear-gradient(
+                    180deg,
+                    #3B82F6 0%,
+                    #2563EB 100%
+                ) !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button {
+            color: #BFCBDD !important;
+            background: transparent !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button:hover {
+            color: #FFFFFF !important;
+            border-color: #245A97 !important;
+            background: #0E2948 !important;
+        }
+
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] {
+            color: #FFFFFF !important;
+            border-color: #2E70CC !important;
+            border-left-color: #60A5FA !important;
+            background:
+                linear-gradient(
+                    90deg,
+                    #0F3C72 0%,
+                    #12305A 100%
+                ) !important;
+        }
+
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] * {
+            color: #FFFFFF !important;
+        }
+
+        [data-testid="stTextInput"] > div:last-child,
+        [data-testid="stNumberInput"] > div:last-child,
+        [data-testid="stDateInput"] > div:last-child,
+        [data-testid="stTimeInput"] > div:last-child,
+        [data-testid="stSearchbox"] > div:last-child,
+        [data-testid="stSelectbox"] > div:last-child,
+        [data-testid="stMultiSelect"] > div:last-child,
+        [data-testid="stTextArea"] > div:last-child {
+            background: #0A1728 !important;
+        }
+
+        [data-testid="stTextInput"] > div:last-child::after,
+        [data-testid="stNumberInput"] > div:last-child::after,
+        [data-testid="stDateInput"] > div:last-child::after,
+        [data-testid="stTimeInput"] > div:last-child::after,
+        [data-testid="stSearchbox"] > div:last-child::after,
+        [data-testid="stSelectbox"] > div:last-child::after,
+        [data-testid="stMultiSelect"] > div:last-child::after,
+        [data-testid="stTextArea"] > div:last-child::after {
+            border-color: var(--sc-control-line) !important;
+            box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,.025),
+                0 1px 2px rgba(0,0,0,.24) !important;
+        }
+
+        [data-testid="stTextInput"] > div:last-child:focus-within::after,
+        [data-testid="stNumberInput"] > div:last-child:focus-within::after,
+        [data-testid="stDateInput"] > div:last-child:focus-within::after,
+        [data-testid="stTimeInput"] > div:last-child:focus-within::after,
+        [data-testid="stSearchbox"] > div:last-child:focus-within::after,
+        [data-testid="stSelectbox"] > div:last-child:focus-within::after,
+        [data-testid="stMultiSelect"] > div:last-child:focus-within::after,
+        [data-testid="stTextArea"] > div:last-child:focus-within::after {
+            border-color: var(--sc-blue) !important;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.22) !important;
+        }
+
+        [data-baseweb="input"],
+        [data-baseweb="base-input"],
+        [data-baseweb="select"] > div,
+        [role="combobox"] {
+            color: var(--sc-text) !important;
+            background: transparent !important;
+        }
+
+        input, textarea, [role="combobox"] {
+            color: var(--sc-text) !important;
+            -webkit-text-fill-color: var(--sc-text) !important;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--sc-subtle) !important;
+            -webkit-text-fill-color: var(--sc-subtle) !important;
+        }
+
+        [data-testid="stWidgetLabel"] p {
+            color: var(--sc-text) !important;
+        }
+
+        [data-testid="stNumberInput"] button {
+            color: var(--sc-blue) !important;
+            border-left-color: var(--sc-divider) !important;
+            background: #10243D !important;
+        }
+
+        [data-testid="stRadio"] [role="radiogroup"],
+        [data-testid="stTabs"] [role="tablist"] {
+            border-color: var(--sc-control-line) !important;
+            background: #091729 !important;
+        }
+
+        [data-testid="stTabs"] [role="tab"] {
+            color: var(--sc-muted) !important;
+        }
+
+        [data-testid="stTabs"]
+        [role="tab"][aria-selected="true"] {
+            color: #FFFFFF !important;
+            border-color: var(--sc-blue) !important;
+            background: #123765 !important;
+        }
+
+        [data-testid="stFileUploaderDropzone"] {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-control-line) !important;
+            background: #0A1728 !important;
+        }
+
+        [data-testid="stDataFrame"] {
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+        }
+
+        [data-testid="stDataFrame"] [role="columnheader"] {
+            color: #D8E5F4 !important;
+            border-color: var(--sc-divider) !important;
+            border-bottom-color: var(--sc-line-strong) !important;
+            background: #132641 !important;
+        }
+
+        [data-testid="stDataFrame"] [role="gridcell"] {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-divider) !important;
+            background: #0D1B2E !important;
+        }
+
+        .sc-list-header {
+            color: var(--sc-muted) !important;
+            border-color: var(--sc-line) !important;
+            border-bottom-color: var(--sc-line-strong) !important;
+            background: #132641 !important;
+        }
+
+        [class*="st-key-market_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-item_shop_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-record_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+        }
+
+        [class*="st-key-market_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [class*="st-key-item_shop_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover,
+        [class*="st-key-record_row_"]
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: var(--sc-blue) !important;
+            background: #11243C !important;
+        }
+
+        [data-testid="stPlotlyChart"] {
+            border-color: var(--sc-line) !important;
+            background: var(--sc-surface) !important;
+        }
+
+        [data-testid="stAlert"] {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-line) !important;
+            background: #102139 !important;
+        }
+
+        [data-testid="stCodeBlock"] {
+            border-color: var(--sc-line) !important;
+            background: #07101C !important;
+        }
+
+        .quiet-action-confirmation {
+            color: #C8F6DE !important;
+            border-color: #299D68 !important;
+            background: #0B3428 !important;
+        }
+
+        .rights-notice {
+            color: var(--sc-muted) !important;
+            border-left-color: var(--sc-blue) !important;
+            background: #0B192A !important;
+        }
+
+        hr,
+        [data-testid="stDivider"] {
+            border-color: var(--sc-divider) !important;
+        }
+
+        /* Make icon strokes blue without editing every SVG file. */
+        .app-svg-icon,
+        .quick-tool-icon img,
+        .sidebar-brand-logo {
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(58%)
+                sepia(74%)
+                saturate(2612%)
+                hue-rotate(190deg)
+                brightness(101%)
+                contrast(102%);
+        }
+
+        .sidebar-brand-logo {
+            border-color: var(--sc-line-strong) !important;
+            background: #09182A !important;
+        }
+
+        .sidebar-art-card {
+            border-color: var(--sc-line) !important;
+        }
+
+        .sidebar-art-copy {
+            color: #FFFFFF !important;
+        }
+
+        /* Plotly SVG and modebar integration */
+        [data-testid="stPlotlyChart"] .modebar-btn path {
+            fill: #8CBFFF !important;
+        }
+
+        /* Popup menus and dropdown options */
+        [data-baseweb="popover"],
+        [data-baseweb="menu"],
+        [role="listbox"] {
+            color: var(--sc-text) !important;
+            border-color: var(--sc-line) !important;
+            background: #0D1B2E !important;
+        }
+
+        [role="option"] {
+            color: var(--sc-text) !important;
+            background: #0D1B2E !important;
+        }
+
+        [role="option"]:hover,
+        [role="option"][aria-selected="true"] {
+            color: #FFFFFF !important;
+            background: #153D6D !important;
+        }
+
+        /* Authentication surfaces */
+        [class*="auth"],
+        .auth-card,
+        .auth-shell {
+            color: var(--sc-text) !important;
+        }
+
+        @media (max-width: 760px) {
+            section[data-testid="stSidebar"] {
+                background: #07111F !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
