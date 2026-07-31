@@ -2939,6 +2939,20 @@ def apply_custom_theme() -> None:
             stroke-width: 2px;
             stroke-linejoin: round;
         }
+
+        /* ================================================================
+           DEEP SPACE BLUE V13 — COLOR SCALE REPAIR
+           ================================================================ */
+
+        [data-testid="stPlotlyChart"] .colorbar .cbtitle:empty,
+        [data-testid="stPlotlyChart"] .colorbar .cbaxis:empty {
+            display: none !important;
+        }
+
+        [data-testid="stPlotlyChart"] text[data-unformatted="undefined"],
+        [data-testid="stPlotlyChart"] text[data-unformatted="None"] {
+            display: none !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -3229,102 +3243,271 @@ def render_rights_notice() -> None:
 
 
 def style_plotly_figure(figure, *, height: int = 430) -> None:
-    """Apply a complete Deep Space Blue text and surface theme to Plotly."""
+    """Apply Deep Space Blue styling without creating ghost color scales."""
     primary_text = "#F4F8FF"
     secondary_text = "#C6D7EA"
     axis_text = "#B8CCE3"
     accent_text = "#8CBFFF"
+
     figure.update_layout(
-        template="plotly_dark", height=height,
-        paper_bgcolor="#07111F", plot_bgcolor="#0B1C31",
-        font={"color": primary_text, "family": "Inter, sans-serif", "size": 13},
-        title={"font": {"color": primary_text, "family": "Inter, sans-serif", "size": 17}},
+        template="plotly_dark",
+        height=height,
+        paper_bgcolor="#07111F",
+        plot_bgcolor="#0B1C31",
+        font={
+            "color": primary_text,
+            "family": "Inter, sans-serif",
+            "size": 13,
+        },
+        title={
+            "text": (
+                ""
+                if str(figure.layout.title.text or "").lower()
+                in {"", "none", "undefined"}
+                else figure.layout.title.text
+            ),
+            "font": {
+                "color": primary_text,
+                "family": "Inter, sans-serif",
+                "size": 17,
+            },
+        },
         colorway=STAR_CITIZEN_COLORS,
-        margin={"l": 34, "r": 28, "t": 46, "b": 34}, legend_title_text="",
-        legend={"orientation":"h","yanchor":"bottom","y":1.02,"xanchor":"left","x":0,
-                "bgcolor":"rgba(7,17,31,0)","borderwidth":0,
-                "font":{"color":secondary_text,"family":"Inter, sans-serif","size":12},
-                "title":{"font":{"color":accent_text,"family":"Inter, sans-serif","size":12}}},
-        hoverlabel={"bgcolor":"#102A4A","bordercolor":"#3A6FA8",
-                    "font":{"color":primary_text,"family":"Inter, sans-serif","size":13}},
-        uniformtext={"minsize":10,"mode":"show"},
+        margin={"l": 34, "r": 28, "t": 46, "b": 34},
+        legend_title_text="",
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "left",
+            "x": 0,
+            "bgcolor": "rgba(7,17,31,0)",
+            "borderwidth": 0,
+            "font": {
+                "color": secondary_text,
+                "family": "Inter, sans-serif",
+                "size": 12,
+            },
+            "title": {
+                "font": {
+                    "color": accent_text,
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                }
+            },
+        },
+        hoverlabel={
+            "bgcolor": "#102A4A",
+            "bordercolor": "#3A6FA8",
+            "font": {
+                "color": primary_text,
+                "family": "Inter, sans-serif",
+                "size": 13,
+            },
+        },
+        uniformtext={"minsize": 10, "mode": "show"},
     )
-    axis_common = dict(
-        color=axis_text, gridcolor="rgba(107,145,191,.20)",
-        zerolinecolor="rgba(107,145,191,.38)", linecolor="rgba(107,145,191,.38)",
-        tickcolor="rgba(107,145,191,.38)", showline=True, automargin=True,
-        tickfont={"color":axis_text,"family":"Inter, sans-serif","size":12},
-        title_font={"color":accent_text,"family":"Inter, sans-serif","size":13},
-    )
+
+    axis_common = {
+        "color": axis_text,
+        "gridcolor": "rgba(107,145,191,.20)",
+        "zerolinecolor": "rgba(107,145,191,.38)",
+        "linecolor": "rgba(107,145,191,.38)",
+        "tickcolor": "rgba(107,145,191,.38)",
+        "showline": True,
+        "automargin": True,
+        "tickfont": {
+            "color": axis_text,
+            "family": "Inter, sans-serif",
+            "size": 12,
+        },
+        "title_font": {
+            "color": accent_text,
+            "family": "Inter, sans-serif",
+            "size": 13,
+        },
+    }
     figure.update_xaxes(**axis_common)
     figure.update_yaxes(**axis_common)
+
+    uses_layout_coloraxis = False
+
     for trace in figure.data:
         trace_type = str(getattr(trace, "type", "") or "").lower()
-        if hasattr(trace, "textfont"):
-            trace.textfont = {"color": primary_text, "family":"Inter, sans-serif", "size":12}
-        if trace_type in {"pie","sunburst","treemap","funnelarea"}:
-            if hasattr(trace, "insidetextfont"):
-                trace.insidetextfont={"color":"#FFFFFF","family":"Inter, sans-serif","size":12}
-            if hasattr(trace, "outsidetextfont"):
-                trace.outsidetextfont={"color":secondary_text,"family":"Inter, sans-serif","size":12}
-        marker=getattr(trace,"marker",None)
-        colorbar=getattr(marker,"colorbar",None) if marker else None
-        if colorbar is not None:
-            colorbar.tickfont={"color":axis_text,"family":"Inter, sans-serif","size":11}
-            colorbar.title={"font":{"color":accent_text,"family":"Inter, sans-serif","size":12}}
-    for annotation in list(figure.layout.annotations or []):
-        annotation.font={"color":primary_text,"family":"Inter, sans-serif","size":annotation.font.size if annotation.font and annotation.font.size else 13}
-        if isinstance(annotation.text,str):
-            annotation.text=annotation.text.replace("#2A3B16",primary_text).replace("#C6D7EA",secondary_text).replace("#4C7814",accent_text)
-    try:
-        figure.update_coloraxes(colorbar_tickfont={"color":axis_text,"family":"Inter, sans-serif","size":11},
-                                colorbar_title_font={"color":accent_text,"family":"Inter, sans-serif","size":12})
-    except Exception:
-        pass
 
+        if hasattr(trace, "textfont"):
+            trace.textfont = {
+                "color": primary_text,
+                "family": "Inter, sans-serif",
+                "size": 12,
+            }
+
+        if trace_type in {"pie", "sunburst", "treemap", "funnelarea"}:
+            if hasattr(trace, "insidetextfont"):
+                trace.insidetextfont = {
+                    "color": "#FFFFFF",
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                }
+            if hasattr(trace, "outsidetextfont"):
+                trace.outsidetextfont = {
+                    "color": secondary_text,
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                }
+
+        marker = getattr(trace, "marker", None)
+        marker_coloraxis = (
+            getattr(marker, "coloraxis", None)
+            if marker is not None
+            else None
+        )
+        trace_coloraxis = getattr(trace, "coloraxis", None)
+        has_layout_coloraxis = bool(
+            marker_coloraxis or trace_coloraxis
+        )
+        has_trace_colorbar = bool(
+            marker is not None
+            and getattr(marker, "showscale", None) is True
+        )
+
+        if has_layout_coloraxis:
+            uses_layout_coloraxis = True
+        elif has_trace_colorbar:
+            colorbar = getattr(marker, "colorbar", None)
+            if colorbar is not None:
+                colorbar.tickfont = {
+                    "color": axis_text,
+                    "family": "Inter, sans-serif",
+                    "size": 11,
+                }
+                existing_title = getattr(
+                    getattr(colorbar, "title", None),
+                    "text",
+                    None,
+                )
+                if existing_title:
+                    colorbar.title.font = {
+                        "color": accent_text,
+                        "family": "Inter, sans-serif",
+                        "size": 12,
+                    }
+        elif marker is not None:
+            # Categorical charts use their normal legend. Explicitly clear
+            # Plotly's default marker.colorbar object so it cannot create an
+            # empty or undefined continuous scale.
+            marker.showscale = False
+            marker.colorbar = None
+
+    for annotation in list(figure.layout.annotations or []):
+        annotation.font = {
+            "color": primary_text,
+            "family": "Inter, sans-serif",
+            "size": (
+                annotation.font.size
+                if annotation.font and annotation.font.size
+                else 13
+            ),
+        }
+
+    if uses_layout_coloraxis:
+        figure.update_coloraxes(
+            colorbar_tickfont={
+                "color": axis_text,
+                "family": "Inter, sans-serif",
+                "size": 11,
+            },
+            colorbar_title_font={
+                "color": accent_text,
+                "family": "Inter, sans-serif",
+                "size": 12,
+            },
+        )
+    else:
+        # Do not create a layout coloraxis for ordinary discrete charts.
+        figure.update_layout(coloraxis=None)
 
 
 def style_horizontal_color_scale(
     figure: go.Figure,
     *,
     title: str,
+    values: Any | None = None,
     tick_suffix: str = "",
     tick_format: str = ".1f",
 ) -> None:
-    """Place a continuous color legend below a chart without label overlap."""
-    figure.update_layout(
-        margin={"l": 34, "r": 28, "t": 46, "b": 112},
-        coloraxis_colorbar={
-            "title": {
-                "text": title,
-                "side": "top",
-                "font": {
-                    "color": "#8CBFFF",
-                    "family": "Inter, sans-serif",
-                    "size": 12,
-                },
-            },
-            "orientation": "h",
-            "x": 0.5,
-            "xanchor": "center",
-            "y": -0.25,
-            "yanchor": "top",
-            "len": 0.72,
-            "thickness": 14,
-            "tickformat": tick_format,
-            "ticksuffix": tick_suffix,
-            "tickfont": {
-                "color": "#C6D7EA",
+    """Render one valid continuous color scale beneath a chart."""
+    numeric_values = pd.to_numeric(
+        pd.Series(values if values is not None else []),
+        errors="coerce",
+    ).dropna()
+
+    colorbar_options: dict[str, Any] = {
+        "title": {
+            "text": title,
+            "side": "top",
+            "font": {
+                "color": "#8CBFFF",
                 "family": "Inter, sans-serif",
-                "size": 11,
+                "size": 12,
             },
-            "tickcolor": "#4A77A8",
-            "ticklen": 4,
-            "outlinecolor": "#315E8F",
-            "outlinewidth": 1,
-            "bgcolor": "rgba(7,17,31,.72)",
         },
-    )
+        "orientation": "h",
+        "x": 0.5,
+        "xanchor": "center",
+        "y": -0.24,
+        "yanchor": "top",
+        "len": 0.68,
+        "thickness": 14,
+        "tickformat": tick_format,
+        "ticksuffix": tick_suffix,
+        "tickfont": {
+            "color": "#C6D7EA",
+            "family": "Inter, sans-serif",
+            "size": 11,
+        },
+        "tickcolor": "#4A77A8",
+        "ticklen": 4,
+        "outlinecolor": "#315E8F",
+        "outlinewidth": 1,
+        "bgcolor": "rgba(7,17,31,.72)",
+    }
+
+    layout_options: dict[str, Any] = {
+        "margin": {"l": 34, "r": 28, "t": 46, "b": 118},
+        "coloraxis_colorbar": colorbar_options,
+    }
+
+    if not numeric_values.empty:
+        minimum = float(numeric_values.min())
+        maximum = float(numeric_values.max())
+
+        if maximum <= minimum:
+            padding = max(abs(maximum) * 0.05, 1.0)
+            minimum -= padding
+            maximum += padding
+
+        midpoint = (minimum + maximum) / 2.0
+        tick_values = [minimum, midpoint, maximum]
+        tick_text = [
+            f"{value:.1f}{tick_suffix}"
+            for value in tick_values
+        ]
+
+        layout_options.update(
+            {
+                "coloraxis_cmin": minimum,
+                "coloraxis_cmax": maximum,
+            }
+        )
+        colorbar_options.update(
+            {
+                "tickvals": tick_values,
+                "ticktext": tick_text,
+            }
+        )
+
+    figure.update_layout(**layout_options)
 
 
 def padded_chart_max(
@@ -7456,6 +7639,7 @@ def dashboard_page() -> None:
         )
         style_plotly_figure(ore_value_figure, height=390)
         ore_value_figure.update_layout(
+            coloraxis=None,
             legend={
                 "orientation": "h",
                 "yanchor": "bottom",
@@ -7566,6 +7750,7 @@ def dashboard_page() -> None:
             height=410,
         )
         commodity_profit_figure.update_layout(
+            coloraxis=None,
             legend={
                 "orientation": "h",
                 "yanchor": "bottom",
@@ -11160,6 +11345,7 @@ def commodities_page() -> None:
                 style_horizontal_color_scale(
                     route_figure,
                     title="Return on investment (ROI)",
+                    values=route_chart["ROI"],
                     tick_suffix="%",
                     tick_format=".1f",
                 )
