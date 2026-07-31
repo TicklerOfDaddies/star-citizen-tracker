@@ -2778,6 +2778,143 @@ def apply_custom_theme() -> None:
                 background: #07111F !important;
             }
         }
+
+        /* ================================================================
+           DEEP SPACE BLUE V9 — SIDEBAR COLOR FIX
+           Ensures all navigation text and icons use the blue theme.
+           ================================================================ */
+
+        section[data-testid="stSidebar"] {
+            color: #DCE8F7 !important;
+        }
+
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] label,
+        section[data-testid="stSidebar"] div {
+            color: inherit;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button {
+            color: #C9D8EA !important;
+            -webkit-text-fill-color: #C9D8EA !important;
+            font-weight: 690 !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button *,
+        section[data-testid="stSidebar"] .stButton > button p,
+        section[data-testid="stSidebar"] .stButton > button span {
+            color: #C9D8EA !important;
+            -webkit-text-fill-color: #C9D8EA !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button:hover {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+        }
+
+        section[data-testid="stSidebar"] .stButton > button:hover *,
+        section[data-testid="stSidebar"] .stButton > button:hover p,
+        section[data-testid="stSidebar"] .stButton > button:hover span {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+        }
+
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"],
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] *,
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] p,
+        section[data-testid="stSidebar"]
+        .stButton > button[kind="primary"] span {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-user-name,
+        section[data-testid="stSidebar"] .sidebar-status-title {
+            color: #F8FAFC !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-user-email,
+        section[data-testid="stSidebar"] .sidebar-status-copy {
+            color: #A9B7C8 !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-title {
+            color: #F8FAFC !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-subtitle {
+            color: #60A5FA !important;
+        }
+
+        /* Force every navigation icon to the same bright blue. */
+        section[data-testid="stSidebar"]
+        [class*="st-key-nav_"] button::before,
+        section[data-testid="stSidebar"]
+        .st-key-sidebar_sign_out button::before {
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(61%)
+                sepia(70%)
+                saturate(2178%)
+                hue-rotate(188deg)
+                brightness(104%)
+                contrast(101%) !important;
+            opacity: 1 !important;
+        }
+
+        section[data-testid="stSidebar"]
+        [class*="st-key-nav_"] button:hover::before,
+        section[data-testid="stSidebar"]
+        [class*="st-key-nav_"] button[kind="primary"]::before,
+        section[data-testid="stSidebar"]
+        .st-key-sidebar_sign_out button:hover::before {
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(100%) !important;
+        }
+
+        /* Remove any inherited olive styling from sidebar SVG content. */
+        section[data-testid="stSidebar"] .app-svg-icon,
+        section[data-testid="stSidebar"] img[src*="svg"] {
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(61%)
+                sepia(70%)
+                saturate(2178%)
+                hue-rotate(188deg)
+                brightness(104%)
+                contrast(101%) !important;
+        }
+
+        /* Profile/navigation spacing and alignment. */
+        section[data-testid="stSidebar"] [class*="st-key-nav_"] button,
+        section[data-testid="stSidebar"] .st-key-sidebar_sign_out button {
+            gap: 0 !important;
+            min-height: 2.9rem !important;
+            padding: .58rem .72rem !important;
+        }
+
+        section[data-testid="stSidebar"] [class*="st-key-nav_"] button::before,
+        section[data-testid="stSidebar"]
+        .st-key-sidebar_sign_out button::before {
+            flex: 0 0 1.18rem !important;
+            width: 1.18rem !important;
+            height: 1.18rem !important;
+            margin-right: .72rem !important;
+        }
+
+        /* Keep captions and profile text readable in the sidebar. */
+        section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+        section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+            color: #9EB0C4 !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
