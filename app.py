@@ -26,7 +26,11 @@ from PIL import Image, ImageOps
 
 st.set_page_config(
     page_title="Star Citizen Tracker",
-    page_icon="🚀",
+    page_icon=str(
+        Path(__file__).parent
+        / "assets"
+        / "star_citizen_logo_black.png"
+    ),
     layout="wide",
 )
 
@@ -1918,6 +1922,110 @@ def image_data_uri(filename: str) -> str:
         return ""
     return f"data:{mime};base64,{encoded}"
 
+
+
+
+def svg_icon_markup(
+    filename: str,
+    *,
+    alt: str = "",
+    css_class: str = "app-svg-icon",
+) -> str:
+    """Return an inline image tag for a packaged SVG icon."""
+    icon_uri = image_data_uri(filename)
+    if not icon_uri:
+        return ""
+    return (
+        f'<img class="{html.escape(css_class)}" '
+        f'src="{icon_uri}" alt="{html.escape(alt)}">'
+    )
+
+
+def render_app_icon_styles() -> None:
+    """Apply the local SVG icon system to navigation and controls."""
+    icon_selectors = {
+        ".st-key-nav_dashboard": "icons/dashboard.svg",
+        ".st-key-nav_contract_calculator": "icons/contracts.svg",
+        ".st-key-nav_ore_ledger": "icons/ore-ledger.svg",
+        ".st-key-nav_commodities": "icons/commodities.svg",
+        ".st-key-nav_mining_locations": "icons/mining-locations.svg",
+        '[class*="st-key-nav_loot_"]': "icons/loot-shops.svg",
+        ".st-key-nav_blueprints": "icons/blueprints.svg",
+        ".st-key-nav_saved_records": "icons/saved-records.svg",
+        ".st-key-nav_export_data": "icons/export-data.svg",
+        ".st-key-nav_my_profile": "icons/profile.svg",
+        ".st-key-sidebar_sign_out": "icons/sign-out.svg",
+    }
+
+    rules: list[str] = []
+    for selector, icon_filename in icon_selectors.items():
+        icon_uri = image_data_uri(icon_filename)
+        if not icon_uri:
+            continue
+        rules.append(
+            selector
+            + " button::before {"
+            + 'content: "";'
+            + "display:inline-block;"
+            + "flex:0 0 1.22rem;"
+            + "width:1.22rem;"
+            + "height:1.22rem;"
+            + "margin-right:.62rem;"
+            + f'background-image:url("{icon_uri}");'
+            + "background-position:center;"
+            + "background-repeat:no-repeat;"
+            + "background-size:contain;"
+            + "}"
+        )
+
+    arrow_uri = image_data_uri("icons/arrow-right.svg")
+    if arrow_uri:
+        rules.append(
+            '[class*="st-key-quick_open_"] button::after {'
+            + 'content:"";'
+            + 'display:inline-block;'
+            + 'flex:0 0 1rem;'
+            + 'width:1rem;'
+            + 'height:1rem;'
+            + 'margin-left:.42rem;'
+            + f'background-image:url("{arrow_uri}");'
+            + 'background-position:center;'
+            + 'background-repeat:no-repeat;'
+            + 'background-size:contain;'
+            + '}'
+        )
+
+    st.markdown(
+        "<style>"
+        + "".join(rules)
+        + """
+        .app-svg-icon {
+            display: block;
+            width: 1.25rem;
+            height: 1.25rem;
+            object-fit: contain;
+        }
+
+        .dashboard-summary-icon .app-svg-icon {
+            width: 1.22rem;
+            height: 1.22rem;
+        }
+
+        section[data-testid="stSidebar"]
+        [class*="st-key-nav_"] button,
+        .st-key-sidebar_sign_out button {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        [class*="st-key-quick_open_"] button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
 
 def page_banner(
     image_filename: str,
@@ -5645,7 +5753,7 @@ def feature_dashboard_cards() -> None:
                     )
 
                     if st.button(
-                        "Open workspace  →",
+                        "Open workspace",
                         key=f"quick_open_{row_start + index}",
                         width="stretch",
                     ):
@@ -5681,7 +5789,10 @@ def render_dashboard_summary(
             + html.escape(card.get("class", ""))
             + '">'
             + '<div class="dashboard-summary-icon">'
-            + html.escape(card.get("icon", "•"))
+            + svg_icon_markup(
+                card.get("icon_file", ""),
+                alt="",
+            )
             + "</div>"
             + '<div class="dashboard-summary-label">'
             + html.escape(card["label"])
@@ -6453,49 +6564,49 @@ def dashboard_page() -> None:
     render_dashboard_summary(
         [
             {
-                "icon": "◉",
+                "icon_file": "icons/total-earnings.svg",
                 "label": "Total Earnings",
                 "value": format_money(total_recorded_earnings),
                 "detail": "All recorded income",
                 "class": "green",
             },
             {
-                "icon": "▤",
+                "icon_file": "icons/contracts.svg",
                 "label": "Contract Take-Home",
                 "value": format_money(contract_take_home),
                 "detail": f"{len(contracts):,} contracts",
                 "class": "blue",
             },
             {
-                "icon": "◆",
+                "icon_file": "icons/ore-sales.svg",
                 "label": "Ore Sales",
                 "value": format_money(ore_sales),
                 "detail": f"{ore_on_hand_scu:,.2f} SCU on hand",
                 "class": "blue",
             },
             {
-                "icon": "⬡",
+                "icon_file": "icons/commodity-sales.svg",
                 "label": "Commodity Sales",
                 "value": format_money(commodity_sales),
                 "detail": f"{commodity_on_hand_scu:,.2f} SCU on hand",
                 "class": "orange",
             },
             {
-                "icon": "↗",
+                "icon_file": "icons/commodity-net.svg",
                 "label": "Commodity Net",
                 "value": format_money(commodity_net),
                 "detail": "Sales − purchases − losses",
                 "class": "green" if commodity_net >= 0 else "red",
             },
             {
-                "icon": "▣",
+                "icon_file": "icons/total-spend.svg",
                 "label": "Total Spend",
                 "value": format_money(total_recorded_spend),
                 "detail": "Ore and commodity purchases",
                 "class": "purple",
             },
             {
-                "icon": "⚖",
+                "icon_file": "icons/net-profit.svg",
                 "label": "Net Profit",
                 "value": format_money(overall_net_profit),
                 "detail": "Earnings after recorded spend",
@@ -12814,6 +12925,7 @@ def edit_records_page() -> None:
 
 def main() -> None:
     apply_custom_theme()
+    render_app_icon_styles()
     cookies = get_cookie_manager()
     client = get_supabase()
     handle_auth_redirect(client, cookies)
@@ -12836,7 +12948,7 @@ def main() -> None:
             f'src="{sidebar_logo_uri}" '
             f'alt="Star Citizen Tracker logo">'
             if sidebar_logo_uri
-            else '<div class="sidebar-brand-mark">✥</div>'
+            else '<div class="sidebar-brand-mark">SC</div>'
         )
 
         st.markdown(
@@ -12888,25 +13000,25 @@ def main() -> None:
         )
 
         navigation_pages = [
-            ("◴", "Dashboard"),
-            ("▤", "Contract Calculator"),
-            ("▱", "Ore Ledger"),
-            ("⬡", "Commodities"),
-            ("⌖", "Mining Locations"),
-            ("◎", "Loot & Shops"),
-            ("▦", "Blueprints"),
-            ("▮", "Saved Records"),
-            ("⇩", "Export Data"),
-            ("⚙", "My Profile"),
+            "Dashboard",
+            "Contract Calculator",
+            "Ore Ledger",
+            "Commodities",
+            "Mining Locations",
+            "Loot & Shops",
+            "Blueprints",
+            "Saved Records",
+            "Export Data",
+            "My Profile",
         ]
 
         if "nav_page" not in st.session_state:
             st.session_state.nav_page = "Dashboard"
 
-        for icon, navigation_page in navigation_pages:
+        for navigation_page in navigation_pages:
             is_active = st.session_state.nav_page == navigation_page
             if st.button(
-                f"{icon}   {navigation_page}",
+                navigation_page,
                 key=f"nav_{navigation_page.lower().replace(' ', '_')}",
                 type="primary" if is_active else "secondary",
                 width="stretch",

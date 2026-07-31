@@ -858,3 +858,46 @@ Because third-party APIs and game data can change, occasional maintenance may be
 ## Modern product interface v2
 
 This release replaces legacy banner imagery with a text-and-icon design system and modernizes the complete Streamlit interface. It adds stronger visual hierarchy, larger typography, visible control borders, elevated cards, segmented tabs, improved data tables, refined navigation, responsive layouts, and app-style list rows. Supabase tables, migrations, authentication, UEX integrations, calculations, and saved user data remain unchanged.
+
+
+## Dashboard Card Image and Icon Update
+
+The Dashboard workspace cards use the following packaged images:
+
+- Mining Locations: `assets/mining_locations_feature.jpg`
+- Blueprints: `assets/blueprints_feature.jpg`
+- Loot & Shops: `assets/loot_shops_feature.jpg`
+- Saved Records: `assets/saved_records_feature.jpg`
+- Export Data: `assets/export_data_feature.jpg`
+
+The image files are normalized to a consistent 1600 × 520 presentation
+format with responsive cover cropping.
+
+The plain character symbols were replaced with local SVG interface icons in
+`assets/icons/`. The icon files are distributed under the MIT License included
+in that directory. The application does not depend on an external icon CDN.
+
+
+## Dashboard Rendering Fix
+
+Dashboard card JPEGs are rendered with Streamlit's native `st.image` component
+instead of being embedded as large base64 strings inside a Markdown block.
+This prevents HTML class names and markup fragments from appearing visibly in
+the cards while preserving the selected images, SVG icons, buttons, and
+responsive card styling.
+
+
+## App-Wide Icon System
+
+The application now uses one consistent local SVG icon system across:
+
+- Sidebar navigation
+- Dashboard workspace cards
+- Dashboard earnings summary cards
+- Profile and sign-out controls
+- Workspace action buttons
+- Browser and application tab branding
+
+All SVG files are stored under `assets/icons/`. The icon files are distributed
+under the included MIT License and do not require an external CDN or runtime
+internet request.
