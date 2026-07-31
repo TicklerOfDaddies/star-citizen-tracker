@@ -3034,6 +3034,10 @@ def apply_custom_theme() -> None:
         /* ================================================================
            DEEP SPACE BLUE V16 — CENTERED DASHBOARD GRAPHS
            ================================================================ */
+
+        /* ================================================================
+           DEEP SPACE BLUE V17 — COMPACT CONTRACT GRAPH SPACING
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -8036,17 +8040,17 @@ def dashboard_page() -> None:
             contract_type_figure,
             contract_type_data["Plot Value"],
             orientation="horizontal",
-            padding=0.46,
+            padding=0.34,
         )
         style_plotly_figure(contract_type_figure, height=390)
         contract_type_figure.update_layout(showlegend=False)
         center_dashboard_bar_figure(
             contract_type_figure,
             orientation="horizontal",
-            top=38,
-            bottom=60,
-            left=118,
-            right=108,
+            top=34,
+            bottom=56,
+            left=96,
+            right=72,
         )
     else:
         contract_type_figure = empty_dashboard_figure(
