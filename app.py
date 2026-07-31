@@ -2953,6 +2953,10 @@ def apply_custom_theme() -> None:
         [data-testid="stPlotlyChart"] text[data-unformatted="None"] {
             display: none !important;
         }
+
+        /* ================================================================
+           DEEP SPACE BLUE V14 — PLOTLY COMPATIBILITY HOTFIX
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -3243,7 +3247,7 @@ def render_rights_notice() -> None:
 
 
 def style_plotly_figure(figure, *, height: int = 430) -> None:
-    """Apply Deep Space Blue styling without creating ghost color scales."""
+    """Apply Deep Space Blue styling with trace-safe Plotly handling."""
     primary_text = "#F4F8FF"
     secondary_text = "#C6D7EA"
     axis_text = "#B8CCE3"
@@ -3334,70 +3338,117 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
 
     for trace in figure.data:
         trace_type = str(getattr(trace, "type", "") or "").lower()
+        trace_valid_props = set(
+            getattr(trace, "_valid_props", set())
+        )
 
-        if hasattr(trace, "textfont"):
+        if "textfont" in trace_valid_props:
             trace.textfont = {
                 "color": primary_text,
                 "family": "Inter, sans-serif",
                 "size": 12,
             }
 
-        if trace_type in {"pie", "sunburst", "treemap", "funnelarea"}:
-            if hasattr(trace, "insidetextfont"):
+        if trace_type in {
+            "pie",
+            "sunburst",
+            "treemap",
+            "funnelarea",
+        }:
+            if "insidetextfont" in trace_valid_props:
                 trace.insidetextfont = {
                     "color": "#FFFFFF",
                     "family": "Inter, sans-serif",
                     "size": 12,
                 }
-            if hasattr(trace, "outsidetextfont"):
+            if "outsidetextfont" in trace_valid_props:
                 trace.outsidetextfont = {
                     "color": secondary_text,
                     "family": "Inter, sans-serif",
                     "size": 12,
                 }
 
+            # Pie-like traces use categorical sector colors and do not
+            # expose marker.showscale or marker.colorbar.
+            continue
+
         marker = getattr(trace, "marker", None)
+        marker_valid_props = set(
+            getattr(marker, "_valid_props", set())
+        ) if marker is not None else set()
+
         marker_coloraxis = (
             getattr(marker, "coloraxis", None)
-            if marker is not None
+            if "coloraxis" in marker_valid_props
             else None
         )
-        trace_coloraxis = getattr(trace, "coloraxis", None)
-        has_layout_coloraxis = bool(
-            marker_coloraxis or trace_coloraxis
-        )
-        has_trace_colorbar = bool(
-            marker is not None
-            and getattr(marker, "showscale", None) is True
+        trace_coloraxis = (
+            getattr(trace, "coloraxis", None)
+            if "coloraxis" in trace_valid_props
+            else None
         )
 
-        if has_layout_coloraxis:
+        if marker_coloraxis or trace_coloraxis:
             uses_layout_coloraxis = True
-        elif has_trace_colorbar:
-            colorbar = getattr(marker, "colorbar", None)
+            continue
+
+        marker_showscale = (
+            getattr(marker, "showscale", None)
+            if "showscale" in marker_valid_props
+            else None
+        )
+        trace_showscale = (
+            getattr(trace, "showscale", None)
+            if "showscale" in trace_valid_props
+            else None
+        )
+
+        if marker_showscale is True:
+            colorbar = (
+                getattr(marker, "colorbar", None)
+                if "colorbar" in marker_valid_props
+                else None
+            )
             if colorbar is not None:
                 colorbar.tickfont = {
                     "color": axis_text,
                     "family": "Inter, sans-serif",
                     "size": 11,
                 }
-                existing_title = getattr(
-                    getattr(colorbar, "title", None),
-                    "text",
-                    None,
-                )
-                if existing_title:
-                    colorbar.title.font = {
-                        "color": accent_text,
-                        "family": "Inter, sans-serif",
-                        "size": 12,
-                    }
-        elif marker is not None:
-            # Categorical charts use their normal legend. Explicitly clear
-            # Plotly's default marker.colorbar object so it cannot create an
-            # empty or undefined continuous scale.
-            marker.showscale = False
-            marker.colorbar = None
+                colorbar.title.font = {
+                    "color": accent_text,
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                }
+            continue
+
+        if trace_showscale is True:
+            colorbar = (
+                getattr(trace, "colorbar", None)
+                if "colorbar" in trace_valid_props
+                else None
+            )
+            if colorbar is not None:
+                colorbar.tickfont = {
+                    "color": axis_text,
+                    "family": "Inter, sans-serif",
+                    "size": 11,
+                }
+                colorbar.title.font = {
+                    "color": accent_text,
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                }
+            continue
+
+        # Disable only properties actually supported by this marker.
+        # This safely removes ghost scales from ordinary bar/scatter
+        # traces without touching pie-chart markers.
+        if marker is not None:
+            if "showscale" in marker_valid_props:
+                marker.showscale = False
+            if "colorbar" in marker_valid_props:
+                marker.colorbar = None
 
     for annotation in list(figure.layout.annotations or []):
         annotation.font = {
@@ -3424,7 +3475,6 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
             },
         )
     else:
-        # Do not create a layout coloraxis for ordinary discrete charts.
         figure.update_layout(coloraxis=None)
 
 
