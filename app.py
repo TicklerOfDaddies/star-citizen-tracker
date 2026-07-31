@@ -2957,6 +2957,79 @@ def apply_custom_theme() -> None:
         /* ================================================================
            DEEP SPACE BLUE V14 — PLOTLY COMPATIBILITY HOTFIX
            ================================================================ */
+
+        /* ================================================================
+           DEEP SPACE BLUE V15 — SIDEBAR LOGO LAYOUT
+           ================================================================ */
+
+        section[data-testid="stSidebar"] .sidebar-brand {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: .42rem !important;
+            min-height: 10.5rem !important;
+            margin: 0 .2rem .9rem !important;
+            padding: .9rem .55rem 1rem !important;
+            text-align: center !important;
+            border-bottom: 2px solid var(--sc-divider) !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-logo {
+            display: block !important;
+            width: 6.2rem !important;
+            height: 6.2rem !important;
+            flex: 0 0 6.2rem !important;
+            margin: 0 auto .15rem !important;
+            padding: 0 !important;
+            object-fit: contain !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            filter: none !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-copy {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-title {
+            color: #F8FAFC !important;
+            font-size: .88rem !important;
+            font-weight: 850 !important;
+            letter-spacing: .14em !important;
+            line-height: 1.1 !important;
+            text-align: center !important;
+        }
+
+        section[data-testid="stSidebar"] .sidebar-brand-subtitle {
+            margin-top: .26rem !important;
+            color: #60A5FA !important;
+            font-size: .7rem !important;
+            font-weight: 820 !important;
+            letter-spacing: .16em !important;
+            line-height: 1 !important;
+            text-align: center !important;
+        }
+
+        @media (max-height: 760px) {
+            section[data-testid="stSidebar"] .sidebar-brand {
+                min-height: 8.5rem !important;
+                padding-top: .55rem !important;
+                padding-bottom: .72rem !important;
+            }
+
+            section[data-testid="stSidebar"] .sidebar-brand-logo {
+                width: 5rem !important;
+                height: 5rem !important;
+                flex-basis: 5rem !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -14417,7 +14490,7 @@ def main() -> None:
 
     with st.sidebar:
         sidebar_logo_uri = image_data_uri(
-            "star_citizen_logo_black.png"
+            "star_citizen_emblem_blue.png"
         )
         sidebar_logo_markup = (
             f'<img class="sidebar-brand-logo" '
