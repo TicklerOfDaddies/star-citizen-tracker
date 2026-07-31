@@ -3030,6 +3030,30 @@ def render_app_icon_styles() -> None:
             height: 1.22rem;
         }
 
+        .icon-badge-glyph {
+            display: inline-block;
+            width: 1.1rem;
+            height: 1.1rem;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            filter:
+                brightness(0)
+                saturate(100%)
+                invert(64%)
+                sepia(82%)
+                saturate(2286%)
+                hue-rotate(186deg)
+                brightness(100%)
+                contrast(101%);
+        }
+
+        .icon-badge-fallback {
+            border-radius: 999px;
+            background: rgba(140, 191, 255, .32);
+            box-shadow: inset 0 0 0 1.4px rgba(140, 191, 255, .55);
+        }
+
         section[data-testid="stSidebar"]
         [class*="st-key-nav_"] button,
         .st-key-sidebar_sign_out button {
@@ -3042,7 +3066,77 @@ def render_app_icon_styles() -> None:
             align-items: center !important;
             justify-content: center !important;
         }
-        </style>""",
+        
+
+        /* ================================================================
+           DEEP SPACE BLUE V10 — DASHBOARD ICON + GRAPH POLISH
+           ================================================================ */
+
+        .dashboard-summary-card,
+        .dashboard-metric-card,
+        .commodity-metric-card,
+        .profile-summary-card {
+            background: linear-gradient(180deg, #071528 0%, #081628 100%) !important;
+            border: 1.5px solid rgba(70, 115, 172, .55) !important;
+            box-shadow: inset 0 1px 0 rgba(140, 191, 255, .08);
+        }
+
+        .dashboard-summary-label,
+        .dashboard-metric-label,
+        .commodity-metric-label,
+        .profile-summary-label {
+            color: #AFC4DD !important;
+        }
+
+        .dashboard-summary-value,
+        .dashboard-metric-value,
+        .commodity-metric-value,
+        .profile-summary-value {
+            color: #F4F8FF !important;
+        }
+
+        .dashboard-summary-detail,
+        .dashboard-metric-detail,
+        .commodity-metric-detail,
+        .profile-summary-detail {
+            color: #BBD0E8 !important;
+        }
+
+        .dashboard-summary-icon,
+        .dashboard-metric-icon {
+            background: linear-gradient(180deg, rgba(30, 81, 145, .38), rgba(18, 49, 89, .70)) !important;
+            border: 1px solid rgba(82, 146, 225, .42) !important;
+            color: #8CBFFF !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        }
+
+        .dashboard-summary-icon img,
+        .dashboard-metric-icon img,
+        .dashboard-summary-icon .icon-badge-glyph,
+        .dashboard-metric-icon .icon-badge-glyph {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        [data-testid="stPlotlyChart"] {
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1.5px solid rgba(70, 115, 172, .55) !important;
+            background: linear-gradient(180deg, #071528 0%, #081628 100%) !important;
+            box-shadow: inset 0 1px 0 rgba(140, 191, 255, .08);
+            padding: .25rem;
+        }
+
+        [data-testid="stPlotlyChart"] > div {
+            background: transparent !important;
+        }
+
+        [data-testid="stPlotlyChart"] .js-plotly-plot,
+        [data-testid="stPlotlyChart"] .plot-container,
+        [data-testid="stPlotlyChart"] .svg-container {
+            background: transparent !important;
+        }
+</style>""",
         unsafe_allow_html=True,
     )
 
@@ -3111,33 +3205,45 @@ def render_rights_notice() -> None:
 
 
 def style_plotly_figure(figure, *, height: int = 430) -> None:
-    """Give Plotly charts the same bright professional appearance as the app."""
+    """Give Plotly charts the same deep-space appearance as the current app."""
     figure.update_layout(
-        template="plotly_white",
+        template="plotly_dark",
         height=height,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#FFFFFF",
-        font={"color": "#2A3B16", "family": "Inter, sans-serif"},
+        paper_bgcolor="#07111F",
+        plot_bgcolor="#0B1C31",
+        font={"color": "#DCE8F7", "family": "Inter, sans-serif"},
         colorway=STAR_CITIZEN_COLORS,
         margin={"l": 30, "r": 26, "t": 42, "b": 30},
         legend_title_text="",
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
-        hoverlabel={"bgcolor": "#FFFFFF", "bordercolor": "#BDF56F", "font_color": "#1F2A16"},
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": 1.02,
+            "xanchor": "left",
+            "x": 0,
+            "bgcolor": "rgba(7,17,31,.0)",
+            "font": {"color": "#CFE2FF"},
+        },
+        hoverlabel={
+            "bgcolor": "#102A4A",
+            "bordercolor": "#2E5F96",
+            "font_color": "#F4F8FF",
+        },
     )
     figure.update_xaxes(
-        gridcolor="#EEF5E2",
-        zerolinecolor="#C9DDA9",
-        linecolor="#C9DDA9",
-        tickfont={"color": "#66734F"},
-        title_font={"color": "#4C7814"},
+        gridcolor="rgba(107,145,191,.20)",
+        zerolinecolor="rgba(107,145,191,.28)",
+        linecolor="rgba(107,145,191,.35)",
+        tickfont={"color": "#AFC4DD"},
+        title_font={"color": "#8CBFFF"},
         automargin=True,
     )
     figure.update_yaxes(
-        gridcolor="#EEF5E2",
-        zerolinecolor="#C9DDA9",
-        linecolor="#C9DDA9",
-        tickfont={"color": "#66734F"},
-        title_font={"color": "#4C7814"},
+        gridcolor="rgba(107,145,191,.20)",
+        zerolinecolor="rgba(107,145,191,.28)",
+        linecolor="rgba(107,145,191,.35)",
+        tickfont={"color": "#AFC4DD"},
+        title_font={"color": "#8CBFFF"},
         automargin=True,
     )
 
@@ -6797,6 +6903,33 @@ def analytics_heading(
     )
 
 
+def dashboard_icon_badge_markup(
+    filename: str,
+    *,
+    alt: str = "",
+    badge_class: str = "dashboard-summary-icon",
+) -> str:
+    """Render a resilient icon badge using a CSS background image."""
+    icon_uri = image_data_uri(filename)
+    label_attr = (
+        f' aria-label="{html.escape(alt)}" role="img"'
+        if alt
+        else ' aria-hidden="true"'
+    )
+    if not icon_uri:
+        return (
+            f'<div class="{html.escape(badge_class)}"{label_attr}>'
+            '<span class="icon-badge-glyph icon-badge-fallback"></span>'
+            '</div>'
+        )
+    return (
+        f'<div class="{html.escape(badge_class)}"{label_attr}>'
+        f'<span class="icon-badge-glyph" style="background-image:url({icon_uri});"></span>'
+        '</div>'
+    )
+
+
+
 def render_dashboard_summary(
     cards: list[dict[str, str]],
 ) -> None:
@@ -6807,12 +6940,11 @@ def render_dashboard_summary(
             '<div class="dashboard-summary-card '
             + html.escape(card.get("class", ""))
             + '">'
-            + '<div class="dashboard-summary-icon">'
-            + svg_icon_markup(
+            + dashboard_icon_badge_markup(
                 card.get("icon_file", ""),
-                alt="",
+                alt=card.get("label", ""),
+                badge_class="dashboard-summary-icon",
             )
-            + "</div>"
             + '<div class="dashboard-summary-label">'
             + html.escape(card["label"])
             + "</div>"
