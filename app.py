@@ -2923,6 +2923,22 @@ def apply_custom_theme() -> None:
         [data-testid="stPlotlyChart"] .bartext,[data-testid="stPlotlyChart"] .slicetext,[data-testid="stPlotlyChart"] .pointtext,[data-testid="stPlotlyChart"] .textpoint{fill:#F4F8FF!important;}
         [data-testid="stPlotlyChart"] .cbaxis text{fill:#B8CCE3!important;}
         [data-testid="stPlotlyChart"] .cbtitle text{fill:#8CBFFF!important;}
+
+        /* ================================================================
+           DEEP SPACE BLUE V12 — CONTINUOUS COLOR SCALE FIX
+           ================================================================ */
+
+        [data-testid="stPlotlyChart"] .colorbar {
+            pointer-events: none;
+        }
+
+        [data-testid="stPlotlyChart"] .cbaxis text,
+        [data-testid="stPlotlyChart"] .cbtitle text {
+            paint-order: stroke;
+            stroke: rgba(7,17,31,.82);
+            stroke-width: 2px;
+            stroke-linejoin: round;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -3265,6 +3281,50 @@ def style_plotly_figure(figure, *, height: int = 430) -> None:
                                 colorbar_title_font={"color":accent_text,"family":"Inter, sans-serif","size":12})
     except Exception:
         pass
+
+
+
+def style_horizontal_color_scale(
+    figure: go.Figure,
+    *,
+    title: str,
+    tick_suffix: str = "",
+    tick_format: str = ".1f",
+) -> None:
+    """Place a continuous color legend below a chart without label overlap."""
+    figure.update_layout(
+        margin={"l": 34, "r": 28, "t": 46, "b": 112},
+        coloraxis_colorbar={
+            "title": {
+                "text": title,
+                "side": "top",
+                "font": {
+                    "color": "#8CBFFF",
+                    "family": "Inter, sans-serif",
+                    "size": 12,
+                },
+            },
+            "orientation": "h",
+            "x": 0.5,
+            "xanchor": "center",
+            "y": -0.25,
+            "yanchor": "top",
+            "len": 0.72,
+            "thickness": 14,
+            "tickformat": tick_format,
+            "ticksuffix": tick_suffix,
+            "tickfont": {
+                "color": "#C6D7EA",
+                "family": "Inter, sans-serif",
+                "size": 11,
+            },
+            "tickcolor": "#4A77A8",
+            "ticklen": 4,
+            "outlinecolor": "#315E8F",
+            "outlinewidth": 1,
+            "bgcolor": "rgba(7,17,31,.72)",
+        },
+    )
 
 
 def padded_chart_max(
@@ -11084,15 +11144,25 @@ def commodities_page() -> None:
                     color="ROI",
                     orientation="h",
                     text_auto=",.0f",
-                    color_continuous_scale="Teal",
+                    color_continuous_scale=[
+                        [0.00, "#183251"],
+                        [0.35, "#2563EB"],
+                        [0.70, "#38BDF8"],
+                        [1.00, "#38D68B"],
+                    ],
                 )
                 route_figure.update_traces(
                     textposition="inside",
                     textfont={"color": "#FFFFFF"},
                 )
                 route_figure.update_yaxes(categoryorder="total ascending")
-                style_plotly_figure(route_figure, height=590)
-                route_figure.update_layout(coloraxis_colorbar_title="ROI %")
+                style_plotly_figure(route_figure, height=620)
+                style_horizontal_color_scale(
+                    route_figure,
+                    title="Return on investment (ROI)",
+                    tick_suffix="%",
+                    tick_format=".1f",
+                )
                 st.plotly_chart(
                     route_figure,
                     width="stretch",
