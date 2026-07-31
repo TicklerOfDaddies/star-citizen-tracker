@@ -1759,6 +1759,139 @@ def apply_custom_theme() -> None:
                 background-position: center;
             }
         }
+
+        /* ================================================================
+           DASHBOARD CARD RENDER FIX
+           Images are rendered through st.image instead of large HTML data
+           URIs. This prevents HTML fragments from appearing as page text.
+           ================================================================ */
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+
+        [class*="st-key-quick_tool_"] [data-testid="stImage"] {
+            width: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stImageContainer"] {
+            width: 100%;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+            border-bottom: 1.5px solid var(--sc-line);
+            background: #EAE9E1;
+        }
+
+        [class*="st-key-quick_tool_"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_"]
+        [data-testid="stImage"] img {
+            display: block !important;
+            width: 100% !important;
+            height: 104px !important;
+            margin: 0 !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            border-radius: 0 !important;
+            filter: saturate(.96) contrast(1.03);
+        }
+
+        [class*="st-key-quick_tool_3"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_3"]
+        [data-testid="stImage"] img {
+            object-position: center 58% !important;
+        }
+
+        [class*="st-key-quick_tool_4"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_4"]
+        [data-testid="stImage"] img {
+            object-position: center 52% !important;
+        }
+
+        [class*="st-key-quick_tool_5"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_5"]
+        [data-testid="stImage"] img {
+            object-position: center 50% !important;
+        }
+
+        [class*="st-key-quick_tool_6"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_6"]
+        [data-testid="stImage"] img {
+            object-position: center 50% !important;
+        }
+
+        [class*="st-key-quick_tool_7"]
+        [data-testid="stImageContainer"] img,
+        [class*="st-key-quick_tool_7"]
+        [data-testid="stImage"] img {
+            object-position: center 46% !important;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-body {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            min-height: 82px;
+            padding: .82rem .86rem .72rem;
+            background: var(--sc-surface);
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 2.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            margin: 0;
+            border: 1.5px solid var(--sc-line-strong);
+            border-radius: 11px;
+            background: var(--sc-surface-green);
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-icon img {
+            display: block;
+            width: 1.4rem;
+            height: 1.4rem;
+            object-fit: contain;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-title {
+            font-size: .96rem;
+            font-weight: 760;
+            line-height: 1.25;
+        }
+
+        [class*="st-key-quick_tool_"] .quick-tool-copy {
+            margin-top: .2rem;
+            font-size: .77rem;
+            line-height: 1.42;
+        }
+
+        [class*="st-key-quick_tool_"] .stButton {
+            margin: 0;
+            padding: 0 .7rem .72rem;
+            background: var(--sc-surface);
+        }
+
+        @media (max-width: 760px) {
+            [class*="st-key-quick_tool_"]
+            [data-testid="stImageContainer"] img,
+            [class*="st-key-quick_tool_"]
+            [data-testid="stImage"] img {
+                height: 128px !important;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -5382,7 +5515,7 @@ def dashboard_hero() -> None:
     )
 
 def feature_dashboard_cards() -> None:
-    """Render the image-backed dashboard workspace cards."""
+    """Render dashboard workspace cards without oversized HTML data URIs."""
     cards = [
         (
             "contracts_feature.jpg",
@@ -5472,13 +5605,8 @@ def feature_dashboard_cards() -> None:
                 target,
             ) = card
 
-            image_uri = image_data_uri(image_filename)
+            image_path = ASSETS_DIR / image_filename
             icon_uri = image_data_uri(icon_filename)
-            background_style = (
-                f"background-image: url('{image_uri}');"
-                if image_uri
-                else ""
-            )
             icon_markup = (
                 f'<img src="{icon_uri}" '
                 f'alt="{html.escape(title)} icon">'
@@ -5486,37 +5614,33 @@ def feature_dashboard_cards() -> None:
                 else ""
             )
 
+            # Keep the HTML string compact. Large card JPEGs are deliberately
+            # rendered with st.image instead of being embedded into markdown.
+            card_body_html = (
+                '<div class="quick-tool-body">'
+                '<div class="quick-tool-icon" aria-hidden="true">'
+                f'{icon_markup}'
+                '</div>'
+                '<div class="quick-tool-copy-wrap">'
+                f'<div class="quick-tool-title">{html.escape(title)}</div>'
+                f'<div class="quick-tool-copy">{html.escape(copy)}</div>'
+                '</div>'
+                '</div>'
+            )
+
             with column:
                 with st.container(
                     border=True,
                     key=f"quick_tool_{row_start + index}",
                 ):
+                    if image_path.exists():
+                        st.image(
+                            str(image_path),
+                            width="stretch",
+                        )
+
                     st.markdown(
-                        f"""
-                        <div class="quick-tool-card">
-                            <div
-                                class="quick-tool-media"
-                                style="{background_style}"
-                                aria-label="{html.escape(title)}"
-                            ></div>
-                            <div class="quick-tool-body">
-                                <div
-                                    class="quick-tool-icon"
-                                    aria-hidden="true"
-                                >
-                                    {icon_markup}
-                                </div>
-                                <div>
-                                    <div class="quick-tool-title">
-                                        {html.escape(title)}
-                                    </div>
-                                    <div class="quick-tool-copy">
-                                        {html.escape(copy)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        """,
+                        card_body_html,
                         unsafe_allow_html=True,
                     )
 
