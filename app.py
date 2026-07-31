@@ -3030,6 +3030,10 @@ def apply_custom_theme() -> None:
                 flex-basis: 5rem !important;
             }
         }
+
+        /* ================================================================
+           DEEP SPACE BLUE V16 — CENTERED DASHBOARD GRAPHS
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -3692,6 +3696,73 @@ def apply_bar_axis_padding(
             automargin=True,
         )
         figure.update_xaxes(automargin=True)
+
+
+def center_dashboard_bar_figure(
+    figure: go.Figure,
+    *,
+    orientation: str,
+    top: int,
+    bottom: int,
+    left: int | None = None,
+    right: int | None = None,
+) -> None:
+    """
+    Keep the visible Plotly plot area centered inside narrow dashboard cards.
+
+    Plotly's automatic margins can heavily enlarge only the left side when a
+    chart has category labels or a y-axis title. Balanced explicit margins
+    prevent the plotting rectangle from appearing pushed against the right
+    edge while still reserving room for outside value labels.
+    """
+    normalized_orientation = str(orientation).strip().lower()
+
+    if normalized_orientation == "horizontal":
+        resolved_left = 118 if left is None else int(left)
+        resolved_right = 104 if right is None else int(right)
+
+        figure.update_layout(
+            autosize=True,
+            margin={
+                "l": resolved_left,
+                "r": resolved_right,
+                "t": int(top),
+                "b": int(bottom),
+                "pad": 0,
+            },
+        )
+        figure.update_xaxes(
+            automargin=False,
+            title_standoff=12,
+        )
+        figure.update_yaxes(
+            automargin=False,
+            title_standoff=10,
+            ticklabelposition="outside",
+        )
+    else:
+        resolved_left = 72 if left is None else int(left)
+        resolved_right = 72 if right is None else int(right)
+
+        figure.update_layout(
+            autosize=True,
+            margin={
+                "l": resolved_left,
+                "r": resolved_right,
+                "t": int(top),
+                "b": int(bottom),
+                "pad": 0,
+            },
+        )
+        figure.update_xaxes(
+            automargin=False,
+            title_standoff=12,
+        )
+        figure.update_yaxes(
+            automargin=False,
+            title_standoff=12,
+        )
+
 
 
 def empty_dashboard_figure(message: str, *, donut: bool = False):
@@ -7636,9 +7707,14 @@ def dashboard_page() -> None:
             padding=0.20,
         )
         style_plotly_figure(total_earnings_figure, height=390)
-        total_earnings_figure.update_layout(
-            showlegend=False,
-            margin={"l": 48, "r": 24, "t": 52, "b": 52},
+        total_earnings_figure.update_layout(showlegend=False)
+        center_dashboard_bar_figure(
+            total_earnings_figure,
+            orientation="vertical",
+            top=52,
+            bottom=58,
+            left=72,
+            right=72,
         )
     else:
         total_earnings_figure = empty_dashboard_figure(
@@ -7699,9 +7775,14 @@ def dashboard_page() -> None:
         padding=0.34,
     )
     style_plotly_figure(source_figure, height=390)
-    source_figure.update_layout(
-        showlegend=False,
-        margin={"l": 32, "r": 20, "t": 26, "b": 52},
+    source_figure.update_layout(showlegend=False)
+    center_dashboard_bar_figure(
+        source_figure,
+        orientation="horizontal",
+        top=30,
+        bottom=58,
+        left=112,
+        right=102,
     )
     # Ore value by mineral
     if not ores.empty:
@@ -7771,9 +7852,18 @@ def dashboard_page() -> None:
                 "x": .5,
                 "title_text": "",
             },
-            margin={"l": 48, "r": 20, "t": 76, "b": 52},
             uniformtext_minsize=8,
             uniformtext_mode="show",
+            bargap=0.24,
+            bargroupgap=0.08,
+        )
+        center_dashboard_bar_figure(
+            ore_value_figure,
+            orientation="vertical",
+            top=76,
+            bottom=60,
+            left=76,
+            right=76,
         )
     else:
         ore_value_figure = empty_dashboard_figure(
@@ -7882,9 +7972,18 @@ def dashboard_page() -> None:
                 "x": .5,
                 "title_text": "",
             },
-            margin={"l": 48, "r": 20, "t": 82, "b": 58},
             uniformtext_minsize=8,
             uniformtext_mode="show",
+            bargap=0.24,
+            bargroupgap=0.08,
+        )
+        center_dashboard_bar_figure(
+            commodity_profit_figure,
+            orientation="vertical",
+            top=82,
+            bottom=62,
+            left=76,
+            right=76,
         )
     else:
         commodity_profit_figure = empty_dashboard_figure(
@@ -7937,12 +8036,17 @@ def dashboard_page() -> None:
             contract_type_figure,
             contract_type_data["Plot Value"],
             orientation="horizontal",
-            padding=0.34,
+            padding=0.46,
         )
         style_plotly_figure(contract_type_figure, height=390)
-        contract_type_figure.update_layout(
-            showlegend=False,
-            margin={"l": 48, "r": 20, "t": 38, "b": 52},
+        contract_type_figure.update_layout(showlegend=False)
+        center_dashboard_bar_figure(
+            contract_type_figure,
+            orientation="horizontal",
+            top=38,
+            bottom=60,
+            left=118,
+            right=108,
         )
     else:
         contract_type_figure = empty_dashboard_figure(
