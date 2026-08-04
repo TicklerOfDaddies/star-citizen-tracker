@@ -47,11 +47,29 @@ DEFAULT_TIMEZONE = "America/Chicago"
 COOKIE_PREFIX = "star-citizen-tracker/"
 COOKIE_REFRESH_TOKEN = "supabase_refresh_token"
 COOKIE_REMEMBERED_EMAIL = "remembered_email"
-DEFAULT_PUBLIC_APP_URL = "https://sccalculator.streamlit.app/"
+DEFAULT_PUBLIC_APP_URL = "https://sc-tracker-tool.streamlit.app/"
 SC_CRAFT_TOOLS_URL = "https://sc-craft.tools/"
 AVATAR_BUCKET = "avatars"
 AVATAR_SIZE = (512, 512)
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
+
+USER_OWNED_TABLES = frozenset(
+    {
+        "contracts",
+        "ore_transactions",
+        "commodity_transactions",
+        "blueprint_tracker",
+        "loot_locations",
+    }
+)
+
+CONNECTION_CHECK_TABLES = (
+    ("Contracts", "contracts"),
+    ("Ore Ledger", "ore_transactions"),
+    ("Commodity Ledger", "commodity_transactions"),
+    ("Blueprint Tracker", "blueprint_tracker"),
+    ("Loot & Shops", "loot_locations"),
+)
 
 
 def selected_timezone() -> str:
@@ -3046,6 +3064,10 @@ def apply_custom_theme() -> None:
         /* ================================================================
            DEEP SPACE BLUE V19 — SUMMARY ICONS + TOP GRAPH FIX
            ================================================================ */
+
+        /* ================================================================
+           DEEP SPACE BLUE V20 — CONTRACT SALVAGE + CONNECTION VERIFICATION
+           ================================================================ */
         </style>
         """,
         unsafe_allow_html=True,
@@ -4657,6 +4679,45 @@ def profile_page(
                         f"The timezone could not be saved: {exc}"
                     )
 
+        st.markdown("### Data Connection Diagnostics")
+        with st.container(border=True):
+            st.caption(
+                "Runs read-only checks against authentication, every app table, "
+                "UEX, SC Trade Tools, and SC Craft Tools. It does not create, "
+                "change, or delete any records."
+            )
+            if st.button(
+                "Run Connection Check",
+                key="run_connection_diagnostics",
+                width="stretch",
+            ):
+                with st.spinner("Checking app connections..."):
+                    st.session_state.connection_diagnostics = (
+                        run_connection_diagnostics()
+                    )
+
+            diagnostics = st.session_state.get("connection_diagnostics")
+            if isinstance(diagnostics, pd.DataFrame) and not diagnostics.empty:
+                st.dataframe(
+                    diagnostics,
+                    width="stretch",
+                    hide_index=True,
+                    column_config={
+                        "Connection": st.column_config.TextColumn(width="medium"),
+                        "Status": st.column_config.TextColumn(width="small"),
+                        "Details": st.column_config.TextColumn(width="large"),
+                    },
+                )
+                failed_checks = diagnostics[
+                    diagnostics["Status"] == "Failed"
+                ]
+                if failed_checks.empty:
+                    quiet_success("All read-only connection checks passed.")
+                else:
+                    st.warning(
+                        f"{len(failed_checks)} connection check(s) need attention."
+                    )
+
 
 def profile_settings(client: Client) -> None:
     """Backward-compatible compact link to the full profile page."""
@@ -5046,15 +5107,217 @@ def login_screen(
 
 
 def fetch_table(table_name: str) -> pd.DataFrame:
-    client = get_supabase()
-    response = (
-        client.table(table_name)
-        .select("*")
-        .order("date_saved", desc=True)
-        .execute()
-    )
+    """Read one signed-in user's private table with RLS as a second guard."""
+    if table_name not in USER_OWNED_TABLES:
+        raise ValueError(f"Unsupported database table: {table_name}")
+
+    user_id = str(st.session_state.get("user_id", "")).strip()
+    if not user_id:
+        raise RuntimeError("The signed-in user ID is missing.")
+
+    query = get_supabase().table(table_name).select("*")
+
+    # Loot entries have a deliberate shared/private RLS policy and use their
+    # own loader. Every table routed through fetch_table is private to the
+    # current account, so apply an explicit user filter in addition to RLS.
+    if table_name != "loot_locations":
+        query = query.eq("user_id", user_id)
+
+    response = query.order("date_saved", desc=True).execute()
     return pd.DataFrame(response.data or [])
 
+
+def run_connection_diagnostics() -> pd.DataFrame:
+    """Run read-only checks for auth, Supabase tables, and public data sources."""
+    rows: list[dict[str, str]] = []
+    client = get_supabase()
+    user_id = str(st.session_state.get("user_id", "")).strip()
+
+    try:
+        auth_response = client.auth.get_user()
+        auth_user = getattr(auth_response, "user", None)
+        authenticated_id = str(getattr(auth_user, "id", "") or "")
+        if not authenticated_id:
+            raise RuntimeError("No authenticated Supabase user was returned.")
+        rows.append(
+            {
+                "Connection": "Supabase Authentication",
+                "Status": "Connected",
+                "Details": "Authenticated session and user ID confirmed.",
+            }
+        )
+    except Exception as exc:
+        rows.append(
+            {
+                "Connection": "Supabase Authentication",
+                "Status": "Failed",
+                "Details": str(exc),
+            }
+        )
+
+    for label, table_name in CONNECTION_CHECK_TABLES:
+        try:
+            query = client.table(table_name).select("id")
+            if table_name != "loot_locations" and user_id:
+                query = query.eq("user_id", user_id)
+            response = query.limit(1).execute()
+            sample_count = len(response.data or [])
+            rows.append(
+                {
+                    "Connection": label,
+                    "Status": "Connected",
+                    "Details": (
+                        "Read access confirmed."
+                        if sample_count == 0
+                        else "Read access confirmed with a visible record."
+                    ),
+                }
+            )
+        except Exception as exc:
+            rows.append(
+                {
+                    "Connection": label,
+                    "Status": "Failed",
+                    "Details": str(exc),
+                }
+            )
+
+    try:
+        client.storage.from_(AVATAR_BUCKET).list(
+            user_id,
+            {
+                "limit": 1,
+                "offset": 0,
+                "sortBy": {"column": "name", "order": "desc"},
+            },
+        )
+        rows.append(
+            {
+                "Connection": "Avatar Storage",
+                "Status": "Connected",
+                "Details": "Private avatar bucket read access confirmed.",
+            }
+        )
+    except Exception as exc:
+        rows.append(
+            {
+                "Connection": "Avatar Storage",
+                "Status": "Failed",
+                "Details": str(exc),
+            }
+        )
+
+    public_checks = (
+        (
+            "UEX API",
+            f"{UEX_API_BASE}/commodities/",
+            {"Accept": "application/json"},
+        ),
+        (
+            "SC Trade Tools API",
+            f"{SC_TRADE_TOOLS_API_BASE}/commodity/items",
+            {"Accept": "application/json"},
+        ),
+        (
+            "SC Craft Tools",
+            SC_CRAFT_TOOLS_URL,
+            {"Accept": "text/html"},
+        ),
+    )
+
+    for label, url, extra_headers in public_checks:
+        try:
+            response = requests.get(
+                url,
+                headers={
+                    "User-Agent": "Star-Citizen-Tracker/1.0",
+                    **extra_headers,
+                },
+                timeout=15,
+            )
+            response.raise_for_status()
+            rows.append(
+                {
+                    "Connection": label,
+                    "Status": "Connected",
+                    "Details": f"HTTP {response.status_code} response confirmed.",
+                }
+            )
+        except Exception as exc:
+            rows.append(
+                {
+                    "Connection": label,
+                    "Status": "Failed",
+                    "Details": str(exc),
+                }
+            )
+
+    sc_trade_token = optional_secret("SC_TRADE_TOOLS_TOKEN")
+    if sc_trade_token:
+        try:
+            response = requests.get(
+                f"{SC_TRADE_TOOLS_API_BASE}/commodity/reports",
+                headers={
+                    "Accept": "application/json",
+                    "User-Agent": "Star-Citizen-Tracker/1.0",
+                    "token": sc_trade_token,
+                },
+                timeout=15,
+            )
+            response.raise_for_status()
+            rows.append(
+                {
+                    "Connection": "SC Trade Tools Licensed Data",
+                    "Status": "Connected",
+                    "Details": "Configured token was accepted.",
+                }
+            )
+        except Exception as exc:
+            rows.append(
+                {
+                    "Connection": "SC Trade Tools Licensed Data",
+                    "Status": "Failed",
+                    "Details": str(exc),
+                }
+            )
+    else:
+        rows.append(
+            {
+                "Connection": "SC Trade Tools Licensed Data",
+                "Status": "Not configured",
+                "Details": "Optional token is absent; UEX and public tools remain available.",
+            }
+        )
+
+    google_credentials = google_service_account_config()
+    if google_credentials:
+        required_google_keys = {"client_email", "private_key", "project_id"}
+        if required_google_keys.issubset(google_credentials):
+            rows.append(
+                {
+                    "Connection": "Google Sheets Export",
+                    "Status": "Configured",
+                    "Details": "Service-account credential structure is present.",
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "Connection": "Google Sheets Export",
+                    "Status": "Failed",
+                    "Details": "Service-account JSON is missing required fields.",
+                }
+            )
+    else:
+        rows.append(
+            {
+                "Connection": "Google Sheets Export",
+                "Status": "Not configured",
+                "Details": "Optional Google service-account credentials are absent.",
+            }
+        )
+
+    return pd.DataFrame(rows, columns=["Connection", "Status", "Details"])
 
 def empty_ore_transaction_frame() -> pd.DataFrame:
     """Return the complete normalized ore-ledger structure."""
@@ -5439,20 +5702,153 @@ def ore_summary_values(
     }
 
 
-def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Load and normalize contracts and ore activity."""
-    contracts = fetch_table("contracts")
-    raw_ores = fetch_table("ore_transactions")
+def empty_contract_frame() -> pd.DataFrame:
+    """Return the complete normalized contract-ledger structure."""
+    return pd.DataFrame(
+        columns=[
+            "id",
+            "user_id",
+            "date_saved",
+            "contract_name",
+            "contract_type",
+            "offer_group",
+            "system_name",
+            "total_payout",
+            "salvage_value",
+            "gross_income",
+            "expenses",
+            "crew_members",
+            "net_payout",
+            "individual_share",
+            "notes",
+        ]
+    )
 
-    if not contracts.empty and "date_saved" in contracts.columns:
-        contracts["date_saved"] = pd.to_datetime(
-            contracts["date_saved"],
+
+def normalize_contracts(frame: pd.DataFrame) -> pd.DataFrame:
+    """Normalize legacy contracts and derive salvage-aware contract totals."""
+    if frame is None or frame.empty:
+        return empty_contract_frame()
+
+    normalized = frame.copy()
+    defaults: dict[str, Any] = {
+        "id": 0,
+        "user_id": "",
+        "date_saved": pd.NaT,
+        "contract_name": "",
+        "contract_type": "Other / Custom",
+        "offer_group": "",
+        "system_name": "",
+        "total_payout": 0.0,
+        "salvage_value": 0.0,
+        "expenses": 0.0,
+        "crew_members": 1,
+        "net_payout": 0.0,
+        "individual_share": 0.0,
+        "notes": "",
+    }
+
+    for column, default in defaults.items():
+        if column not in normalized.columns:
+            normalized[column] = default
+
+    normalized["date_saved"] = pd.to_datetime(
+        normalized["date_saved"],
+        errors="coerce",
+        utc=True,
+    )
+    try:
+        normalized["date_saved"] = normalized[
+            "date_saved"
+        ].dt.tz_convert(APP_TIMEZONE)
+    except (TypeError, AttributeError):
+        pass
+
+    for column in (
+        "total_payout",
+        "salvage_value",
+        "expenses",
+    ):
+        normalized[column] = pd.to_numeric(
+            normalized[column],
             errors="coerce",
-            utc=True,
-        ).dt.tz_convert(APP_TIMEZONE)
+        ).fillna(0.0)
 
-    ores = normalize_ore_transactions(raw_ores)
-    return contracts, ores
+    recorded_net = pd.to_numeric(
+        normalized["net_payout"],
+        errors="coerce",
+    )
+    recorded_share = pd.to_numeric(
+        normalized["individual_share"],
+        errors="coerce",
+    )
+
+    normalized["crew_members"] = (
+        pd.to_numeric(
+            normalized["crew_members"],
+            errors="coerce",
+        )
+        .fillna(1)
+        .clip(lower=1)
+        .astype(int)
+    )
+
+    normalized["total_payout"] = normalized[
+        "total_payout"
+    ].clip(lower=0.0)
+    normalized["salvage_value"] = normalized[
+        "salvage_value"
+    ].clip(lower=0.0)
+    normalized["expenses"] = normalized["expenses"].clip(lower=0.0)
+    normalized["gross_income"] = (
+        normalized["total_payout"]
+        + normalized["salvage_value"]
+    )
+
+    calculated_net = normalized["gross_income"] - normalized["expenses"]
+    normalized["net_payout"] = recorded_net.fillna(calculated_net)
+
+    calculated_share = normalized["net_payout"] / normalized["crew_members"]
+    normalized["individual_share"] = recorded_share.fillna(calculated_share)
+
+    for column in (
+        "user_id",
+        "contract_name",
+        "contract_type",
+        "offer_group",
+        "system_name",
+        "notes",
+    ):
+        normalized[column] = (
+            normalized[column].fillna("").astype(str).str.strip()
+        )
+
+    return normalized[
+        [
+            "id",
+            "user_id",
+            "date_saved",
+            "contract_name",
+            "contract_type",
+            "offer_group",
+            "system_name",
+            "total_payout",
+            "salvage_value",
+            "gross_income",
+            "expenses",
+            "crew_members",
+            "net_payout",
+            "individual_share",
+            "notes",
+        ]
+    ]
+
+
+def load_data() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load and normalize the current user's contracts and ore activity."""
+    raw_contracts = fetch_table("contracts")
+    raw_ores = fetch_table("ore_transactions")
+    return normalize_contracts(raw_contracts), normalize_ore_transactions(raw_ores)
 
 def empty_commodity_transaction_frame() -> pd.DataFrame:
     """Return the complete normalized commodity-ledger structure."""
@@ -6680,9 +7076,63 @@ def normalize_blueprint_materials(value: Any) -> dict[str, float]:
     return cleaned
 
 
-def insert_blueprint(payload: dict[str, Any]) -> None:
-    get_supabase().table("blueprint_tracker").insert(payload).execute()
+def insert_blueprint(payload: dict[str, Any]) -> dict[str, Any]:
+    """Insert a blueprint and verify the personal tracker can read it back."""
+    user_id = str(payload.get("user_id", "")).strip()
+    blueprint_name = str(payload.get("blueprint_name", "")).strip()
+    materials = normalize_blueprint_materials(payload.get("materials", {}))
 
+    if not user_id:
+        raise ValueError("The signed-in user ID is missing.")
+    if not blueprint_name:
+        raise ValueError("Blueprint name is required.")
+    if not materials:
+        raise ValueError("At least one blueprint material is required.")
+
+    cleaned_payload = {
+        **payload,
+        "user_id": user_id,
+        "blueprint_name": blueprint_name,
+        "materials": materials,
+    }
+    response = (
+        get_supabase()
+        .table("blueprint_tracker")
+        .insert(cleaned_payload)
+        .execute()
+    )
+    returned_rows = list(response.data or [])
+
+    if not returned_rows:
+        verification = (
+            get_supabase()
+            .table("blueprint_tracker")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("blueprint_name", blueprint_name)
+            .order("id", desc=True)
+            .limit(10)
+            .execute()
+        )
+        returned_rows = list(verification.data or [])
+
+    matches = [
+        row
+        for row in returned_rows
+        if str(row.get("blueprint_name", "")).strip() == blueprint_name
+    ]
+    if not matches:
+        raise RuntimeError(
+            "The blueprint was not returned by Supabase after saving. Run "
+            "schema_migration_v3_blueprints_repair.sql and verify its RLS policies."
+        )
+
+    row = matches[0]
+    return {
+        "id": int(row.get("id") or 0) or None,
+        "blueprint_name": blueprint_name,
+        "materials": normalize_blueprint_materials(row.get("materials", {})),
+    }
 
 def build_blueprint_readiness(
     blueprints: pd.DataFrame,
@@ -6851,9 +7301,92 @@ def build_ore_inventory(ores: pd.DataFrame) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-def insert_contract(payload: dict[str, Any]) -> None:
-    get_supabase().table("contracts").insert(payload).execute()
+def insert_contract(payload: dict[str, Any]) -> dict[str, Any]:
+    """Insert a salvage-aware contract and verify the saved row is readable."""
+    user_id = str(payload.get("user_id", "")).strip()
+    contract_name = str(payload.get("contract_name", "")).strip()
+    contract_type = str(payload.get("contract_type", "")).strip()
+    total_payout = max(safe_float(payload.get("total_payout")), 0.0)
+    salvage_value = max(safe_float(payload.get("salvage_value")), 0.0)
+    expenses = max(safe_float(payload.get("expenses")), 0.0)
+    crew_members = max(int(safe_float(payload.get("crew_members")) or 1), 1)
 
+    if not user_id:
+        raise ValueError("The signed-in user ID is missing.")
+    if not contract_name:
+        raise ValueError("Contract name is required.")
+    if not contract_type:
+        raise ValueError("Contract type is required.")
+    if total_payout <= 0:
+        raise ValueError("Contract payout must be greater than zero.")
+
+    gross_income = total_payout + salvage_value
+    net_payout = gross_income - expenses
+    individual_share = net_payout / crew_members
+
+    cleaned_payload = {
+        **payload,
+        "user_id": user_id,
+        "contract_name": contract_name,
+        "contract_type": contract_type,
+        "total_payout": total_payout,
+        "salvage_value": salvage_value,
+        "expenses": expenses,
+        "crew_members": crew_members,
+        "net_payout": net_payout,
+        "individual_share": individual_share,
+    }
+
+    response = (
+        get_supabase()
+        .table("contracts")
+        .insert(cleaned_payload)
+        .execute()
+    )
+    returned_rows = list(response.data or [])
+
+    if not returned_rows:
+        verification = (
+            get_supabase()
+            .table("contracts")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("contract_name", contract_name)
+            .order("id", desc=True)
+            .limit(10)
+            .execute()
+        )
+        returned_rows = list(verification.data or [])
+
+    normalized = normalize_contracts(pd.DataFrame(returned_rows))
+    matches = normalized[
+        (normalized["contract_name"] == contract_name)
+        & (normalized["contract_type"] == contract_type)
+        & ((normalized["total_payout"] - total_payout).abs() <= 0.01)
+        & ((normalized["salvage_value"] - salvage_value).abs() <= 0.01)
+        & ((normalized["expenses"] - expenses).abs() <= 0.01)
+        & (normalized["crew_members"] == crew_members)
+    ]
+
+    if matches.empty:
+        raise RuntimeError(
+            "The contract was not returned by Supabase after saving. Run "
+            "schema_migration_v10_contract_salvage_and_connections.sql and "
+            "verify the contracts RLS policies."
+        )
+
+    row = matches.iloc[0]
+    return {
+        "id": int(row["id"]) if safe_float(row.get("id")) > 0 else None,
+        "contract_name": str(row["contract_name"]),
+        "contract_type": str(row["contract_type"]),
+        "total_payout": float(row["total_payout"]),
+        "salvage_value": float(row["salvage_value"]),
+        "gross_income": float(row["gross_income"]),
+        "expenses": float(row["expenses"]),
+        "net_payout": float(row["net_payout"]),
+        "individual_share": float(row["individual_share"]),
+    }
 
 def insert_ore(payload: dict[str, Any]) -> dict[str, Any]:
     """Insert an ore record and verify it can be read back from Supabase."""
@@ -6950,28 +7483,72 @@ def insert_ore(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def delete_record(table_name: str, record_id: int) -> None:
+    """Delete one owned record and verify it no longer exists."""
+    if table_name not in USER_OWNED_TABLES:
+        raise ValueError(f"Unsupported database table: {table_name}")
+
+    user_id = str(st.session_state.get("user_id", "")).strip()
+    if not user_id:
+        raise RuntimeError("The signed-in user ID is missing.")
+
     (
         get_supabase()
         .table(table_name)
         .delete()
-        .eq("id", record_id)
+        .eq("id", int(record_id))
+        .eq("user_id", user_id)
         .execute()
     )
 
+    verification = (
+        get_supabase()
+        .table(table_name)
+        .select("id")
+        .eq("id", int(record_id))
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if verification.data:
+        raise RuntimeError(
+            "Supabase still returned the record after the delete request."
+        )
 
 def update_record(
     table_name: str,
     record_id: int,
     payload: dict[str, Any],
 ) -> None:
+    """Update one owned record and verify it remains readable afterward."""
+    if table_name not in USER_OWNED_TABLES:
+        raise ValueError(f"Unsupported database table: {table_name}")
+
+    user_id = str(st.session_state.get("user_id", "")).strip()
+    if not user_id:
+        raise RuntimeError("The signed-in user ID is missing.")
+
     (
         get_supabase()
         .table(table_name)
         .update(payload)
-        .eq("id", record_id)
+        .eq("id", int(record_id))
+        .eq("user_id", user_id)
         .execute()
     )
 
+    verification = (
+        get_supabase()
+        .table(table_name)
+        .select("id")
+        .eq("id", int(record_id))
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    )
+    if not verification.data:
+        raise RuntimeError(
+            "The updated record could not be read back from Supabase."
+        )
 
 def filter_data(
     frame: pd.DataFrame,
@@ -7012,6 +7589,7 @@ def filter_data(
 
 
 def display_contract_table(contracts: pd.DataFrame) -> None:
+    contracts = normalize_contracts(contracts)
     if contracts.empty:
         st.info("No contract records match the current filters.")
         return
@@ -7024,7 +7602,9 @@ def display_contract_table(contracts: pd.DataFrame) -> None:
             "contract_type": "Type",
             "offer_group": "Offer Group",
             "system_name": "System / Area",
-            "total_payout": "Total Payout",
+            "total_payout": "Mission Payout",
+            "salvage_value": "Salvage / Cargo",
+            "gross_income": "Gross Income",
             "expenses": "Expenses",
             "crew_members": "Crew",
             "net_payout": "Net Payout",
@@ -7040,7 +7620,9 @@ def display_contract_table(contracts: pd.DataFrame) -> None:
         "Type",
         "Offer Group",
         "System / Area",
-        "Total Payout",
+        "Mission Payout",
+        "Salvage / Cargo",
+        "Gross Income",
         "Expenses",
         "Crew",
         "Net Payout",
@@ -7052,20 +7634,23 @@ def display_contract_table(contracts: pd.DataFrame) -> None:
     if "Date" in table.columns:
         table["Date"] = table["Date"].dt.strftime("%Y-%m-%d %I:%M %p")
 
+    money_columns = {
+        column: st.column_config.NumberColumn(format="%,.0f aUEC")
+        for column in (
+            "Mission Payout",
+            "Salvage / Cargo",
+            "Gross Income",
+            "Expenses",
+            "Net Payout",
+            "Individual Share",
+        )
+    }
     st.dataframe(
         table,
         width="stretch",
         hide_index=True,
-        column_config={
-            "Total Payout": st.column_config.NumberColumn(format="%,.0f aUEC"),
-            "Expenses": st.column_config.NumberColumn(format="%,.0f aUEC"),
-            "Net Payout": st.column_config.NumberColumn(format="%,.0f aUEC"),
-            "Individual Share": st.column_config.NumberColumn(
-                format="%,.0f aUEC"
-            ),
-        },
+        column_config=money_columns,
     )
-
 
 def display_ore_table(ores: pd.DataFrame) -> None:
     """Display verified ore values and clearly flag legacy quantity gaps."""
@@ -8295,7 +8880,7 @@ def contract_page() -> None:
     page_banner(
         "contracts_banner.jpg",
         "Contract Pay Calculator",
-        "Record mission payouts, account for operating expenses, and calculate a fair crew split.",
+        "Record mission payouts, salvage proceeds, operating expenses, and a fair crew split.",
         "Mission Operations",
     )
 
@@ -8324,20 +8909,32 @@ def contract_page() -> None:
             placeholder="Example: Stanton, Pyro, Nyx, ArcCorp",
         )
 
-        money_col1, money_col2, money_col3 = st.columns(3)
-        with money_col1:
+        income_col1, income_col2 = st.columns(2)
+        with income_col1:
             total_payout = st.number_input(
-                "Total payout",
+                "Mission payout",
                 min_value=0.0,
                 step=1000.0,
             )
-        with money_col2:
+        with income_col2:
+            salvage_value = st.number_input(
+                "Salvage / recovered cargo value",
+                min_value=0.0,
+                step=1000.0,
+                help=(
+                    "Optional additional income recovered during a bounty, "
+                    "cargo recovery, salvage contract, or similar mission."
+                ),
+            )
+
+        split_col1, split_col2 = st.columns(2)
+        with split_col1:
             expenses = st.number_input(
                 "Expenses",
                 min_value=0.0,
                 step=1000.0,
             )
-        with money_col3:
+        with split_col2:
             crew_members = st.number_input(
                 "Crew members",
                 min_value=1,
@@ -8366,10 +8963,11 @@ def contract_page() -> None:
             st.error("Enter a custom contract type.")
             return
         if total_payout <= 0:
-            st.error("Enter a payout greater than zero.")
+            st.error("Enter a mission payout greater than zero.")
             return
 
-        net_payout = total_payout - expenses
+        gross_income = total_payout + salvage_value
+        net_payout = gross_income - expenses
         individual_share = net_payout / int(crew_members)
 
         payload = {
@@ -8379,6 +8977,7 @@ def contract_page() -> None:
             "offer_group": offer_group,
             "system_name": system_name.strip(),
             "total_payout": total_payout,
+            "salvage_value": salvage_value,
             "expenses": expenses,
             "crew_members": int(crew_members),
             "net_payout": net_payout,
@@ -8387,21 +8986,35 @@ def contract_page() -> None:
         }
 
         try:
-            insert_contract(payload)
-            quiet_success("Contract saved.")
-            summary_columns = st.columns(3)
-            summary_columns[0].metric("Net payout", format_money(net_payout))
+            verified = insert_contract(payload)
+            quiet_success("Contract and salvage proceeds saved.")
+            summary_columns = st.columns(4)
+            summary_columns[0].metric(
+                "Gross income",
+                format_money(verified["gross_income"]),
+            )
             summary_columns[1].metric(
+                "Net payout",
+                format_money(verified["net_payout"]),
+            )
+            summary_columns[2].metric(
                 "Crew members",
                 f"{int(crew_members)}",
             )
-            summary_columns[2].metric(
+            summary_columns[3].metric(
                 "Pay per person",
-                format_money(individual_share),
+                format_money(verified["individual_share"]),
             )
         except Exception as exc:
-            st.error(f"The contract could not be saved: {exc}")
-
+            error_text = str(exc)
+            if "salvage_value" in error_text.lower():
+                st.error(
+                    "The contract database is missing the salvage column. Run "
+                    "`schema_migration_v10_contract_salvage_and_connections.sql` "
+                    "in Supabase, then try again."
+                )
+            else:
+                st.error(f"The contract could not be saved: {exc}")
 
 def ore_page() -> None:
     page_banner(
@@ -8686,13 +9299,16 @@ def ore_page() -> None:
     display_ore_table(ores)
 
 def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
+    contracts = normalize_contracts(contracts)
     columns = {
         "date_saved": "Date",
         "contract_name": "Contract",
         "contract_type": "Type",
         "offer_group": "Offer Group",
         "system_name": "System / Area",
-        "total_payout": "Total Payout",
+        "total_payout": "Mission Payout",
+        "salvage_value": "Salvage / Cargo",
+        "gross_income": "Gross Income",
         "expenses": "Expenses",
         "crew_members": "Crew Members",
         "net_payout": "Net Payout",
@@ -8706,7 +9322,9 @@ def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
         "Type",
         "Offer Group",
         "System / Area",
-        "Total Payout",
+        "Mission Payout",
+        "Salvage / Cargo",
+        "Gross Income",
         "Expenses",
         "Crew Members",
         "Net Payout",
@@ -8719,7 +9337,6 @@ def prepare_contract_export(contracts: pd.DataFrame) -> pd.DataFrame:
         if getattr(export["Date"].dt, "tz", None) is not None:
             export["Date"] = export["Date"].dt.tz_localize(None)
     return export
-
 
 def prepare_ore_export(ores: pd.DataFrame) -> pd.DataFrame:
     """Prepare verified ore records for Excel, CSV, and Google Sheets."""
@@ -8840,23 +9457,28 @@ def export_summary_values(
     commodity_trades: pd.DataFrame,
 ) -> list[list[Any]]:
     """Return export-summary rows shared by Excel, CSV, and Google Sheets."""
-    gross_payout = (
-        float(contracts["total_payout"].sum())
-        if not contracts.empty and "total_payout" in contracts.columns
+    normalized_contracts = normalize_contracts(contracts)
+    mission_payout = (
+        float(normalized_contracts["total_payout"].sum())
+        if not normalized_contracts.empty
         else 0.0
     )
+    salvage_proceeds = (
+        float(normalized_contracts["salvage_value"].sum())
+        if not normalized_contracts.empty
+        else 0.0
+    )
+    gross_contract_income = mission_payout + salvage_proceeds
     contract_take_home = (
-        float(contracts["individual_share"].sum())
-        if not contracts.empty and "individual_share" in contracts.columns
+        float(normalized_contracts["individual_share"].sum())
+        if not normalized_contracts.empty
         else 0.0
     )
     ore_totals = ore_summary_values(ores)
     ore_sales = ore_totals["sales_revenue"]
     ore_purchases = ore_totals["purchase_cost"]
     on_hand = ore_totals["on_hand_scu"]
-    commodity_totals = commodity_summary_values(
-        commodity_trades
-    )
+    commodity_totals = commodity_summary_values(commodity_trades)
     total_earnings = (
         contract_take_home
         + ore_sales
@@ -8867,19 +9489,17 @@ def export_summary_values(
         ["Metric", "Value"],
         ["Account", st.session_state.get("user_email", "")],
         ["Generated", datetime.now().strftime("%Y-%m-%d %I:%M %p")],
-        ["Contract Records", len(contracts)],
-        ["Gross Contract Payout", gross_payout],
+        ["Contract Records", len(normalized_contracts)],
+        ["Mission Contract Payout", mission_payout],
+        ["Contract Salvage Proceeds", salvage_proceeds],
+        ["Gross Contract Income", gross_contract_income],
         ["Contract Take-Home", contract_take_home],
         ["Ore Ledger Entries", len(ores)],
         ["Ore Sales", ore_sales],
         ["Ore Purchases", ore_purchases],
         ["Ore Trade Net", ore_sales - ore_purchases],
         ["Ore On Hand (SCU)", on_hand],
-        [
-            "Ore Records Missing SCU Quantity",
-            int(ore_totals["incomplete_quantity_records"]),
-        ],
-        ["Commodity Records", int(commodity_totals["records"])],
+        ["Commodity Ledger Entries", int(commodity_totals["records"])],
         ["Commodity Purchases", commodity_totals["purchase_cost"]],
         ["Commodity Sales", commodity_totals["sales_revenue"]],
         ["Commodity Losses", commodity_totals["loss_value"]],
@@ -8887,7 +9507,6 @@ def export_summary_values(
         ["Commodity On Hand (SCU)", commodity_totals["on_hand_scu"]],
         ["Total Earnings", total_earnings],
     ]
-
 
 def build_excel_export(
     contracts: pd.DataFrame,
@@ -8971,7 +9590,9 @@ def build_excel_export(
             summary.write(row_index, 0, row[0], label_format)
             value = row[1]
             if row[0] in {
-                "Gross Contract Payout",
+                "Mission Contract Payout",
+                "Contract Salvage Proceeds",
+                "Gross Contract Income",
                 "Contract Take-Home",
                 "Ore Sales",
                 "Ore Purchases",
@@ -8996,7 +9617,9 @@ def build_excel_export(
         sheet_specs = [
             ("Contracts", contract_export, {
                 "Date": date_format,
-                "Total Payout": money_format,
+                "Mission Payout": money_format,
+                "Salvage / Cargo": money_format,
+                "Gross Income": money_format,
                 "Expenses": money_format,
                 "Net Payout": money_format,
                 "Individual Share": money_format,
@@ -9550,20 +10173,28 @@ def manage_records_section(
                 value=record.get("system_name", "") or "",
             )
 
-            edit_col1, edit_col2, edit_col3 = st.columns(3)
-            with edit_col1:
+            income_col1, income_col2 = st.columns(2)
+            with income_col1:
                 payout = st.number_input(
-                    "Total payout",
+                    "Mission payout",
                     min_value=0.0,
                     value=float(record["total_payout"]),
                 )
-            with edit_col2:
+            with income_col2:
+                salvage_value = st.number_input(
+                    "Salvage / recovered cargo value",
+                    min_value=0.0,
+                    value=float(record.get("salvage_value", 0.0) or 0.0),
+                )
+
+            cost_col1, cost_col2 = st.columns(2)
+            with cost_col1:
                 expenses = st.number_input(
                     "Expenses",
                     min_value=0.0,
                     value=float(record["expenses"]),
                 )
-            with edit_col3:
+            with cost_col2:
                 crew = st.number_input(
                     "Crew members",
                     min_value=1,
@@ -9591,13 +10222,15 @@ def manage_records_section(
                     "are required."
                 )
             else:
-                net = payout - expenses
+                gross_income = payout + salvage_value
+                net = gross_income - expenses
                 payload = {
                     "contract_name": name.strip(),
                     "contract_type": type_value.strip(),
                     "offer_group": offer.strip(),
                     "system_name": system.strip(),
                     "total_payout": payout,
+                    "salvage_value": salvage_value,
                     "expenses": expenses,
                     "crew_members": int(crew),
                     "net_payout": net,
